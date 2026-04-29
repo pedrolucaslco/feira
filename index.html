@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#145c58" />
+    <title>Feira</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 48 48" role="img">
+              <path d="M12 19h24l-2 22H14L12 19Z" fill="#f2b84b" />
+              <path d="M18 19c0-5 3-9 7-9s7 4 7 9" fill="none" stroke="#145c58" stroke-width="4" stroke-linecap="round" />
+              <path d="M16 25h16M17 31h14" stroke="#fff8ea" stroke-width="3" stroke-linecap="round" opacity=".9" />
+            </svg>
+          </div>
+          <div>
+            <p class="eyebrow">Feira</p>
+            <h1>Mercado do mês</h1>
+          </div>
+        </div>
+        <div class="balance-pill">
+          <span>Saldo</span>
+          <strong id="headerBalance">R$ 0,00</strong>
+        </div>
+      </header>
+
+      <main>
+        <section id="dashboardView" class="view is-active" aria-labelledby="dashboardTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow" id="monthLabel">Mês atual</p>
+              <h2 id="dashboardTitle">Resumo</h2>
+            </div>
+            <button class="icon-button" id="refreshButton" type="button" title="Atualizar" aria-label="Atualizar">
+              <span aria-hidden="true">↻</span>
+            </button>
+          </div>
+
+          <div class="metrics-grid">
+            <article class="metric metric-primary">
+              <span>Saldo restante</span>
+              <strong id="remainingBalance">R$ 0,00</strong>
+            </article>
+            <article class="metric">
+              <span>Gasto no mês</span>
+              <strong id="spentMonth">R$ 0,00</strong>
+            </article>
+            <article class="metric">
+              <span>Budget</span>
+              <strong id="monthlyBudget">R$ 0,00</strong>
+            </article>
+            <article class="metric">
+              <span>Compras</span>
+              <strong id="purchaseCount">0</strong>
+            </article>
+          </div>
+
+          <form class="budget-form" id="budgetForm">
+            <label for="budgetInput">Budget mensal</label>
+            <div class="input-row">
+              <input id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
+              <button type="submit">Salvar</button>
+            </div>
+          </form>
+
+          <button class="primary-action" id="startPurchaseButton" type="button">
+            <span aria-hidden="true">▶</span>
+            Começar compra
+          </button>
+
+          <section class="content-block" aria-labelledby="latestTitle">
+            <div class="block-title-row">
+              <h3 id="latestTitle">Últimas compras</h3>
+              <span id="averagePurchase" class="soft-label">Média R$ 0,00</span>
+            </div>
+            <ul class="purchase-list" id="purchaseList"></ul>
+            <p class="empty-state" id="emptyPurchases">Nenhuma compra registrada neste mês.</p>
+          </section>
+        </section>
+
+        <section id="listView" class="view" aria-labelledby="listTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Checklist</p>
+              <h2 id="listTitle">Lista de mercado</h2>
+            </div>
+          </div>
+
+          <form class="add-form" id="itemForm">
+            <label for="itemName">Item</label>
+            <input id="itemName" name="name" autocomplete="off" placeholder="Arroz" required />
+            <label for="itemQuantity">Quantidade</label>
+            <input id="itemQuantity" name="quantity" autocomplete="off" placeholder="2 kg" />
+            <button type="submit">Adicionar</button>
+          </form>
+
+          <ul class="item-list" id="itemList"></ul>
+          <p class="empty-state" id="emptyItems">Sua lista ainda está vazia.</p>
+        </section>
+
+        <section id="purchaseView" class="view purchase-mode" aria-labelledby="purchaseTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Comprando</p>
+              <h2 id="purchaseTitle">Compra ativa</h2>
+            </div>
+            <button class="secondary-button" id="cancelPurchaseButton" type="button">Sair</button>
+          </div>
+
+          <ul class="item-list active-list" id="activeItemList"></ul>
+          <p class="empty-state" id="emptyActiveItems">Adicione itens na lista para começar.</p>
+
+          <button class="primary-action finish" id="finishPurchaseButton" type="button">
+            <span aria-hidden="true">✓</span>
+            Finalizar compra
+          </button>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Navegação principal">
+        <button class="nav-button is-active" type="button" data-view="dashboardView" aria-label="Resumo">
+          <span aria-hidden="true">⌂</span>
+          <b>Resumo</b>
+        </button>
+        <button class="nav-button" type="button" data-view="listView" aria-label="Lista">
+          <span aria-hidden="true">☑</span>
+          <b>Lista</b>
+        </button>
+        <button class="nav-button" type="button" data-view="purchaseView" aria-label="Compra">
+          <span aria-hidden="true">◉</span>
+          <b>Compra</b>
+        </button>
+      </nav>
+    </div>
+
+    <dialog class="checkout-dialog" id="checkoutDialog">
+      <form id="checkoutForm">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Finalizar</p>
+            <h2>Total da compra</h2>
+          </div>
+          <button class="icon-button" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">×</button>
+        </div>
+        <label for="purchaseTotal">Valor pago</label>
+        <input id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
+        <div class="dialog-actions">
+          <button class="secondary-button" id="cancelCheckoutButton" value="cancel" type="button">Cancelar</button>
+          <button class="primary-dialog-button" value="confirm" type="submit">Confirmar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js" defer></script>
+  </body>
+</html>
