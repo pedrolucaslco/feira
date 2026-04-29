@@ -25,6 +25,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Dashboard com resumo do mês.
 - Controle de budget mensal.
 - Aba de configurações.
+- Modo escuro com preferência salva no dispositivo.
 - Cálculo de saldo restante.
 - Total gasto no mês.
 - Número de compras realizadas.

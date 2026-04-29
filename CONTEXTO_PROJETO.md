@@ -26,6 +26,7 @@ Funcionalidades do MVP:
 
 - Budget mensal.
 - Aba de configurações.
+- Modo escuro com preferência local.
 - Total gasto no mês.
 - Saldo restante.
 - Número de compras feitas.
@@ -168,6 +169,21 @@ A aba também tem a função de resetar os dados locais. O reset:
 4. Deixa a lista vazia.
 5. Encerra qualquer compra ativa.
 
+Também existe um switch de modo escuro. A preferência é salva em `localStorage`, com a chave:
+
+```txt
+feira:theme
+```
+
+O valor pode ser:
+
+```txt
+light
+dark
+```
+
+O reset do banco não apaga essa preferência visual.
+
 ### Lista de Mercado
 
 O usuário pode:
@@ -230,10 +246,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v4
+feira-v5
 ```
 
-O cache foi atualizado para `feira-v4` depois da criação da aba de configurações e reset dos dados locais.
+O cache foi atualizado para `feira-v5` depois da implementação do modo escuro.
 
 Se alguma alteração não aparecer no navegador, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -332,7 +348,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Nova aba Configurações com edição de budget mensal e reset do banco local.
+Modo escuro com switch na aba Configurações e preferência salva localmente.
 ```
 
 Arquivos alterados nesse marco:

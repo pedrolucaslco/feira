@@ -3,9 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#145c58" />
+    <meta name="theme-color" content="#145c58" id="themeColorMeta" />
     <title>Feira</title>
     <link rel="manifest" href="./manifest.webmanifest" />
+    <script>
+      (() => {
+        const storedTheme = localStorage.getItem("feira:theme");
+        const theme =
+          storedTheme === "dark" || storedTheme === "light"
+            ? storedTheme
+            : window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -129,6 +141,17 @@
               <button type="submit">Salvar</button>
             </div>
           </form>
+
+          <section class="settings-card" aria-labelledby="themeTitle">
+            <div>
+              <h3 id="themeTitle">Modo escuro</h3>
+              <p>Ajusta as cores da interface neste dispositivo.</p>
+            </div>
+            <label class="theme-switch" for="themeToggle">
+              <input id="themeToggle" type="checkbox" role="switch" aria-label="Ativar modo escuro" />
+              <span aria-hidden="true"></span>
+            </label>
+          </section>
 
           <section class="danger-zone" aria-labelledby="resetTitle">
             <div>

@@ -1,6 +1,7 @@
 const DB_NAME = "feira-db";
 const DB_VERSION = 1;
 const SETTINGS_ID = "main";
+const THEME_STORAGE_KEY = "feira:theme";
 const DEFAULT_ITEMS = [
   { name: "Arroz", quantity: "1 pacote" },
   { name: "Feijão", quantity: "1 kg" },
@@ -19,6 +20,22 @@ function preventIOSZoomGestures() {
 }
 
 preventIOSZoomGestures();
+
+function getInitialTheme() {
+  const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  if (storedTheme === "dark" || storedTheme === "light") {
+    return storedTheme;
+  }
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem(THEME_STORAGE_KEY, theme);
+  document.querySelector("#themeColorMeta")?.setAttribute("content", theme === "dark" ? "#0e1615" : "#145c58");
+}
+
+applyTheme(getInitialTheme());
 
 const state = {
   db: null,
@@ -62,6 +79,7 @@ const el = {
   cancelPurchaseButton: document.querySelector("#cancelPurchaseButton"),
   finishPurchaseButton: document.querySelector("#finishPurchaseButton"),
   resetDatabaseButton: document.querySelector("#resetDatabaseButton"),
+  themeToggle: document.querySelector("#themeToggle"),
   refreshButton: document.querySelector("#refreshButton"),
   checkoutDialog: document.querySelector("#checkoutDialog"),
   checkoutForm: document.querySelector("#checkoutForm"),
@@ -340,10 +358,15 @@ function renderNavigation() {
   el.navButtons.forEach((button) => button.classList.toggle("is-active", button.dataset.view === state.activeView));
 }
 
+function renderSettings() {
+  el.themeToggle.checked = document.documentElement.dataset.theme === "dark";
+}
+
 function render() {
   renderDashboard();
   renderItems();
   renderNavigation();
+  renderSettings();
 }
 
 function setView(viewId) {
@@ -445,6 +468,11 @@ async function resetDatabase() {
   showToast("Dados resetados.");
 }
 
+function toggleTheme(event) {
+  const theme = event.currentTarget.checked ? "dark" : "light";
+  applyTheme(theme);
+}
+
 function startPurchase() {
   state.purchaseActive = true;
   localStorage.setItem("feira:purchaseActive", "true");
@@ -535,6 +563,7 @@ function bindEvents() {
   el.itemForm.addEventListener("submit", addItem);
   el.budgetForm.addEventListener("submit", saveBudget);
   el.resetDatabaseButton.addEventListener("click", resetDatabase);
+  el.themeToggle.addEventListener("change", toggleTheme);
   el.startPurchaseButton.addEventListener("click", startPurchase);
   el.cancelPurchaseButton.addEventListener("click", cancelPurchase);
   el.finishPurchaseButton.addEventListener("click", openCheckout);
