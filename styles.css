@@ -229,6 +229,10 @@ label {
   color: rgba(255, 255, 255, 0.76);
 }
 
+:root[data-theme="dark"] .metric-primary span {
+  color: rgba(9, 33, 30, 0.72);
+}
+
 .budget-form,
 .add-form,
 .content-block,
@@ -299,6 +303,13 @@ input:focus {
   color: #fff;
 }
 
+:root[data-theme="dark"] .budget-form button,
+:root[data-theme="dark"] .add-form button,
+:root[data-theme="dark"] .primary-dialog-button,
+:root[data-theme="dark"] .save-item-button {
+  color: #09211e;
+}
+
 .primary-action {
   display: flex;
   align-items: center;
@@ -313,6 +324,11 @@ input:focus {
   box-shadow: var(--shadow);
 }
 
+:root[data-theme="dark"] .primary-action {
+  background: linear-gradient(135deg, var(--teal), var(--teal-2));
+  color: #09211e;
+}
+
 .primary-action span {
   display: grid;
   width: 28px;
@@ -320,6 +336,10 @@ input:focus {
   place-items: center;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.18);
+}
+
+:root[data-theme="dark"] .primary-action span {
+  background: rgba(9, 33, 30, 0.12);
 }
 
 .primary-action.finish {
@@ -414,6 +434,10 @@ input:focus {
   background: var(--teal);
   color: #fff;
   transform: scale(1.04);
+}
+
+:root[data-theme="dark"] .item-row.is-checked .check-button {
+  color: #09211e;
 }
 
 .item-row.is-checked .item-main strong {

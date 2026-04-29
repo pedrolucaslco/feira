@@ -247,10 +247,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v7
+feira-v8
 ```
 
-O cache foi atualizado para `feira-v7` depois da troca dos SVGs inline por Lucide Icons via CDN na bottom nav.
+O cache foi atualizado para `feira-v8` depois dos ajustes de contraste no modo escuro.
 
 Se alguma alteração não aparecer no navegador, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -349,7 +349,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Bottom nav usando Lucide Icons via CDN.
+Ajuste de contraste dos textos em fundos verdes no modo escuro.
 ```
 
 Arquivos alterados nesse marco:

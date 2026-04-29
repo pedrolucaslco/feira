@@ -1,4 +1,4 @@
-const CACHE_NAME = "feira-v7";
+const CACHE_NAME = "feira-v8";
 const ASSETS = [
   "./",
   "./index.html",
