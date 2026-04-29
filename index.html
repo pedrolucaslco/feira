@@ -61,14 +61,6 @@
             </article>
           </div>
 
-          <form class="budget-form" id="budgetForm">
-            <label for="budgetInput">Budget mensal</label>
-            <div class="input-row">
-              <input id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
-              <button type="submit">Salvar</button>
-            </div>
-          </form>
-
           <button class="primary-action" id="startPurchaseButton" type="button">
             <span aria-hidden="true">▶</span>
             Começar compra
@@ -121,6 +113,31 @@
             Finalizar compra
           </button>
         </section>
+
+        <section id="settingsView" class="view" aria-labelledby="settingsTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Preferências</p>
+              <h2 id="settingsTitle">Configurações</h2>
+            </div>
+          </div>
+
+          <form class="budget-form" id="budgetForm">
+            <label for="budgetInput">Budget mensal</label>
+            <div class="input-row">
+              <input id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
+              <button type="submit">Salvar</button>
+            </div>
+          </form>
+
+          <section class="danger-zone" aria-labelledby="resetTitle">
+            <div>
+              <h3 id="resetTitle">Resetar dados</h3>
+              <p>Apaga lista, compras e restaura o budget inicial.</p>
+            </div>
+            <button class="danger-button" id="resetDatabaseButton" type="button">Resetar</button>
+          </section>
+        </section>
       </main>
 
       <nav class="bottom-nav" aria-label="Navegação principal">
@@ -135,6 +152,10 @@
         <button class="nav-button" type="button" data-view="purchaseView" aria-label="Compra">
           <span aria-hidden="true">◉</span>
           <b>Compra</b>
+        </button>
+        <button class="nav-button" type="button" data-view="settingsView" aria-label="Configurações">
+          <span aria-hidden="true">⚙</span>
+          <b>Config.</b>
         </button>
       </nav>
     </div>

@@ -25,6 +25,7 @@ O objetivo inicial era criar um **POC em 1 dia** de um app de compras com contro
 Funcionalidades do MVP:
 
 - Budget mensal.
+- Aba de configurações.
 - Total gasto no mês.
 - Saldo restante.
 - Número de compras feitas.
@@ -33,6 +34,7 @@ Funcionalidades do MVP:
 - Modo de compra ativa.
 - Finalização de compra com valor total.
 - Histórico simples das compras do mês.
+- Reset dos dados locais.
 - Persistência offline local.
 
 Fora do escopo neste momento:
@@ -146,9 +148,9 @@ saldo = monthlyBudget - soma das compras do mês atual
 
 O histórico exibido no dashboard considera apenas o mês atual.
 
-### Budget
+### Configurações
 
-O usuário pode editar o budget mensal direto no dashboard.
+O usuário pode editar o budget mensal na aba **Configurações**.
 
 O campo aceita valores em formato brasileiro, por exemplo:
 
@@ -157,6 +159,14 @@ O campo aceita valores em formato brasileiro, por exemplo:
 1.200,00
 R$ 1200,00
 ```
+
+A aba também tem a função de resetar os dados locais. O reset:
+
+1. Apaga os itens.
+2. Apaga as compras.
+3. Restaura o budget padrão.
+4. Deixa a lista vazia.
+5. Encerra qualquer compra ativa.
 
 ### Lista de Mercado
 
@@ -220,10 +230,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v2
+feira-v4
 ```
 
-O cache foi atualizado para `feira-v2` depois da implementação da edição de itens, para evitar que o navegador segurasse arquivos antigos.
+O cache foi atualizado para `feira-v4` depois da criação da aba de configurações e reset dos dados locais.
 
 Se alguma alteração não aparecer no navegador, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -322,12 +332,12 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Editar item da lista de compras, permitindo alterar nome e quantidade.
+Nova aba Configurações com edição de budget mensal e reset do banco local.
 ```
 
 Arquivos alterados nesse marco:
 
+- `index.html`
 - `app.js`
 - `styles.css`
 - `sw.js`
-

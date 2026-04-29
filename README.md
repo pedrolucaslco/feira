@@ -24,6 +24,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 
 - Dashboard com resumo do mês.
 - Controle de budget mensal.
+- Aba de configurações.
 - Cálculo de saldo restante.
 - Total gasto no mês.
 - Número de compras realizadas.
@@ -36,6 +37,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Modo de compra ativa.
 - Finalização de compra com valor total.
 - Histórico simples das compras do mês.
+- Reset dos dados locais para começar do zero.
 - PWA com manifest e service worker básico.
 
 ## Status
@@ -131,4 +133,3 @@ A longo prazo, o Feira pode evoluir para uma lista compartilhável para casa/fam
 ## Licença
 
 Ainda não definida.
-

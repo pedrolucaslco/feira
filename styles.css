@@ -197,7 +197,8 @@ label {
 
 .budget-form,
 .add-form,
-.content-block {
+.content-block,
+.danger-zone {
   margin-top: 14px;
   padding: 16px;
   border: 1px solid var(--line);
@@ -239,7 +240,8 @@ input:focus {
 .primary-dialog-button,
 .secondary-button,
 .icon-button,
-.save-item-button {
+.save-item-button,
+.danger-button {
   min-height: 46px;
   border: 0;
   border-radius: 8px;
@@ -410,6 +412,33 @@ input:focus {
   color: #8a2d20;
 }
 
+.danger-zone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-color: #efc7bf;
+  background: #fff6f3;
+}
+
+.danger-zone h3 {
+  margin-bottom: 5px;
+  color: #8a2d20;
+}
+
+.danger-zone p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.danger-button {
+  flex: 0 0 auto;
+  padding: 0 18px;
+  background: #b9402f;
+  color: #fff;
+}
+
 .edit-row {
   align-items: stretch;
 }
@@ -502,7 +531,7 @@ input:focus {
   bottom: 16px;
   left: 16px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   max-width: 520px;
   margin: 0 auto;
@@ -613,6 +642,11 @@ input:focus {
 
   .edit-actions {
     justify-content: stretch;
+  }
+
+  .danger-zone {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .edit-actions button {

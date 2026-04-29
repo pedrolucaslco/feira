@@ -61,6 +61,7 @@ const el = {
   startPurchaseButton: document.querySelector("#startPurchaseButton"),
   cancelPurchaseButton: document.querySelector("#cancelPurchaseButton"),
   finishPurchaseButton: document.querySelector("#finishPurchaseButton"),
+  resetDatabaseButton: document.querySelector("#resetDatabaseButton"),
   refreshButton: document.querySelector("#refreshButton"),
   checkoutDialog: document.querySelector("#checkoutDialog"),
   checkoutForm: document.querySelector("#checkoutForm"),
@@ -128,6 +129,14 @@ function deleteOne(name, id) {
   });
 }
 
+function clearStore(name) {
+  return new Promise((resolve, reject) => {
+    const request = store(name, "readwrite").clear();
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
 function bulkPut(name, values) {
   return new Promise((resolve, reject) => {
     const transaction = state.db.transaction(name, "readwrite");
@@ -140,12 +149,14 @@ function bulkPut(name, values) {
 
 async function seedData() {
   const settings = await getOne("settings", SETTINGS_ID);
-  if (!settings) {
+  const isFirstRun = !settings;
+
+  if (isFirstRun) {
     await putOne("settings", state.settings);
   }
 
   const items = await getAll("items");
-  if (!items.length) {
+  if (isFirstRun && !items.length) {
     await bulkPut(
       "items",
       DEFAULT_ITEMS.map((item) => ({
@@ -418,6 +429,22 @@ async function saveBudget(event) {
   showToast("Budget atualizado.");
 }
 
+async function resetDatabase() {
+  const confirmed = window.confirm("Tem certeza que deseja apagar todos os dados e começar do zero?");
+  if (!confirmed) return;
+
+  await Promise.all([clearStore("items"), clearStore("purchases"), clearStore("settings")]);
+  await putOne("settings", { id: SETTINGS_ID, monthlyBudget: 1200 });
+
+  state.editingItemId = null;
+  state.purchaseActive = false;
+  localStorage.setItem("feira:purchaseActive", "false");
+
+  await reloadAndRender();
+  setView("dashboardView");
+  showToast("Dados resetados.");
+}
+
 function startPurchase() {
   state.purchaseActive = true;
   localStorage.setItem("feira:purchaseActive", "true");
@@ -507,6 +534,7 @@ function bindEvents() {
   });
   el.itemForm.addEventListener("submit", addItem);
   el.budgetForm.addEventListener("submit", saveBudget);
+  el.resetDatabaseButton.addEventListener("click", resetDatabase);
   el.startPurchaseButton.addEventListener("click", startPurchase);
   el.cancelPurchaseButton.addEventListener("click", cancelPurchase);
   el.finishPurchaseButton.addEventListener("click", openCheckout);
