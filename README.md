@@ -26,6 +26,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Controle de budget mensal.
 - Aba de configurações.
 - Modo escuro com preferência salva no dispositivo.
+- Navegação inferior com Lucide Icons via CDN.
 - Cálculo de saldo restante.
 - Total gasto no mês.
 - Número de compras realizadas.

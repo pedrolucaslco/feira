@@ -362,11 +362,18 @@ function renderSettings() {
   el.themeToggle.checked = document.documentElement.dataset.theme === "dark";
 }
 
+function renderIcons() {
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+}
+
 function render() {
   renderDashboard();
   renderItems();
   renderNavigation();
   renderSettings();
+  renderIcons();
 }
 
 function setView(viewId) {

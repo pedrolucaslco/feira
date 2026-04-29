@@ -27,6 +27,7 @@ Funcionalidades do MVP:
 - Budget mensal.
 - Aba de configurações.
 - Modo escuro com preferência local.
+- Navegação inferior com Lucide Icons via CDN.
 - Total gasto no mês.
 - Saldo restante.
 - Número de compras feitas.
@@ -149,9 +150,9 @@ saldo = monthlyBudget - soma das compras do mês atual
 
 O histórico exibido no dashboard considera apenas o mês atual.
 
-### Configurações
+### Ajustes
 
-O usuário pode editar o budget mensal na aba **Configurações**.
+O usuário pode editar o budget mensal na aba **Ajustes**.
 
 O campo aceita valores em formato brasileiro, por exemplo:
 
@@ -246,10 +247,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v5
+feira-v7
 ```
 
-O cache foi atualizado para `feira-v5` depois da implementação do modo escuro.
+O cache foi atualizado para `feira-v7` depois da troca dos SVGs inline por Lucide Icons via CDN na bottom nav.
 
 Se alguma alteração não aparecer no navegador, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -348,7 +349,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Modo escuro com switch na aba Configurações e preferência salva localmente.
+Bottom nav usando Lucide Icons via CDN.
 ```
 
 Arquivos alterados nesse marco:
