@@ -8,6 +8,18 @@ const DEFAULT_ITEMS = [
   { name: "Café", quantity: "" },
 ];
 
+function preventIOSZoomGestures() {
+  const preventDefault = (event) => event.preventDefault();
+
+  ["gesturestart", "gesturechange", "gestureend"].forEach((eventName) => {
+    document.addEventListener(eventName, preventDefault, { passive: false });
+  });
+
+  document.addEventListener("dblclick", preventDefault, { passive: false });
+}
+
+preventIOSZoomGestures();
+
 const state = {
   db: null,
   items: [],
