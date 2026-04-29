@@ -225,7 +225,8 @@ input:focus {
 .primary-action,
 .primary-dialog-button,
 .secondary-button,
-.icon-button {
+.icon-button,
+.save-item-button {
   min-height: 46px;
   border: 0;
   border-radius: 8px;
@@ -234,7 +235,8 @@ input:focus {
 
 .budget-form button,
 .add-form button,
-.primary-dialog-button {
+.primary-dialog-button,
+.save-item-button {
   padding: 0 18px;
   background: var(--teal);
   color: #fff;
@@ -368,16 +370,58 @@ input:focus {
   overflow-wrap: anywhere;
 }
 
+.item-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 7px;
+}
+
+.edit-button,
 .delete-button {
   flex: 0 0 auto;
   width: 38px;
   height: 38px;
   border: 0;
   border-radius: 8px;
-  background: #f8dfd9;
-  color: #8a2d20;
   font-size: 1.2rem;
   font-weight: 900;
+}
+
+.edit-button {
+  background: var(--mint);
+  color: var(--teal);
+}
+
+.delete-button {
+  background: #f8dfd9;
+  color: #8a2d20;
+}
+
+.edit-row {
+  align-items: stretch;
+}
+
+.edit-item-form {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1.2fr 0.8fr auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.edit-item-form label {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+
+.edit-item-form input {
+  min-height: 42px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .empty-state {
@@ -548,6 +592,18 @@ input:focus {
 
   .add-form {
     grid-template-columns: 1fr;
+  }
+
+  .edit-item-form {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-actions {
+    justify-content: stretch;
+  }
+
+  .edit-actions button {
+    flex: 1;
   }
 
   .add-form label,

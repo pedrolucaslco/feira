@@ -14,6 +14,7 @@ const state = {
   purchases: [],
   settings: { id: SETTINGS_ID, monthlyBudget: 1200 },
   activeView: "dashboardView",
+  editingItemId: null,
   purchaseActive: localStorage.getItem("feira:purchaseActive") === "true",
 };
 
@@ -229,6 +230,10 @@ function renderDashboard() {
 }
 
 function createItemRow(item, { removable }) {
+  if (removable && state.editingItemId === item.id) {
+    return createEditableItemRow(item);
+  }
+
   const row = document.createElement("li");
   row.className = `item-row${item.checked ? " is-checked" : ""}`;
 
@@ -239,14 +244,56 @@ function createItemRow(item, { removable }) {
       <strong>${escapeHtml(item.name)}</strong>
       ${quantity}
     </div>
-    ${removable ? '<button class="delete-button" type="button" aria-label="Remover item">×</button>' : ""}
+    ${
+      removable
+        ? `
+          <div class="item-actions">
+            <button class="edit-button" type="button" aria-label="Editar item">✎</button>
+            <button class="delete-button" type="button" aria-label="Remover item">×</button>
+          </div>
+        `
+        : ""
+    }
   `;
 
   row.querySelector(".check-button").addEventListener("click", () => toggleItem(item.id));
+  const editButton = row.querySelector(".edit-button");
+  if (editButton) {
+    editButton.addEventListener("click", () => startEditingItem(item.id));
+  }
   const deleteButton = row.querySelector(".delete-button");
   if (deleteButton) {
     deleteButton.addEventListener("click", () => removeItem(item.id));
   }
+
+  return row;
+}
+
+function createEditableItemRow(item) {
+  const row = document.createElement("li");
+  row.className = "item-row edit-row";
+  row.innerHTML = `
+    <form class="edit-item-form">
+      <label>
+        <span>Item</span>
+        <input name="name" autocomplete="off" value="${escapeHtml(item.name)}" required />
+      </label>
+      <label>
+        <span>Quantidade</span>
+        <input name="quantity" autocomplete="off" value="${escapeHtml(item.quantity || "")}" placeholder="2 kg" />
+      </label>
+      <div class="edit-actions">
+        <button class="secondary-button" type="button" data-action="cancel">Cancelar</button>
+        <button class="save-item-button" type="submit">Salvar</button>
+      </div>
+    </form>
+  `;
+
+  const form = row.querySelector(".edit-item-form");
+  const cancelButton = row.querySelector('[data-action="cancel"]');
+  form.addEventListener("submit", (event) => saveEditedItem(event, item.id));
+  cancelButton.addEventListener("click", cancelEditingItem);
+  setTimeout(() => form.elements.name.focus(), 0);
 
   return row;
 }
@@ -300,6 +347,35 @@ async function addItem(event) {
   showToast("Item adicionado.");
 }
 
+function startEditingItem(id) {
+  state.editingItemId = id;
+  renderItems();
+}
+
+function cancelEditingItem() {
+  state.editingItemId = null;
+  renderItems();
+}
+
+async function saveEditedItem(event, id) {
+  event.preventDefault();
+  const item = state.items.find((current) => current.id === id);
+  if (!item) return;
+
+  const form = event.currentTarget;
+  const name = form.elements.name.value.trim();
+  const quantity = form.elements.quantity.value.trim();
+  if (!name) {
+    showToast("Informe o nome do item.");
+    return;
+  }
+
+  await putOne("items", { ...item, name, quantity });
+  state.editingItemId = null;
+  await reloadAndRender();
+  showToast("Item atualizado.");
+}
+
 async function toggleItem(id) {
   const item = state.items.find((current) => current.id === id);
   if (!item) return;
@@ -309,6 +385,9 @@ async function toggleItem(id) {
 }
 
 async function removeItem(id) {
+  if (state.editingItemId === id) {
+    state.editingItemId = null;
+  }
   await deleteOne("items", id);
   await reloadAndRender();
   showToast("Item removido.");
