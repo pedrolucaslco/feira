@@ -41,10 +41,9 @@ const state = {
   db: null,
   items: [],
   purchases: [],
-  settings: { id: SETTINGS_ID, monthlyBudget: 1200 },
+  settings: { id: SETTINGS_ID, monthlyBudget: 1200, userName: "", userGender: "neutral" },
   activeView: "dashboardView",
   editingItemId: null,
-  purchaseActive: localStorage.getItem("feira:purchaseActive") === "true",
 };
 
 function createId() {
@@ -57,29 +56,45 @@ function createId() {
 const el = {
   views: [...document.querySelectorAll(".view")],
   navButtons: [...document.querySelectorAll(".nav-button")],
-  headerBalance: document.querySelector("#headerBalance"),
   monthLabel: document.querySelector("#monthLabel"),
   remainingBalance: document.querySelector("#remainingBalance"),
   spentMonth: document.querySelector("#spentMonth"),
   monthlyBudget: document.querySelector("#monthlyBudget"),
   purchaseCount: document.querySelector("#purchaseCount"),
   averagePurchase: document.querySelector("#averagePurchase"),
+  itemCountLabel: document.querySelector("#itemCountLabel"),
+  welcomeTitle: document.querySelector("#welcomeTitle"),
+  userAvatar: document.querySelector("#userAvatar"),
+  summaryItemList: document.querySelector("#summaryItemList"),
+  emptySummaryItems: document.querySelector("#emptySummaryItems"),
+  summaryPurchaseList: document.querySelector("#summaryPurchaseList"),
+  emptySummaryPurchases: document.querySelector("#emptySummaryPurchases"),
   purchaseList: document.querySelector("#purchaseList"),
   emptyPurchases: document.querySelector("#emptyPurchases"),
   budgetForm: document.querySelector("#budgetForm"),
   budgetInput: document.querySelector("#budgetInput"),
+  profileForm: document.querySelector("#profileForm"),
+  userNameInput: document.querySelector("#userNameInput"),
+  userGenderInput: document.querySelector("#userGenderInput"),
   itemForm: document.querySelector("#itemForm"),
   itemName: document.querySelector("#itemName"),
   itemQuantity: document.querySelector("#itemQuantity"),
+  itemDialog: document.querySelector("#itemDialog"),
+  itemDialogTitle: document.querySelector("#itemDialogTitle"),
+  saveItemButton: document.querySelector("#saveItemButton"),
+  closeItemDialogButton: document.querySelector("#closeItemDialogButton"),
+  cancelItemDialogButton: document.querySelector("#cancelItemDialogButton"),
   itemList: document.querySelector("#itemList"),
-  activeItemList: document.querySelector("#activeItemList"),
   emptyItems: document.querySelector("#emptyItems"),
-  emptyActiveItems: document.querySelector("#emptyActiveItems"),
-  startPurchaseButton: document.querySelector("#startPurchaseButton"),
-  cancelPurchaseButton: document.querySelector("#cancelPurchaseButton"),
-  finishPurchaseButton: document.querySelector("#finishPurchaseButton"),
   resetDatabaseButton: document.querySelector("#resetDatabaseButton"),
   themeToggle: document.querySelector("#themeToggle"),
+  quickAddButton: document.querySelector("#quickAddButton"),
+  fabMenu: document.querySelector("#fabMenu"),
+  quickAddItemButton: document.querySelector("#quickAddItemButton"),
+  quickAddPurchaseButton: document.querySelector("#quickAddPurchaseButton"),
+  inlineAddButton: document.querySelector("#inlineAddButton"),
+  viewFullListButton: document.querySelector("#viewFullListButton"),
+  viewPurchasesButton: document.querySelector("#viewPurchasesButton"),
   refreshButton: document.querySelector("#refreshButton"),
   checkoutDialog: document.querySelector("#checkoutDialog"),
   checkoutForm: document.querySelector("#checkoutForm"),
@@ -195,9 +210,9 @@ async function loadState() {
     getOne("settings", SETTINGS_ID),
   ]);
 
-  state.items = items.sort((a, b) => a.createdAt - b.createdAt);
+  state.items = items.sort((a, b) => b.createdAt - a.createdAt);
   state.purchases = purchases.sort((a, b) => b.date - a.date);
-  state.settings = settings || state.settings;
+  state.settings = { ...state.settings, ...(settings || {}) };
 }
 
 function monthBounds(date = new Date()) {
@@ -245,21 +260,23 @@ function renderDashboard() {
   const monthName = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(new Date());
 
   el.monthLabel.textContent = monthName;
-  el.headerBalance.textContent = formatCurrency(remaining);
   el.remainingBalance.textContent = formatCurrency(remaining);
   el.spentMonth.textContent = formatCurrency(spent);
   el.monthlyBudget.textContent = formatCurrency(budget);
   el.purchaseCount.textContent = String(monthPurchases.length);
   el.averagePurchase.textContent = `Média ${formatCurrency(average)}`;
   el.budgetInput.value = budget ? String(budget).replace(".", ",") : "";
+  el.userNameInput.value = state.settings.userName || "";
+  el.userGenderInput.value = state.settings.userGender || "neutral";
+  renderProfile();
 
   el.purchaseList.innerHTML = "";
-  monthPurchases.slice(0, 6).forEach((purchase, index) => {
+  state.purchases.forEach((purchase, index) => {
     const row = document.createElement("li");
     row.className = "purchase-row";
     row.innerHTML = `
       <div>
-        <strong>Compra #${monthPurchases.length - index}</strong>
+        <strong>Compra #${state.purchases.length - index}</strong>
         <span>${formatDate(purchase.date)}</span>
       </div>
       <strong>${formatCurrency(purchase.total)}</strong>
@@ -267,14 +284,19 @@ function renderDashboard() {
     el.purchaseList.append(row);
   });
 
-  el.emptyPurchases.classList.toggle("is-visible", monthPurchases.length === 0);
+  el.emptyPurchases.classList.toggle("is-visible", state.purchases.length === 0);
+  renderPurchaseSummary();
+}
+
+function renderProfile() {
+  const name = (state.settings.userName || "").trim();
+  const gender = state.settings.userGender || "neutral";
+  el.welcomeTitle.textContent = name ? `Olá, ${name}` : "Boas-vindas";
+  el.userAvatar.textContent = gender === "female" ? "♀" : gender === "male" ? "♂" : "F";
+  el.userAvatar.dataset.gender = gender;
 }
 
 function createItemRow(item, { removable }) {
-  if (removable && state.editingItemId === item.id) {
-    return createEditableItemRow(item);
-  }
-
   const row = document.createElement("li");
   row.className = `item-row${item.checked ? " is-checked" : ""}`;
 
@@ -300,7 +322,7 @@ function createItemRow(item, { removable }) {
   row.querySelector(".check-button").addEventListener("click", () => toggleItem(item.id));
   const editButton = row.querySelector(".edit-button");
   if (editButton) {
-    editButton.addEventListener("click", () => startEditingItem(item.id));
+    editButton.addEventListener("click", () => openItemDialog(item.id));
   }
   const deleteButton = row.querySelector(".delete-button");
   if (deleteButton) {
@@ -310,47 +332,36 @@ function createItemRow(item, { removable }) {
   return row;
 }
 
-function createEditableItemRow(item) {
+function createSummaryItemRow(item) {
   const row = document.createElement("li");
-  row.className = "item-row edit-row";
+  row.className = `item-row summary-row${item.checked ? " is-checked" : ""}`;
+  const quantity = item.quantity ? `<span>${escapeHtml(item.quantity)}</span>` : "<span>Sem quantidade</span>";
   row.innerHTML = `
-    <form class="edit-item-form">
-      <label>
-        <span>Item</span>
-        <input name="name" autocomplete="off" value="${escapeHtml(item.name)}" required />
-      </label>
-      <label>
-        <span>Quantidade</span>
-        <input name="quantity" autocomplete="off" value="${escapeHtml(item.quantity || "")}" placeholder="2 kg" />
-      </label>
-      <div class="edit-actions">
-        <button class="secondary-button" type="button" data-action="cancel">Cancelar</button>
-        <button class="save-item-button" type="submit">Salvar</button>
-      </div>
-    </form>
+    <div class="item-main">
+      <strong>${escapeHtml(item.name)}</strong>
+      ${quantity}
+    </div>
   `;
-
-  const form = row.querySelector(".edit-item-form");
-  const cancelButton = row.querySelector('[data-action="cancel"]');
-  form.addEventListener("submit", (event) => saveEditedItem(event, item.id));
-  cancelButton.addEventListener("click", cancelEditingItem);
-  setTimeout(() => form.elements.name.focus(), 0);
-
   return row;
 }
 
 function renderItems() {
   el.itemList.innerHTML = "";
-  el.activeItemList.innerHTML = "";
+  el.summaryItemList.innerHTML = "";
 
   state.items.forEach((item) => {
     el.itemList.append(createItemRow(item, { removable: true }));
-    el.activeItemList.append(createItemRow(item, { removable: false }));
+  });
+
+  state.items.slice(0, 3).forEach((item) => {
+    el.summaryItemList.append(createSummaryItemRow(item));
   });
 
   el.emptyItems.classList.toggle("is-visible", state.items.length === 0);
-  el.emptyActiveItems.classList.toggle("is-visible", state.items.length === 0);
-  el.finishPurchaseButton.disabled = state.items.length === 0;
+  el.emptySummaryItems.classList.toggle("is-visible", state.items.length === 0);
+  if (el.itemCountLabel) {
+    el.itemCountLabel.textContent = `${state.items.length} ${state.items.length === 1 ? "item" : "itens"}`;
+  }
 }
 
 function renderNavigation() {
@@ -379,54 +390,80 @@ function render() {
 function setView(viewId) {
   state.activeView = viewId;
   renderNavigation();
+  closeFabMenu();
 }
 
-async function addItem(event) {
+function renderPurchaseSummary() {
+  el.summaryPurchaseList.innerHTML = "";
+  state.purchases.slice(0, 3).forEach((purchase, index) => {
+    const row = document.createElement("li");
+    row.className = "purchase-row summary-row";
+    row.innerHTML = `
+      <div>
+        <strong>Compra #${state.purchases.length - index}</strong>
+        <span>${formatDate(purchase.date)}</span>
+      </div>
+      <strong>${formatCurrency(purchase.total)}</strong>
+    `;
+    el.summaryPurchaseList.append(row);
+  });
+  el.emptySummaryPurchases.classList.toggle("is-visible", state.purchases.length === 0);
+}
+
+async function saveItem(event) {
   event.preventDefault();
   const name = el.itemName.value.trim();
   const quantity = el.itemQuantity.value.trim();
-  if (!name) return;
-
-  await putOne("items", {
-    id: createId(),
-    name,
-    quantity,
-    checked: false,
-    createdAt: Date.now(),
-  });
-
-  el.itemForm.reset();
-  await reloadAndRender();
-  showToast("Item adicionado.");
-}
-
-function startEditingItem(id) {
-  state.editingItemId = id;
-  renderItems();
-}
-
-function cancelEditingItem() {
-  state.editingItemId = null;
-  renderItems();
-}
-
-async function saveEditedItem(event, id) {
-  event.preventDefault();
-  const item = state.items.find((current) => current.id === id);
-  if (!item) return;
-
-  const form = event.currentTarget;
-  const name = form.elements.name.value.trim();
-  const quantity = form.elements.quantity.value.trim();
   if (!name) {
     showToast("Informe o nome do item.");
     return;
   }
 
-  await putOne("items", { ...item, name, quantity });
-  state.editingItemId = null;
+  const item = state.items.find((current) => current.id === state.editingItemId);
+  if (item) {
+    await putOne("items", { ...item, name, quantity });
+  } else {
+    await putOne("items", {
+      id: createId(),
+      name,
+      quantity,
+      checked: false,
+      createdAt: Date.now(),
+    });
+  }
+
+  closeItemDialog();
   await reloadAndRender();
-  showToast("Item atualizado.");
+  showToast(item ? "Item atualizado." : "Item adicionado.");
+}
+
+function openItemDialog(id = null) {
+  state.editingItemId = id;
+  const item = state.items.find((current) => current.id === id);
+
+  el.itemForm.reset();
+  el.itemDialogTitle.textContent = item ? "Editar item" : "Novo item";
+  el.saveItemButton.textContent = item ? "Salvar" : "Adicionar";
+  if (item) {
+    el.itemName.value = item.name;
+    el.itemQuantity.value = item.quantity || "";
+  }
+
+  if (typeof el.itemDialog.showModal === "function") {
+    el.itemDialog.showModal();
+  } else {
+    el.itemDialog.setAttribute("open", "");
+  }
+  setTimeout(() => el.itemName.focus(), 80);
+}
+
+function closeItemDialog() {
+  state.editingItemId = null;
+  if (typeof el.itemDialog.close === "function") {
+    el.itemDialog.close();
+  } else {
+    el.itemDialog.removeAttribute("open");
+  }
 }
 
 async function toggleItem(id) {
@@ -454,9 +491,19 @@ async function saveBudget(event) {
     return;
   }
 
-  await putOne("settings", { id: SETTINGS_ID, monthlyBudget: value });
+  await putOne("settings", { ...state.settings, id: SETTINGS_ID, monthlyBudget: value });
   await reloadAndRender();
   showToast("Budget atualizado.");
+}
+
+async function saveProfile(event) {
+  event.preventDefault();
+  const userName = el.userNameInput.value.trim();
+  const userGender = el.userGenderInput.value;
+
+  await putOne("settings", { ...state.settings, id: SETTINGS_ID, userName, userGender });
+  await reloadAndRender();
+  showToast("Perfil atualizado.");
 }
 
 async function resetDatabase() {
@@ -464,11 +511,9 @@ async function resetDatabase() {
   if (!confirmed) return;
 
   await Promise.all([clearStore("items"), clearStore("purchases"), clearStore("settings")]);
-  await putOne("settings", { id: SETTINGS_ID, monthlyBudget: 1200 });
+  await putOne("settings", { id: SETTINGS_ID, monthlyBudget: 1200, userName: "", userGender: "neutral" });
 
   state.editingItemId = null;
-  state.purchaseActive = false;
-  localStorage.setItem("feira:purchaseActive", "false");
 
   await reloadAndRender();
   setView("dashboardView");
@@ -480,24 +525,34 @@ function toggleTheme(event) {
   applyTheme(theme);
 }
 
-function startPurchase() {
-  state.purchaseActive = true;
-  localStorage.setItem("feira:purchaseActive", "true");
-  setView("purchaseView");
+function openQuickAdd() {
+  openItemDialog();
 }
 
-function cancelPurchase() {
-  state.purchaseActive = false;
-  localStorage.setItem("feira:purchaseActive", "false");
-  setView("dashboardView");
+function toggleFabMenu() {
+  if (!el.fabMenu) return;
+  const isOpen = !el.fabMenu.hidden;
+  el.fabMenu.hidden = isOpen;
+  el.quickAddButton.setAttribute("aria-expanded", String(!isOpen));
+}
+
+function closeFabMenu() {
+  if (!el.fabMenu) return;
+  el.fabMenu.hidden = true;
+  el.quickAddButton.setAttribute("aria-expanded", "false");
+}
+
+function openQuickItem() {
+  closeFabMenu();
+  openItemDialog();
+}
+
+function openQuickPurchase() {
+  closeFabMenu();
+  openCheckout();
 }
 
 function openCheckout() {
-  if (!state.items.length) {
-    showToast("Adicione itens antes de finalizar.");
-    return;
-  }
-
   el.purchaseTotal.value = "";
   if (typeof el.checkoutDialog.showModal === "function") {
     el.checkoutDialog.showModal();
@@ -526,11 +581,9 @@ async function finishPurchase(event) {
     state.items.map((item) => ({ ...item, checked: false })),
   );
 
-  state.purchaseActive = false;
-  localStorage.setItem("feira:purchaseActive", "false");
   closeCheckout();
   await reloadAndRender();
-  setView("dashboardView");
+  setView("purchaseView");
   showToast("Compra registrada.");
 }
 
@@ -567,13 +620,19 @@ function bindEvents() {
   el.navButtons.forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.view));
   });
-  el.itemForm.addEventListener("submit", addItem);
+  el.itemForm.addEventListener("submit", saveItem);
+  el.closeItemDialogButton.addEventListener("click", closeItemDialog);
+  el.cancelItemDialogButton.addEventListener("click", closeItemDialog);
   el.budgetForm.addEventListener("submit", saveBudget);
+  el.profileForm.addEventListener("submit", saveProfile);
   el.resetDatabaseButton.addEventListener("click", resetDatabase);
   el.themeToggle.addEventListener("change", toggleTheme);
-  el.startPurchaseButton.addEventListener("click", startPurchase);
-  el.cancelPurchaseButton.addEventListener("click", cancelPurchase);
-  el.finishPurchaseButton.addEventListener("click", openCheckout);
+  el.quickAddButton.addEventListener("click", toggleFabMenu);
+  el.quickAddItemButton?.addEventListener("click", openQuickItem);
+  el.quickAddPurchaseButton?.addEventListener("click", openQuickPurchase);
+  el.inlineAddButton.addEventListener("click", openQuickAdd);
+  el.viewFullListButton?.addEventListener("click", () => setView("listView"));
+  el.viewPurchasesButton?.addEventListener("click", () => setView("purchaseView"));
   el.checkoutForm.addEventListener("submit", finishPurchase);
   el.closeCheckoutButton.addEventListener("click", closeCheckout);
   el.cancelCheckoutButton.addEventListener("click", closeCheckout);
@@ -596,7 +655,6 @@ async function init() {
     await loadState();
     bindEvents();
     render();
-    if (state.purchaseActive) setView("purchaseView");
     registerServiceWorker();
   } catch (error) {
     console.error(error);

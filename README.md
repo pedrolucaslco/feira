@@ -23,21 +23,26 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 ## Funcionalidades atuais
 
 - Dashboard com resumo do mês.
+- Tela inicial com saldo no topo e lista de mercado.
+- Adição inline acima da lista e botão flutuante de atalho.
+- Modal compartilhado para adicionar e editar itens.
+- Tela de compras com histórico, budget, total gasto e quantidade de compras.
 - Controle de budget mensal.
-- Aba de configurações.
+- Aba de ajustes.
+- Perfil local com nome, avatar e saudação no topo.
 - Modo escuro com preferência salva no dispositivo.
 - Navegação inferior com Lucide Icons via CDN.
 - Cálculo de saldo restante.
 - Total gasto no mês.
 - Número de compras realizadas.
 - Média por compra.
-- Lista de mercado offline.
+- Lista de mercado offline na tela inicial.
 - Adição de itens com quantidade opcional.
 - Edição de nome e quantidade dos itens.
 - Remoção de itens.
-- Checklist para marcar itens durante a compra.
-- Modo de compra ativa.
-- Finalização de compra com valor total.
+- Checklist para marcar itens já comprados.
+- Registro de compra pelo menu flutuante.
+- Modal de compra com valor total.
 - Histórico simples das compras do mês.
 - Reset dos dados locais para começar do zero.
 - PWA com manifest e service worker básico.

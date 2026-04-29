@@ -24,41 +24,72 @@
     <div class="app-shell">
       <header class="topbar">
         <div class="brand">
-          <div class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 48 48" role="img">
-              <path d="M12 19h24l-2 22H14L12 19Z" fill="#f2b84b" />
-              <path d="M18 19c0-5 3-9 7-9s7 4 7 9" fill="none" stroke="#145c58" stroke-width="4" stroke-linecap="round" />
-              <path d="M16 25h16M17 31h14" stroke="#fff8ea" stroke-width="3" stroke-linecap="round" opacity=".9" />
-            </svg>
-          </div>
+          <div class="brand-mark" id="userAvatar" aria-hidden="true">F</div>
           <div>
             <p class="eyebrow">Feira</p>
-            <h1>Mercado do mês</h1>
+            <h1 id="welcomeTitle">Boas-vindas</h1>
           </div>
         </div>
         <div class="balance-pill">
           <span>Saldo</span>
-          <strong id="headerBalance">R$ 0,00</strong>
+          <strong id="remainingBalance">R$ 0,00</strong>
         </div>
       </header>
 
       <main>
-        <section id="dashboardView" class="view is-active" aria-labelledby="dashboardTitle">
+        <section id="dashboardView" class="view is-active" aria-label="Resumo">
+          <div class="home-panel">
+            <p class="eyebrow" id="monthLabel">Mês atual</p>
+            <section class="home-list" aria-labelledby="listTitle">
+              <div class="block-title-row">
+                <h3 id="listTitle">Lista de mercado</h3>
+                <button class="link-button" id="viewFullListButton" type="button">Ver mais</button>
+              </div>
+              <ul class="item-list summary-list" id="summaryItemList"></ul>
+              <p class="empty-state" id="emptySummaryItems">Sua lista ainda está vazia.</p>
+            </section>
+
+            <section class="home-list" aria-labelledby="summaryPurchasesTitle">
+              <div class="block-title-row">
+                <h3 id="summaryPurchasesTitle">Últimas compras</h3>
+                <button class="link-button" id="viewPurchasesButton" type="button">Ver mais</button>
+              </div>
+              <ul class="purchase-list summary-list" id="summaryPurchaseList"></ul>
+              <p class="empty-state" id="emptySummaryPurchases">Nenhuma compra registrada.</p>
+            </section>
+          </div>
+        </section>
+
+        <section id="listView" class="view" aria-labelledby="fullListTitle">
           <div class="section-head">
             <div>
-              <p class="eyebrow" id="monthLabel">Mês atual</p>
-              <h2 id="dashboardTitle">Resumo</h2>
+              <p class="eyebrow">Checklist</p>
+              <h2 id="fullListTitle">Lista completa</h2>
+            </div>
+            <span id="itemCountLabel" class="soft-label">0 itens</span>
+          </div>
+
+          <button class="inline-add-button" id="inlineAddButton" type="button">
+            <i data-lucide="plus" aria-hidden="true"></i>
+            Adicionar item
+          </button>
+
+          <ul class="item-list" id="itemList"></ul>
+          <p class="empty-state" id="emptyItems">Sua lista ainda está vazia.</p>
+        </section>
+
+        <section id="purchaseView" class="view" aria-labelledby="purchaseTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Compras</p>
+              <h2 id="purchaseTitle">Histórico</h2>
             </div>
             <button class="icon-button" id="refreshButton" type="button" title="Atualizar" aria-label="Atualizar">
               <span aria-hidden="true">↻</span>
             </button>
           </div>
 
-          <div class="metrics-grid">
-            <article class="metric metric-primary">
-              <span>Saldo restante</span>
-              <strong id="remainingBalance">R$ 0,00</strong>
-            </article>
+          <div class="metrics-grid report-grid">
             <article class="metric">
               <span>Gasto no mês</span>
               <strong id="spentMonth">R$ 0,00</strong>
@@ -73,57 +104,14 @@
             </article>
           </div>
 
-          <button class="primary-action" id="startPurchaseButton" type="button">
-            <span aria-hidden="true">▶</span>
-            Começar compra
-          </button>
-
           <section class="content-block" aria-labelledby="latestTitle">
             <div class="block-title-row">
-              <h3 id="latestTitle">Últimas compras</h3>
+              <h3 id="latestTitle">Compras realizadas</h3>
               <span id="averagePurchase" class="soft-label">Média R$ 0,00</span>
             </div>
             <ul class="purchase-list" id="purchaseList"></ul>
-            <p class="empty-state" id="emptyPurchases">Nenhuma compra registrada neste mês.</p>
+            <p class="empty-state" id="emptyPurchases">Nenhuma compra registrada.</p>
           </section>
-        </section>
-
-        <section id="listView" class="view" aria-labelledby="listTitle">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Checklist</p>
-              <h2 id="listTitle">Lista de mercado</h2>
-            </div>
-          </div>
-
-          <form class="add-form" id="itemForm">
-            <label for="itemName">Item</label>
-            <input id="itemName" name="name" autocomplete="off" placeholder="Arroz" required />
-            <label for="itemQuantity">Quantidade</label>
-            <input id="itemQuantity" name="quantity" autocomplete="off" placeholder="2 kg" />
-            <button type="submit">Adicionar</button>
-          </form>
-
-          <ul class="item-list" id="itemList"></ul>
-          <p class="empty-state" id="emptyItems">Sua lista ainda está vazia.</p>
-        </section>
-
-        <section id="purchaseView" class="view purchase-mode" aria-labelledby="purchaseTitle">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Comprando</p>
-              <h2 id="purchaseTitle">Compra ativa</h2>
-            </div>
-            <button class="secondary-button" id="cancelPurchaseButton" type="button">Sair</button>
-          </div>
-
-          <ul class="item-list active-list" id="activeItemList"></ul>
-          <p class="empty-state" id="emptyActiveItems">Adicione itens na lista para começar.</p>
-
-          <button class="primary-action finish" id="finishPurchaseButton" type="button">
-            <span aria-hidden="true">✓</span>
-            Finalizar compra
-          </button>
         </section>
 
         <section id="settingsView" class="view" aria-labelledby="settingsTitle">
@@ -140,6 +128,18 @@
               <input id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
               <button type="submit">Salvar</button>
             </div>
+          </form>
+
+          <form class="profile-form" id="profileForm">
+            <label for="userNameInput">Nome</label>
+            <input id="userNameInput" name="name" autocomplete="name" placeholder="Seu nome" />
+            <label for="userGenderInput">Avatar</label>
+            <select id="userGenderInput" name="gender">
+              <option value="neutral">Neutro</option>
+              <option value="male">Masculino</option>
+              <option value="female">Feminino</option>
+            </select>
+            <button type="submit">Salvar perfil</button>
           </form>
 
           <section class="settings-card" aria-labelledby="themeTitle">
@@ -172,23 +172,36 @@
           <i data-lucide="list-checks" aria-hidden="true"></i>
           <b>Lista</b>
         </button>
-        <button class="nav-button" type="button" data-view="purchaseView" aria-label="Compra">
+        <button class="nav-button" type="button" data-view="purchaseView" aria-label="Compras">
           <i data-lucide="shopping-basket" aria-hidden="true"></i>
-          <b>Compra</b>
+          <b>Compras</b>
         </button>
         <button class="nav-button" type="button" data-view="settingsView" aria-label="Ajustes">
           <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
           <b>Ajustes</b>
         </button>
       </nav>
+      <button class="fab-button" id="quickAddButton" type="button" aria-label="Abrir ações rápidas" aria-expanded="false">
+        <i data-lucide="plus" aria-hidden="true"></i>
+      </button>
+      <div class="fab-menu" id="fabMenu" hidden>
+        <button type="button" id="quickAddItemButton">
+          <i data-lucide="list-plus" aria-hidden="true"></i>
+          Novo item
+        </button>
+        <button type="button" id="quickAddPurchaseButton">
+          <i data-lucide="receipt" aria-hidden="true"></i>
+          Registrar compra
+        </button>
+      </div>
     </div>
 
     <dialog class="checkout-dialog" id="checkoutDialog">
       <form id="checkoutForm">
         <div class="dialog-head">
           <div>
-            <p class="eyebrow">Finalizar</p>
-            <h2>Total da compra</h2>
+            <p class="eyebrow">Compras</p>
+            <h2>Registrar compra</h2>
           </div>
           <button class="icon-button" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">×</button>
         </div>
@@ -196,7 +209,27 @@
         <input id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
         <div class="dialog-actions">
           <button class="secondary-button" id="cancelCheckoutButton" value="cancel" type="button">Cancelar</button>
-          <button class="primary-dialog-button" value="confirm" type="submit">Confirmar</button>
+          <button class="primary-dialog-button" value="confirm" type="submit">Salvar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="item-dialog" id="itemDialog">
+      <form id="itemForm">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Lista</p>
+            <h2 id="itemDialogTitle">Novo item</h2>
+          </div>
+          <button class="icon-button" id="closeItemDialogButton" type="button" aria-label="Fechar">×</button>
+        </div>
+        <label for="itemName">Item</label>
+        <input id="itemName" name="name" autocomplete="off" placeholder="Arroz" required />
+        <label for="itemQuantity">Quantidade</label>
+        <input id="itemQuantity" name="quantity" autocomplete="off" placeholder="2 kg" />
+        <div class="dialog-actions">
+          <button class="secondary-button" id="cancelItemDialogButton" type="button">Cancelar</button>
+          <button class="primary-dialog-button" id="saveItemButton" type="submit">Adicionar</button>
         </div>
       </form>
     </dialog>

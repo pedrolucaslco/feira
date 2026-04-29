@@ -25,16 +25,23 @@ O objetivo inicial era criar um **POC em 1 dia** de um app de compras com contro
 Funcionalidades do MVP:
 
 - Budget mensal.
-- Aba de configurações.
+- Aba de ajustes.
 - Modo escuro com preferência local.
 - Navegação inferior com Lucide Icons via CDN.
+- Tela inicial minimalista.
+- Tela Compras para histórico e métricas.
+- Perfil local com nome, avatar e saudação.
+- Lista de mercado mesclada na tela inicial.
+- Modal compartilhado para adicionar e editar itens.
+- Saldo restante no topo ao lado da saudação.
+- Adição inline acima da lista.
 - Total gasto no mês.
 - Saldo restante.
 - Número de compras feitas.
 - Média por compra.
 - Lista de mercado com nome, quantidade e marcado/desmarcado.
-- Modo de compra ativa.
-- Finalização de compra com valor total.
+- Registro de compra pelo menu flutuante.
+- Modal de compra com valor total.
 - Histórico simples das compras do mês.
 - Reset dos dados locais.
 - Persistência offline local.
@@ -136,11 +143,19 @@ Café
 Mostra:
 
 - Saldo restante.
+- Botão flutuante para adicionar item.
+- Botão inline para adicionar item acima da lista.
+- Lista de mercado.
+
+### Compras
+
+Mostra:
+
 - Gasto no mês.
 - Budget mensal.
 - Quantidade de compras no mês.
 - Média por compra.
-- Últimas compras do mês.
+- Histórico de compras do mês.
 
 O saldo é calculado assim:
 
@@ -168,7 +183,7 @@ A aba também tem a função de resetar os dados locais. O reset:
 2. Apaga as compras.
 3. Restaura o budget padrão.
 4. Deixa a lista vazia.
-5. Encerra qualquer compra ativa.
+5. Volta para a tela de resumo.
 
 Também existe um switch de modo escuro. A preferência é salva em `localStorage`, com a chave:
 
@@ -185,6 +200,17 @@ dark
 
 O reset do banco não apaga essa preferência visual.
 
+A aba também permite salvar um perfil local:
+
+```js
+settings: {
+  userName: string,
+  userGender: "neutral" | "male" | "female"
+}
+```
+
+Esses dados são usados para exibir a saudação no topo do app e o avatar.
+
 ### Lista de Mercado
 
 O usuário pode:
@@ -195,9 +221,7 @@ O usuário pode:
 - Remover item.
 - Editar item.
 
-A edição de item foi a última funcionalidade implementada nesta conversa.
-
-Na tela de lista, cada item tem:
+A lista aparece na tela inicial. Cada item tem:
 
 - Botão de check.
 - Nome.
@@ -205,33 +229,35 @@ Na tela de lista, cada item tem:
 - Botão de editar.
 - Botão de remover.
 
-Ao clicar em editar, a linha vira um formulário inline com:
+O botão flutuante e a linha inline acima da lista abrem o modal de novo item. Ao clicar em editar, o mesmo modal é reutilizado com os dados do item.
 
 - Campo de nome.
 - Campo de quantidade.
 - Botão cancelar.
 - Botão salvar.
 
-### Compra Ativa
+### Compras
 
-O botão **Começar compra** leva para o modo de compra ativa.
+A aba **Compras** mostra o histórico e os indicadores do mês.
 
-Nesse modo:
+Nessa tela:
 
-- A interface fica mais focada no checklist.
-- Os itens podem ser marcados/desmarcados.
-- O usuário pode finalizar compra.
-- O usuário pode sair da compra ativa.
+- O usuário vê total gasto no mês.
+- O usuário vê budget mensal.
+- O usuário vê quantidade de compras.
+- O usuário vê o histórico completo de compras registradas.
 
-### Finalizar Compra
+### Registrar Compra
 
-Ao finalizar:
+Ao registrar:
 
-1. O app abre um modal pedindo o total da compra.
-2. Salva uma entrada em `purchases`.
-3. Desmarca todos os itens da lista.
-4. Atualiza dashboard e saldo.
-5. Retorna para o dashboard.
+1. O usuário abre o menu flutuante.
+2. Escolhe **Registrar compra**.
+3. O app abre um modal pedindo o total da compra.
+4. Salva uma entrada em `purchases`.
+5. Desmarca todos os itens da lista.
+6. Atualiza dashboard, compras e saldo.
+7. Leva o usuário para a tela Compras.
 
 Os itens permanecem na lista após a compra. Apenas os checks são resetados.
 
@@ -247,10 +273,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v8
+feira-v13
 ```
 
-O cache foi atualizado para `feira-v8` depois dos ajustes de contraste no modo escuro.
+O cache foi atualizado para `feira-v13` depois de tornar o render tolerante a HTML antigo em cache.
 
 Se alguma alteração não aparecer no navegador, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -324,7 +350,7 @@ Melhorias pequenas e naturais:
 - Configurar troca de mês/fechamento mensal.
 - Adicionar campo de observação em compra.
 - Adicionar confirmação antes de remover item.
-- Melhorar estado vazio da compra ativa.
+- Melhorar estados vazios das telas de lista e compras.
 
 Evolução técnica:
 
@@ -349,7 +375,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Ajuste de contraste dos textos em fundos verdes no modo escuro.
+Resumo com listas curtas, Lista completa, Compras com indicadores e FAB com ações de novo item/nova compra.
 ```
 
 Arquivos alterados nesse marco:
