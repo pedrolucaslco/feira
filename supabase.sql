@@ -33,6 +33,7 @@ alter table public.spaces enable row level security;
 alter table public.space_members enable row level security;
 alter table public.space_records enable row level security;
 
+drop policy if exists "Members can read spaces" on public.spaces;
 create policy "Members can read spaces"
 on public.spaces
 for select
@@ -45,6 +46,7 @@ using (
   )
 );
 
+drop policy if exists "Members can update spaces" on public.spaces;
 create policy "Members can update spaces"
 on public.spaces
 for update
@@ -64,12 +66,14 @@ with check (
   )
 );
 
+drop policy if exists "Members can read memberships" on public.space_members;
 create policy "Members can read memberships"
 on public.space_members
 for select
 to authenticated
 using (user_id = auth.uid());
 
+drop policy if exists "Members can read records" on public.space_records;
 create policy "Members can read records"
 on public.space_records
 for select
@@ -82,6 +86,7 @@ using (
   )
 );
 
+drop policy if exists "Members can write records" on public.space_records;
 create policy "Members can write records"
 on public.space_records
 for all
@@ -133,8 +138,8 @@ declare
 begin
   select *
   into target_space
-  from public.spaces
-  where invite_code = upper(trim(invite_code_input));
+  from public.spaces as spaces_table
+  where spaces_table.invite_code = upper(trim(invite_code_input));
 
   if target_space.id is null then
     raise exception 'invalid invite code';
