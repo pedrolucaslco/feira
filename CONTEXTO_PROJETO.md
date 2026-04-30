@@ -330,10 +330,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v40
+feira-v42
 ```
 
-O cache foi atualizado para `feira-v40` depois de refinar a tela de lista com acordeon animado, botões de seção neutros, checklist com borda fria e indicador gasto/budget alinhado à direita.
+O cache foi atualizado para `feira-v42` depois de trocar a animação do acordeon para transição por altura real calculada no JavaScript.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -438,7 +438,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Acordeon animado nas seções, lista mais limpa e indicador gasto/budget refinado.
+Correção da animação do acordeon das seções usando altura real calculada.
 ```
 
 Arquivos alterados nesse marco:

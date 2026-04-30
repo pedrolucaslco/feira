@@ -91,6 +91,68 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function cssEscape(value) {
+  if (globalThis.CSS && typeof globalThis.CSS.escape === "function") {
+    return globalThis.CSS.escape(value);
+  }
+  return String(value).replace(/["\\]/g, "\\$&");
+}
+
+function animateCategoryList(list, shouldExpand) {
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const finishPreviousTransition = list.categoryTransitionCleanup;
+  if (typeof finishPreviousTransition === "function") {
+    finishPreviousTransition();
+  }
+
+  let transitionFrame = 0;
+  let transitionTimeout = 0;
+
+  const finish = () => {
+    cancelAnimationFrame(transitionFrame);
+    clearTimeout(transitionTimeout);
+    list.removeEventListener("transitionend", handleTransitionEnd);
+    list.categoryTransitionCleanup = null;
+    list.style.height = shouldExpand ? "" : "0px";
+    list.style.willChange = "";
+  };
+
+  const handleTransitionEnd = (event) => {
+    if (event.propertyName === "height") {
+      finish();
+    }
+  };
+
+  if (prefersReducedMotion) {
+    list.dataset.collapsed = String(!shouldExpand);
+    list.setAttribute("aria-hidden", String(!shouldExpand));
+    list.style.height = shouldExpand ? "" : "0px";
+    return;
+  }
+
+  list.categoryTransitionCleanup = finish;
+  list.style.willChange = "height";
+  list.addEventListener("transitionend", handleTransitionEnd);
+
+  if (shouldExpand) {
+    list.dataset.collapsed = "false";
+    list.setAttribute("aria-hidden", "false");
+    list.style.height = "0px";
+    transitionFrame = requestAnimationFrame(() => {
+      list.style.height = `${list.scrollHeight}px`;
+      transitionTimeout = setTimeout(finish, 320);
+    });
+  } else {
+    list.style.height = `${list.scrollHeight}px`;
+    transitionFrame = requestAnimationFrame(() => {
+      list.dataset.collapsed = "true";
+      list.setAttribute("aria-hidden", "true");
+      list.style.height = "0px";
+      transitionTimeout = setTimeout(finish, 320);
+    });
+  }
+}
+
 const el = {
   views: [...document.querySelectorAll(".view")],
   navButtons: [...document.querySelectorAll(".nav-button")],
@@ -569,7 +631,7 @@ function renderCategorySections() {
           <i data-lucide="plus" aria-hidden="true"></i>
         </button>
       </div>
-      <ul class="item-list category-items" id="${listId}" data-collapsed="${isCollapsed}" aria-hidden="${isCollapsed}"></ul>
+      <ul class="item-list category-items" id="${listId}" data-collapsed="${isCollapsed}" aria-hidden="${isCollapsed}" style="${isCollapsed ? "height: 0px;" : ""}"></ul>
     `;
 
     const list = section.querySelector(".category-items");
@@ -954,12 +1016,26 @@ function closeCategoryDialog() {
 }
 
 function toggleCategory(id) {
-  if (state.collapsedCategoryIds.has(id)) {
+  const shouldExpand = state.collapsedCategoryIds.has(id);
+  if (shouldExpand) {
     state.collapsedCategoryIds.delete(id);
   } else {
     state.collapsedCategoryIds.add(id);
   }
-  renderItems();
+
+  const section = el.itemList.querySelector(`.category-section[data-category-id="${cssEscape(id)}"]`);
+  const toggle = section?.querySelector(".category-toggle");
+  const icon = toggle?.querySelector("i");
+  const list = section?.querySelector(".category-items");
+  if (!section || !toggle || !icon || !list) {
+    renderItems();
+    renderIcons();
+    return;
+  }
+
+  toggle.setAttribute("aria-expanded", String(shouldExpand));
+  icon.setAttribute("data-lucide", shouldExpand ? "chevron-down" : "chevron-right");
+  animateCategoryList(list, shouldExpand);
   renderIcons();
 }
 

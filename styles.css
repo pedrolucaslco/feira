@@ -590,14 +590,14 @@ label {
 
 .category-items {
   overflow: hidden;
-  max-height: 1200px;
+  height: auto;
   padding: 0 8px 8px;
   opacity: 1;
-  transition: max-height 220ms ease, opacity 160ms ease, padding 180ms ease;
+  transition: height 240ms ease, opacity 180ms ease, padding 200ms ease;
 }
 
 .category-items[data-collapsed="true"] {
-  max-height: 0;
+  height: 0;
   padding-block: 0;
   opacity: 0;
   pointer-events: none;
@@ -1043,7 +1043,7 @@ select:focus {
 .settings-card p {
   margin-bottom: 0;
   color: var(--muted);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .theme-switch {
