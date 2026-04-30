@@ -47,6 +47,7 @@
               <strong class="weeklyBudgetValue" id="weeklyBudgetValue">R$ 0,00</strong>
               <span class="weeksUntilClosingLabel" id="weeksUntilClosingLabel">Configure o fechamento nos ajustes.</span>
             </section>
+            <div class="section-separator" aria-hidden="true"></div>
 
             <section class="home-list" aria-labelledby="listTitle">
               <div class="block-title-row">
@@ -75,6 +76,13 @@
         </section>
 
         <section id="listView" class="view" aria-labelledby="fullListTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="fullListTitle">Lista de compras</h2>
+            </div>
+            <span id="itemCountLabel" class="soft-label">0 itens</span>
+          </div>
+
           <section class="weekly-widget compact-widget" aria-label="Planejamento semanal">
             <div>
               <h3>Saldo por semana</h3>
@@ -82,13 +90,7 @@
             <strong class="weeklyBudgetValue">R$ 0,00</strong>
             <span class="weeksUntilClosingLabel">Configure o fechamento nos ajustes.</span>
           </section>
-
-          <div class="section-head">
-            <div>
-              <h2 id="fullListTitle">Lista de compras</h2>
-            </div>
-            <span id="itemCountLabel" class="soft-label">0 itens</span>
-          </div>
+          <div class="section-separator" aria-hidden="true"></div>
 
           <button class="inline-add-button" id="inlineAddButton" type="button">
             <i data-lucide="plus" aria-hidden="true"></i>
@@ -100,14 +102,6 @@
         </section>
 
         <section id="purchaseView" class="view" aria-labelledby="purchaseTitle">
-          <section class="weekly-widget compact-widget" aria-label="Planejamento semanal">
-            <div>
-              <h3>Saldo por semana</h3>
-            </div>
-            <strong class="weeklyBudgetValue">R$ 0,00</strong>
-            <span class="weeksUntilClosingLabel">Configure o fechamento nos ajustes.</span>
-          </section>
-
           <div class="section-head">
             <div>
               <p class="eyebrow">Compras</p>
@@ -117,6 +111,15 @@
               <span aria-hidden="true">↻</span>
             </button>
           </div>
+
+          <section class="weekly-widget compact-widget" aria-label="Planejamento semanal">
+            <div>
+              <h3>Saldo por semana</h3>
+            </div>
+            <strong class="weeklyBudgetValue">R$ 0,00</strong>
+            <span class="weeksUntilClosingLabel">Configure o fechamento nos ajustes.</span>
+          </section>
+          <div class="section-separator" aria-hidden="true"></div>
 
           <div class="metrics-grid report-grid">
             <article class="metric">
@@ -264,15 +267,16 @@
         <div class="dialog-head">
           <div>
             <p class="eyebrow">Compras</p>
-            <h2>Registrar compra</h2>
+            <h2 id="checkoutDialogTitle">Registrar compra</h2>
           </div>
           <button class="icon-button" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">×</button>
         </div>
         <label for="purchaseTotal">Valor pago</label>
         <input id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
+        <button class="danger-text-button" id="deletePurchaseButton" type="button" hidden>Excluir compra</button>
         <div class="dialog-actions">
           <button class="secondary-button" id="cancelCheckoutButton" value="cancel" type="button">Cancelar</button>
-          <button class="primary-dialog-button" value="confirm" type="submit">Salvar</button>
+          <button class="primary-dialog-button" id="savePurchaseButton" value="confirm" type="submit">Salvar</button>
         </div>
       </form>
     </dialog>

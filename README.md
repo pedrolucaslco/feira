@@ -39,6 +39,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Animações leves ao trocar de tela.
 - Feedback sutil ao tocar em botões e modais em estilo bottom sheet.
 - Gráfico simples de variação das compras com linha de mediana.
+- Edição de compras registradas e remoção apenas pelo modal de edição.
 - Cálculo de saldo restante.
 - Total gasto no mês.
 - Número de compras realizadas no cabeçalho do histórico.

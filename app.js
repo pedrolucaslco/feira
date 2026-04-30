@@ -66,6 +66,7 @@ const state = {
   settings: { id: SETTINGS_ID, monthlyBudget: 1200, cardClosingDay: "", userName: "", userGender: "neutral" },
   activeView: "dashboardView",
   editingItemId: null,
+  editingPurchaseId: null,
 };
 
 function createId() {
@@ -126,8 +127,11 @@ const el = {
   viewPurchasesButton: document.querySelector("#viewPurchasesButton"),
   refreshButton: document.querySelector("#refreshButton"),
   checkoutDialog: document.querySelector("#checkoutDialog"),
+  checkoutDialogTitle: document.querySelector("#checkoutDialogTitle"),
   checkoutForm: document.querySelector("#checkoutForm"),
   purchaseTotal: document.querySelector("#purchaseTotal"),
+  savePurchaseButton: document.querySelector("#savePurchaseButton"),
+  deletePurchaseButton: document.querySelector("#deletePurchaseButton"),
   closeCheckoutButton: document.querySelector("#closeCheckoutButton"),
   cancelCheckoutButton: document.querySelector("#cancelCheckoutButton"),
   toast: document.querySelector("#toast"),
@@ -336,16 +340,7 @@ function renderDashboard() {
 
   el.purchaseList.innerHTML = "";
   state.purchases.forEach((purchase, index) => {
-    const row = document.createElement("li");
-    row.className = "purchase-row";
-    row.innerHTML = `
-      <div>
-        <strong>Compra #${state.purchases.length - index}</strong>
-        <span>${formatDate(purchase.date)}</span>
-      </div>
-      <strong>${formatCurrency(purchase.total)}</strong>
-    `;
-    el.purchaseList.append(row);
+    el.purchaseList.append(createPurchaseRow(purchase, index));
   });
 
   el.emptyPurchases.classList.toggle("is-visible", state.purchases.length === 0);
@@ -540,18 +535,35 @@ function setView(viewId) {
 function renderPurchaseSummary() {
   el.summaryPurchaseList.innerHTML = "";
   state.purchases.slice(0, 3).forEach((purchase, index) => {
-    const row = document.createElement("li");
-    row.className = "purchase-row summary-row";
-    row.innerHTML = `
-      <div>
-        <strong>Compra #${state.purchases.length - index}</strong>
-        <span>${formatDate(purchase.date)}</span>
-      </div>
-      <strong>${formatCurrency(purchase.total)}</strong>
-    `;
-    el.summaryPurchaseList.append(row);
+    el.summaryPurchaseList.append(createPurchaseRow(purchase, index, { summary: true }));
   });
   el.emptySummaryPurchases.classList.toggle("is-visible", state.purchases.length === 0);
+}
+
+function createPurchaseRow(purchase, index, { summary = false } = {}) {
+  const row = document.createElement("li");
+  row.className = `purchase-row${summary ? " summary-row" : ""}`;
+  row.setAttribute("role", "button");
+  row.setAttribute("tabindex", "0");
+  row.setAttribute("aria-label", `Editar compra de ${formatCurrency(purchase.total)}`);
+  row.innerHTML = `
+    <div class="purchase-main">
+      <strong>Compra #${state.purchases.length - index}</strong>
+      <span>${formatDate(purchase.date)}</span>
+    </div>
+    <strong>${formatCurrency(purchase.total)}</strong>
+  `;
+
+  row.addEventListener("click", () => openCheckout(purchase.id));
+  row.addEventListener("keydown", (event) => {
+    if (event.target !== row) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openCheckout(purchase.id);
+    }
+  });
+
+  return row;
 }
 
 function focusDialogInput(input) {
@@ -669,6 +681,7 @@ async function resetDatabase() {
   await putOne("settings", { id: SETTINGS_ID, monthlyBudget: 1200, cardClosingDay: "", userName: "", userGender: "neutral" });
 
   state.editingItemId = null;
+  state.editingPurchaseId = null;
 
   await reloadAndRender();
   setView("dashboardView");
@@ -711,8 +724,14 @@ function openQuickPurchase() {
   openCheckout();
 }
 
-function openCheckout() {
-  el.purchaseTotal.value = "";
+function openCheckout(id = null) {
+  state.editingPurchaseId = id;
+  const purchase = state.purchases.find((current) => current.id === id);
+
+  el.checkoutDialogTitle.textContent = purchase ? "Editar compra" : "Registrar compra";
+  el.savePurchaseButton.textContent = purchase ? "Salvar" : "Salvar";
+  el.deletePurchaseButton.hidden = !purchase;
+  el.purchaseTotal.value = purchase ? String(purchase.total).replace(".", ",") : "";
   if (typeof el.checkoutDialog.showModal === "function") {
     el.checkoutDialog.showModal();
   } else {
@@ -729,29 +748,47 @@ async function finishPurchase(event) {
     return;
   }
 
-  await putOne("purchases", {
-    id: createId(),
-    total,
-    date: Date.now(),
-  });
+  const purchase = state.purchases.find((current) => current.id === state.editingPurchaseId);
+  if (purchase) {
+    await putOne("purchases", { ...purchase, total });
+  } else {
+    await putOne("purchases", {
+      id: createId(),
+      total,
+      date: Date.now(),
+    });
 
-  await bulkPut(
-    "items",
-    state.items.map((item) => ({ ...item, checked: false })),
-  );
+    await bulkPut(
+      "items",
+      state.items.map((item) => ({ ...item, checked: false })),
+    );
+  }
 
   closeCheckout();
   await reloadAndRender();
   setView("purchaseView");
-  showToast("Compra registrada.");
+  showToast(purchase ? "Compra atualizada." : "Compra registrada.");
 }
 
 function closeCheckout() {
+  state.editingPurchaseId = null;
+  el.deletePurchaseButton.hidden = true;
   if (typeof el.checkoutDialog.close === "function") {
     el.checkoutDialog.close();
   } else {
     el.checkoutDialog.removeAttribute("open");
   }
+}
+
+async function removePurchase(id) {
+  if (!id) return;
+  const confirmed = window.confirm("Excluir esta compra?");
+  if (!confirmed) return;
+
+  await deleteOne("purchases", id);
+  closeCheckout();
+  await reloadAndRender();
+  showToast("Compra removida.");
 }
 
 function showToast(message) {
@@ -813,6 +850,7 @@ function bindEvents() {
   el.viewFullListButton?.addEventListener("click", () => setView("listView"));
   el.viewPurchasesButton?.addEventListener("click", () => setView("purchaseView"));
   el.checkoutForm.addEventListener("submit", finishPurchase);
+  el.deletePurchaseButton?.addEventListener("click", () => removePurchase(state.editingPurchaseId));
   el.closeCheckoutButton.addEventListener("click", closeCheckout);
   el.cancelCheckoutButton.addEventListener("click", closeCheckout);
   el.refreshButton.addEventListener("click", reloadAndRender);

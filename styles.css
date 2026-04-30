@@ -436,6 +436,13 @@ label {
   margin-bottom: 10px;
 }
 
+.section-separator {
+  height: 1px;
+  margin: 4px 0 16px;
+  background: var(--line);
+  opacity: 0.72;
+}
+
 .inline-add-button {
   display: flex;
   align-items: center;
@@ -735,10 +742,12 @@ select:focus {
   background: var(--surface-strong);
 }
 
+.purchase-row,
 .item-row {
   cursor: pointer;
 }
 
+.purchase-row:focus-visible,
 .item-row:focus-visible {
   border-color: var(--teal-2);
   outline: none;
@@ -748,6 +757,11 @@ select:focus {
 .purchase-row strong,
 .item-main strong {
   display: block;
+}
+
+.purchase-main {
+  flex: 1;
+  min-width: 0;
 }
 
 .purchase-row span,
@@ -984,6 +998,33 @@ select:focus {
   padding: 0 18px;
   background: #b9402f;
   color: #fff;
+}
+
+.danger-text-button {
+  justify-self: start;
+  min-height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #b9402f;
+  font-size: 0.9rem;
+  font-weight: 750;
+  padding: 0 4px;
+}
+
+.danger-text-button:hover,
+.danger-text-button:focus-visible {
+  background: #fff0ed;
+  outline: none;
+}
+
+:root[data-theme="dark"] .danger-text-button {
+  color: #fda4af;
+}
+
+:root[data-theme="dark"] .danger-text-button:hover,
+:root[data-theme="dark"] .danger-text-button:focus-visible {
+  background: #261316;
 }
 
 .accent-select {

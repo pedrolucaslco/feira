@@ -170,6 +170,8 @@ Mostra:
 - Gráfico simples de barras para variação das compras, com linha de mediana.
 - Quantidade de compras no cabeçalho do histórico.
 - Histórico de compras do mês.
+- Edição de compra ao clicar na linha.
+- Remoção de compra apenas dentro do modal de edição.
 
 O saldo é calculado assim:
 
@@ -285,6 +287,8 @@ Ao registrar:
 
 Os itens permanecem na lista após a compra. Apenas os checks são resetados.
 
+Ao editar uma compra existente, o app reaproveita o modal de compra, altera apenas o valor total e preserva a data original. A edição não altera os checks da lista. A exclusão não aparece inline no histórico; ela fica disponível apenas dentro do modal de edição para reduzir exclusões acidentais.
+
 ## PWA e Cache
 
 O app tem:
@@ -297,10 +301,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v24
+feira-v28
 ```
 
-O cache foi atualizado para `feira-v24` depois de reforçar o foco automático no primeiro input dos modais.
+O cache foi atualizado para `feira-v28` depois de adicionar separadores muted abaixo do widget semanal.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -404,7 +408,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Foco automático no primeiro input ao abrir modais.
+Separadores muted abaixo do widget semanal nas telas principais.
 ```
 
 Arquivos alterados nesse marco:
