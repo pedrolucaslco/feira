@@ -330,10 +330,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v34
+feira-v35
 ```
 
-O cache foi atualizado para `feira-v34` depois de fixar a topbar no topo, ajustar o destaque ativo do bottom nav e trocar o fundo claro creme por branco suave.
+O cache foi atualizado para `feira-v35` depois de expandir a topbar fixa para a largura completa da tela e reduzir o peso visual dos textos comuns.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -438,7 +438,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Topbar fixa, bottom nav com ativo por cor de ícone e tema claro em branco suave.
+Topbar fixa em largura completa e tipografia com textos comuns mais leves.
 ```
 
 Arquivos alterados nesse marco:
