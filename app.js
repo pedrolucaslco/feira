@@ -777,7 +777,7 @@ function createPurchaseInlineEditor(purchase = null) {
 }
 
 function focusDialogInput(input) {
-  return;
+  //return;
   if (!input) return;
   input.focus({ preventScroll: true });
   requestAnimationFrame(() => input.focus({ preventScroll: true }));

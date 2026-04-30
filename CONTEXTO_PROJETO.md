@@ -330,10 +330,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v35
+feira-v38
 ```
 
-O cache foi atualizado para `feira-v35` depois de expandir a topbar fixa para a largura completa da tela e reduzir o peso visual dos textos comuns.
+O cache foi atualizado para `feira-v38` depois de adicionar animação de entrada e sombra reforçada aos toasts.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -438,7 +438,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Topbar fixa em largura completa e tipografia com textos comuns mais leves.
+Toasts no topo com animação de entrada e sombra reforçada.
 ```
 
 Arquivos alterados nesse marco:
