@@ -95,6 +95,7 @@ Stores:
 
 ```txt
 items
+categories
 purchases
 settings
 ```
@@ -106,7 +107,14 @@ items: {
   id: string,
   name: string,
   quantity: string,
+  categoryId: string,
   checked: boolean,
+  createdAt: number
+}
+
+categories: {
+  id: string,
+  name: string,
   createdAt: number
 }
 
@@ -246,16 +254,24 @@ O usuário pode:
 - Marcar/desmarcar item.
 - Remover item.
 - Editar item.
+- Criar seções personalizadas.
+- Adicionar seções por modal aberto pelo menu de três pontos da tela Lista.
+- Marcar sugestões rápidas de seções via checkboxes no modal.
+- Expandir/contrair seções em acordeon.
+- Adicionar item diretamente em uma seção.
+- Arrastar itens entre seções.
 
-A tela inicial mostra um resumo com os 3 últimos itens e permite marcar, editar e excluir por ali. A tela **Lista** mostra todos os itens e inclui a adição inline no topo. Cada item tem:
+A tela inicial mostra um resumo com os 3 últimos itens e permite marcar e editar por ali. A tela **Lista** mostra todos os itens e inclui a adição inline no topo. Cada item tem:
 
 - Botão circular de check.
 - Nome e quantidade na mesma linha quando houver quantidade.
-- Botão de remover com confirmação inline antes de excluir.
+- Remoção apenas dentro do modal de edição.
 
 O clique no fundo ou no texto de qualquer item abre o modal de edição. O botão de editar separado foi removido para reduzir ruído visual.
 
 O botão flutuante e a linha inline acima da lista abrem o modal de novo item. Ao editar, o mesmo modal é reutilizado com os dados do item.
+
+A tela **Lista** organiza itens por seções criadas pelo usuário. Há uma seção automática **Sem seção** para itens antigos ou itens adicionados sem categoria. As seções ficam somente na tela de lista completa; os resumos continuam mostrando os últimos itens adicionados. A criação de seções fica em um modal aberto pelo menu de três pontos, mantendo a tela principal mais minimalista.
 
 - Campo de nome.
 - Campo de quantidade.
@@ -301,10 +317,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v28
+feira-v30
 ```
 
-O cache foi atualizado para `feira-v28` depois de adicionar separadores muted abaixo do widget semanal.
+O cache foi atualizado para `feira-v30` depois de mover criação de seções para modal e exclusão de itens para o modal de edição.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -408,7 +424,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Separadores muted abaixo do widget semanal nas telas principais.
+Seções em modal minimalista e exclusão de itens apenas pelo modal de edição.
 ```
 
 Arquivos alterados nesse marco:

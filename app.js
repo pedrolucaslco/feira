@@ -1,5 +1,5 @@
 const DB_NAME = "feira-db";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const SETTINGS_ID = "main";
 const THEME_STORAGE_KEY = "feira:theme";
 const ACCENT_STORAGE_KEY = "feira:accent";
@@ -11,6 +11,7 @@ const DEFAULT_ITEMS = [
   { name: "Leite", quantity: "2 un" },
   { name: "Café", quantity: "" },
 ];
+const UNCATEGORIZED_ID = "uncategorized";
 
 function preventIOSZoomGestures() {
   const preventDefault = (event) => event.preventDefault();
@@ -62,11 +63,15 @@ applyAccent(getInitialAccent());
 const state = {
   db: null,
   items: [],
+  categories: [],
   purchases: [],
   settings: { id: SETTINGS_ID, monthlyBudget: 1200, cardClosingDay: "", userName: "", userGender: "neutral" },
   activeView: "dashboardView",
   editingItemId: null,
   editingPurchaseId: null,
+  pendingItemCategoryId: "",
+  collapsedCategoryIds: new Set(),
+  draggingItemId: null,
 };
 
 function createId() {
@@ -105,11 +110,18 @@ const el = {
   itemForm: document.querySelector("#itemForm"),
   itemName: document.querySelector("#itemName"),
   itemQuantity: document.querySelector("#itemQuantity"),
+  categoryForm: document.querySelector("#categoryForm"),
+  categoryNameInput: document.querySelector("#categoryNameInput"),
+  categoryPresetInputs: [...document.querySelectorAll("input[name='categoryPreset']")],
   itemDialog: document.querySelector("#itemDialog"),
   itemDialogTitle: document.querySelector("#itemDialogTitle"),
   saveItemButton: document.querySelector("#saveItemButton"),
+  deleteItemButton: document.querySelector("#deleteItemButton"),
   closeItemDialogButton: document.querySelector("#closeItemDialogButton"),
   cancelItemDialogButton: document.querySelector("#cancelItemDialogButton"),
+  categoryDialog: document.querySelector("#categoryDialog"),
+  closeCategoryDialogButton: document.querySelector("#closeCategoryDialogButton"),
+  cancelCategoryDialogButton: document.querySelector("#cancelCategoryDialogButton"),
   itemList: document.querySelector("#itemList"),
   emptyItems: document.querySelector("#emptyItems"),
   resetDatabaseButton: document.querySelector("#resetDatabaseButton"),
@@ -121,6 +133,9 @@ const el = {
   quickAddItemButton: document.querySelector("#quickAddItemButton"),
   quickAddPurchaseButton: document.querySelector("#quickAddPurchaseButton"),
   inlineAddButton: document.querySelector("#inlineAddButton"),
+  listMenuButton: document.querySelector("#listMenuButton"),
+  listMenu: document.querySelector("#listMenu"),
+  openCategoryDialogButton: document.querySelector("#openCategoryDialogButton"),
   addSummaryItemButton: document.querySelector("#addSummaryItemButton"),
   addSummaryPurchaseButton: document.querySelector("#addSummaryPurchaseButton"),
   viewFullListButton: document.querySelector("#viewFullListButton"),
@@ -151,6 +166,9 @@ function openDatabase() {
       }
       if (!db.objectStoreNames.contains("settings")) {
         db.createObjectStore("settings", { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains("categories")) {
+        db.createObjectStore("categories", { keyPath: "id" });
       }
     };
 
@@ -237,13 +255,15 @@ async function seedData() {
 }
 
 async function loadState() {
-  const [items, purchases, settings] = await Promise.all([
+  const [items, categories, purchases, settings] = await Promise.all([
     getAll("items"),
+    getAll("categories"),
     getAll("purchases"),
     getOne("settings", SETTINGS_ID),
   ]);
 
   state.items = items.sort((a, b) => b.createdAt - a.createdAt);
+  state.categories = categories.sort((a, b) => a.createdAt - b.createdAt);
   state.purchases = purchases.sort((a, b) => b.date - a.date);
   state.settings = { ...state.settings, ...(settings || {}) };
 }
@@ -271,6 +291,10 @@ function formatDate(timestamp) {
     day: "2-digit",
     month: "2-digit",
   }).format(new Date(timestamp));
+}
+
+function itemCategoryId(item) {
+  return item.categoryId || UNCATEGORIZED_ID;
 }
 
 function median(values) {
@@ -406,34 +430,39 @@ function renderProfile() {
   el.userAvatar.dataset.gender = gender;
 }
 
-function createItemRow(item, { removable }) {
+function createItemRow(item, { removable, draggable = false } = {}) {
   const row = document.createElement("li");
   row.className = `item-row${item.checked ? " is-checked" : ""}`;
   row.setAttribute("role", "button");
   row.setAttribute("tabindex", "0");
   row.setAttribute("aria-label", `Editar ${item.name}`);
+  if (draggable) {
+    row.draggable = true;
+    row.dataset.itemId = item.id;
+    row.addEventListener("dragstart", (event) => {
+      event.stopPropagation();
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", item.id);
+      row.classList.add("is-dragging");
+    });
+    row.addEventListener("dragend", () => row.classList.remove("is-dragging"));
+  }
 
   const quantity = item.quantity ? `<span class="item-quantity">${escapeHtml(item.quantity)}</span>` : "";
   row.innerHTML = `
+    ${draggable ? `<button class="drag-handle" type="button" aria-label="Mover item"><i data-lucide="grip-vertical" aria-hidden="true"></i></button>` : ""}
     <button class="check-button" type="button" aria-label="Marcar ${escapeHtml(item.name)}">✓</button>
     <div class="item-main">
       <strong>${escapeHtml(item.name)}</strong>
       ${quantity}
     </div>
-    ${
-      removable
-        ? `
-          <div class="item-actions">
-            <button class="delete-button" type="button" aria-label="Remover item">×</button>
-            <div class="delete-confirm" hidden>
-              <span>Excluir?</span>
-              <button class="confirm-delete-button" type="button">Confirmar</button>
-            </div>
-          </div>
-        `
-        : ""
-    }
   `;
+
+  const dragHandle = row.querySelector(".drag-handle");
+  if (dragHandle) {
+    dragHandle.addEventListener("click", (event) => event.stopPropagation());
+    dragHandle.addEventListener("pointerdown", (event) => beginItemPointerDrag(event, item.id, row));
+  }
 
   row.addEventListener("click", () => openItemDialog(item.id));
   row.addEventListener("keydown", (event) => {
@@ -448,28 +477,6 @@ function createItemRow(item, { removable }) {
     event.stopPropagation();
     toggleItem(item.id);
   });
-  const deleteButton = row.querySelector(".delete-button");
-  if (deleteButton) {
-    deleteButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const confirmBox = row.querySelector(".delete-confirm");
-      if (confirmBox) {
-        confirmBox.hidden = !confirmBox.hidden;
-      }
-    });
-  }
-  const confirmBox = row.querySelector(".delete-confirm");
-  if (confirmBox) {
-    confirmBox.addEventListener("click", (event) => event.stopPropagation());
-  }
-  const confirmDeleteButton = row.querySelector(".confirm-delete-button");
-  if (confirmDeleteButton) {
-    confirmDeleteButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      removeItem(item.id);
-    });
-  }
-
   return row;
 }
 
@@ -477,9 +484,7 @@ function renderItems() {
   el.itemList.innerHTML = "";
   el.summaryItemList.innerHTML = "";
 
-  state.items.forEach((item) => {
-    el.itemList.append(createItemRow(item, { removable: true }));
-  });
+  renderCategorySections();
 
   state.items.slice(0, 3).forEach((item) => {
     el.summaryItemList.append(createItemRow(item, { removable: true }));
@@ -490,6 +495,61 @@ function renderItems() {
   if (el.itemCountLabel) {
     el.itemCountLabel.textContent = `${state.items.length} ${state.items.length === 1 ? "item" : "itens"}`;
   }
+}
+
+function renderCategorySections() {
+  const categories = [{ id: UNCATEGORIZED_ID, name: "Sem seção", locked: true }, ...state.categories];
+  categories.forEach((category) => {
+    const items = state.items.filter((item) => itemCategoryId(item) === category.id);
+    if (category.locked && !items.length && state.categories.length) return;
+
+    const section = document.createElement("section");
+    section.className = "category-section";
+    section.dataset.categoryId = category.id;
+
+    const isCollapsed = state.collapsedCategoryIds.has(category.id);
+    const listId = `category-list-${category.id}`;
+    section.innerHTML = `
+      <div class="category-head">
+        <button class="category-toggle" type="button" aria-expanded="${!isCollapsed}" aria-controls="${listId}">
+          <i data-lucide="${isCollapsed ? "chevron-right" : "chevron-down"}" aria-hidden="true"></i>
+          <span>${escapeHtml(category.name)}</span>
+          <small>${items.length}</small>
+        </button>
+        <button class="category-add-button" type="button" aria-label="Adicionar item em ${escapeHtml(category.name)}">
+          <i data-lucide="plus" aria-hidden="true"></i>
+        </button>
+      </div>
+      <ul class="item-list category-items" id="${listId}" ${isCollapsed ? "hidden" : ""}></ul>
+    `;
+
+    const list = section.querySelector(".category-items");
+    list.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      list.classList.add("is-drop-target");
+    });
+    list.addEventListener("dragleave", () => list.classList.remove("is-drop-target"));
+    list.addEventListener("drop", (event) => {
+      event.preventDefault();
+      list.classList.remove("is-drop-target");
+      moveItemToCategory(event.dataTransfer.getData("text/plain"), category.id);
+    });
+
+    items.forEach((item) => {
+      list.append(createItemRow(item, { removable: true, draggable: true }));
+    });
+
+    if (!items.length) {
+      const empty = document.createElement("li");
+      empty.className = "category-empty";
+      empty.textContent = "Arraste itens para esta seção.";
+      list.append(empty);
+    }
+
+    section.querySelector(".category-toggle").addEventListener("click", () => toggleCategory(category.id));
+    section.querySelector(".category-add-button").addEventListener("click", () => openItemDialog(null, category.id));
+    el.itemList.append(section);
+  });
 }
 
 function renderNavigation() {
@@ -521,6 +581,7 @@ function render() {
 function setView(viewId) {
   if (state.activeView === viewId) {
     closeFabMenu();
+    closeListMenu();
     return;
   }
 
@@ -530,6 +591,7 @@ function setView(viewId) {
   state.activeView = viewId;
   renderNavigation();
   closeFabMenu();
+  closeListMenu();
 }
 
 function renderPurchaseSummary() {
@@ -589,6 +651,7 @@ async function saveItem(event) {
       id: createId(),
       name,
       quantity,
+      categoryId: state.pendingItemCategoryId === UNCATEGORIZED_ID ? "" : state.pendingItemCategoryId,
       checked: false,
       createdAt: Date.now(),
     });
@@ -599,13 +662,15 @@ async function saveItem(event) {
   showToast(item ? "Item atualizado." : "Item adicionado.");
 }
 
-function openItemDialog(id = null) {
+function openItemDialog(id = null, categoryId = "") {
   state.editingItemId = id;
+  state.pendingItemCategoryId = categoryId === UNCATEGORIZED_ID ? "" : categoryId;
   const item = state.items.find((current) => current.id === id);
 
   el.itemForm.reset();
   el.itemDialogTitle.textContent = item ? "Editar item" : "Novo item";
   el.saveItemButton.textContent = item ? "Salvar" : "Adicionar";
+  el.deleteItemButton.hidden = !item;
   if (item) {
     el.itemName.value = item.name;
     el.itemQuantity.value = item.quantity || "";
@@ -621,11 +686,124 @@ function openItemDialog(id = null) {
 
 function closeItemDialog() {
   state.editingItemId = null;
+  state.pendingItemCategoryId = "";
+  el.deleteItemButton.hidden = true;
   if (typeof el.itemDialog.close === "function") {
     el.itemDialog.close();
   } else {
     el.itemDialog.removeAttribute("open");
   }
+}
+
+async function saveCategory(event) {
+  event.preventDefault();
+  const names = [
+    el.categoryNameInput.value.trim(),
+    ...el.categoryPresetInputs.filter((input) => input.checked).map((input) => input.value.trim()),
+  ].filter(Boolean);
+
+  const uniqueNames = [...new Set(names)];
+  if (!uniqueNames.length) {
+    showToast("Informe ou selecione uma seção.");
+    return;
+  }
+
+  const existingNames = new Set(state.categories.map((category) => category.name.toLowerCase()));
+  const categories = uniqueNames.filter((name) => !existingNames.has(name.toLowerCase()));
+
+  if (!categories.length) {
+    showToast("Essas seções já existem.");
+    return;
+  }
+
+  await bulkPut(
+    "categories",
+    categories.map((name, index) => ({
+      id: createId(),
+      name,
+      createdAt: Date.now() + index,
+    })),
+  );
+
+  closeCategoryDialog();
+  await reloadAndRender();
+  showToast(categories.length === 1 ? "Seção adicionada." : "Seções adicionadas.");
+}
+
+function openCategoryDialog() {
+  closeListMenu();
+  el.categoryForm.reset();
+  if (typeof el.categoryDialog.showModal === "function") {
+    el.categoryDialog.showModal();
+  } else {
+    el.categoryDialog.setAttribute("open", "");
+  }
+  focusDialogInput(el.categoryNameInput);
+}
+
+function closeCategoryDialog() {
+  if (typeof el.categoryDialog.close === "function") {
+    el.categoryDialog.close();
+  } else {
+    el.categoryDialog.removeAttribute("open");
+  }
+}
+
+function toggleCategory(id) {
+  if (state.collapsedCategoryIds.has(id)) {
+    state.collapsedCategoryIds.delete(id);
+  } else {
+    state.collapsedCategoryIds.add(id);
+  }
+  renderItems();
+  renderIcons();
+}
+
+function beginItemPointerDrag(event, itemId, row) {
+  event.preventDefault();
+  event.stopPropagation();
+  state.draggingItemId = itemId;
+  row.classList.add("is-dragging");
+  event.currentTarget.setPointerCapture?.(event.pointerId);
+
+  const move = (moveEvent) => {
+    document.querySelectorAll(".category-items.is-drop-target").forEach((target) => {
+      target.classList.remove("is-drop-target");
+    });
+    const target = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY)?.closest(".category-section");
+    target?.querySelector(".category-items:not([hidden])")?.classList.add("is-drop-target");
+  };
+
+  const finish = async (finishEvent) => {
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", finish);
+    document.querySelectorAll(".category-items.is-drop-target").forEach((target) => {
+      target.classList.remove("is-drop-target");
+    });
+    row.classList.remove("is-dragging");
+
+    const target = document.elementFromPoint(finishEvent.clientX, finishEvent.clientY)?.closest(".category-section");
+    const categoryId = target?.dataset.categoryId;
+    state.draggingItemId = null;
+    if (categoryId) {
+      await moveItemToCategory(itemId, categoryId);
+    }
+  };
+
+  document.addEventListener("pointermove", move);
+  document.addEventListener("pointerup", finish, { once: true });
+}
+
+async function moveItemToCategory(itemId, categoryId) {
+  const item = state.items.find((current) => current.id === itemId);
+  if (!item) return;
+
+  const normalizedCategoryId = categoryId === UNCATEGORIZED_ID ? "" : categoryId;
+  if ((item.categoryId || "") === normalizedCategoryId) return;
+
+  await putOne("items", { ...item, categoryId: normalizedCategoryId });
+  await reloadAndRender();
+  showToast("Item movido.");
 }
 
 async function toggleItem(id) {
@@ -637,10 +815,17 @@ async function toggleItem(id) {
 }
 
 async function removeItem(id) {
+  if (!id) return;
+  const confirmed = window.confirm("Excluir este item?");
+  if (!confirmed) return;
+
   if (state.editingItemId === id) {
     state.editingItemId = null;
   }
   await deleteOne("items", id);
+  if (el.itemDialog.open) {
+    closeItemDialog();
+  }
   await reloadAndRender();
   showToast("Item removido.");
 }
@@ -677,11 +862,13 @@ async function resetDatabase() {
   const confirmed = window.confirm("Tem certeza que deseja apagar todos os dados e começar do zero?");
   if (!confirmed) return;
 
-  await Promise.all([clearStore("items"), clearStore("purchases"), clearStore("settings")]);
+  await Promise.all([clearStore("items"), clearStore("categories"), clearStore("purchases"), clearStore("settings")]);
   await putOne("settings", { id: SETTINGS_ID, monthlyBudget: 1200, cardClosingDay: "", userName: "", userGender: "neutral" });
 
   state.editingItemId = null;
   state.editingPurchaseId = null;
+  state.pendingItemCategoryId = "";
+  state.collapsedCategoryIds.clear();
 
   await reloadAndRender();
   setView("dashboardView");
@@ -712,6 +899,19 @@ function closeFabMenu() {
   if (!el.fabMenu) return;
   el.fabMenu.hidden = true;
   el.quickAddButton.setAttribute("aria-expanded", "false");
+}
+
+function toggleListMenu() {
+  if (!el.listMenu) return;
+  const isOpen = !el.listMenu.hidden;
+  el.listMenu.hidden = isOpen;
+  el.listMenuButton.setAttribute("aria-expanded", String(!isOpen));
+}
+
+function closeListMenu() {
+  if (!el.listMenu) return;
+  el.listMenu.hidden = true;
+  el.listMenuButton.setAttribute("aria-expanded", "false");
 }
 
 function openQuickItem() {
@@ -833,8 +1033,12 @@ function bindEvents() {
     button.addEventListener("click", () => setView(button.dataset.view));
   });
   el.itemForm.addEventListener("submit", saveItem);
+  el.categoryForm?.addEventListener("submit", saveCategory);
+  el.deleteItemButton?.addEventListener("click", () => removeItem(state.editingItemId));
   el.closeItemDialogButton.addEventListener("click", closeItemDialog);
   el.cancelItemDialogButton.addEventListener("click", closeItemDialog);
+  el.closeCategoryDialogButton?.addEventListener("click", closeCategoryDialog);
+  el.cancelCategoryDialogButton?.addEventListener("click", closeCategoryDialog);
   el.budgetForm.addEventListener("submit", saveBudget);
   el.profileForm.addEventListener("submit", saveProfile);
   el.resetDatabaseButton.addEventListener("click", resetDatabase);
@@ -845,6 +1049,13 @@ function bindEvents() {
   el.quickAddItemButton?.addEventListener("click", openQuickItem);
   el.quickAddPurchaseButton?.addEventListener("click", openQuickPurchase);
   el.inlineAddButton.addEventListener("click", openQuickAdd);
+  el.listMenuButton?.addEventListener("click", toggleListMenu);
+  el.openCategoryDialogButton?.addEventListener("click", openCategoryDialog);
+  document.addEventListener("click", (event) => {
+    if (!el.listMenu || el.listMenu.hidden) return;
+    if (event.target.closest(".list-menu-wrap")) return;
+    closeListMenu();
+  });
   el.addSummaryItemButton?.addEventListener("click", openQuickItem);
   el.addSummaryPurchaseButton?.addEventListener("click", openQuickPurchase);
   el.viewFullListButton?.addEventListener("click", () => setView("listView"));

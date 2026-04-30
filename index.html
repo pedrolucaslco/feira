@@ -79,8 +79,16 @@
           <div class="section-head">
             <div>
               <h2 id="fullListTitle">Lista de compras</h2>
+              <span id="itemCountLabel" class="soft-label">0 itens</span>
             </div>
-            <span id="itemCountLabel" class="soft-label">0 itens</span>
+            <div class="list-menu-wrap">
+              <button class="icon-button" id="listMenuButton" type="button" aria-label="Abrir opções da lista" aria-expanded="false">
+                <i data-lucide="ellipsis" aria-hidden="true"></i>
+              </button>
+              <div class="list-menu" id="listMenu" hidden>
+                <button type="button" id="openCategoryDialogButton">Adicionar seção</button>
+              </div>
+            </div>
           </div>
 
           <section class="weekly-widget compact-widget" aria-label="Planejamento semanal">
@@ -97,7 +105,7 @@
             Adicionar item
           </button>
 
-          <ul class="item-list" id="itemList"></ul>
+          <div class="category-list" id="itemList"></div>
           <p class="empty-state" id="emptyItems">Sua lista ainda está vazia.</p>
         </section>
 
@@ -294,9 +302,39 @@
         <input id="itemName" name="name" autocomplete="off" placeholder="Arroz" required />
         <label for="itemQuantity">Quantidade</label>
         <input id="itemQuantity" name="quantity" autocomplete="off" placeholder="2 kg" />
+        <button class="danger-text-button" id="deleteItemButton" type="button" hidden>Excluir item</button>
         <div class="dialog-actions">
           <button class="secondary-button" id="cancelItemDialogButton" type="button">Cancelar</button>
           <button class="primary-dialog-button" id="saveItemButton" type="submit">Adicionar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="item-dialog" id="categoryDialog">
+      <form id="categoryForm">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Lista</p>
+            <h2>Adicionar seção</h2>
+          </div>
+          <button class="icon-button" id="closeCategoryDialogButton" type="button" aria-label="Fechar">×</button>
+        </div>
+        <label for="categoryNameInput">Seção personalizada</label>
+        <input id="categoryNameInput" name="category" autocomplete="off" placeholder="Ex.: Congelados" />
+        <fieldset class="preset-grid">
+          <legend>Sugestões rápidas</legend>
+          <label><input type="checkbox" name="categoryPreset" value="Frutas" /> Frutas</label>
+          <label><input type="checkbox" name="categoryPreset" value="Verduras" /> Verduras</label>
+          <label><input type="checkbox" name="categoryPreset" value="Frios" /> Frios</label>
+          <label><input type="checkbox" name="categoryPreset" value="Carnes" /> Carnes</label>
+          <label><input type="checkbox" name="categoryPreset" value="Padaria" /> Padaria</label>
+          <label><input type="checkbox" name="categoryPreset" value="Bebidas" /> Bebidas</label>
+          <label><input type="checkbox" name="categoryPreset" value="Limpeza" /> Limpeza</label>
+          <label><input type="checkbox" name="categoryPreset" value="Mercearia" /> Mercearia</label>
+        </fieldset>
+        <div class="dialog-actions">
+          <button class="secondary-button" id="cancelCategoryDialogButton" type="button">Cancelar</button>
+          <button class="primary-dialog-button" type="submit">Adicionar</button>
         </div>
       </form>
     </dialog>

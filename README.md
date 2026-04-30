@@ -44,9 +44,11 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Total gasto no mês.
 - Número de compras realizadas no cabeçalho do histórico.
 - Lista de mercado offline na tela inicial.
+- Seções personalizadas na lista, com modal de criação, sugestões rápidas e acordeon.
+- Arrastar itens entre seções na tela de lista.
 - Adição de itens com quantidade opcional.
 - Edição de nome e quantidade dos itens.
-- Remoção de itens com confirmação inline.
+- Remoção de itens apenas pelo modal de edição.
 - Checklist para marcar itens já comprados, inclusive no resumo da tela inicial.
 - Registro de compra pelo menu flutuante.
 - Modal de compra com valor total.
