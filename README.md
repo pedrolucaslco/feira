@@ -23,7 +23,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 ## Funcionalidades atuais
 
 - Dashboard com resumo do mês.
-- Tela inicial com saldo no topo, planejamento semanal e resumos rápidos.
+- Tela inicial com saldo total e saldo semanal no topo, além de resumos rápidos.
 - Campo de fechamento do cartão para calcular semanas restantes e saldo sugerido por semana.
 - Atalhos para adicionar item e compra direto pelos resumos da tela inicial.
 - Botão flutuante contextual: dropdown no resumo, novo item na lista e nova compra em compras.
@@ -38,7 +38,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Modo escuro AMOLED com accent emerald.
 - Cor de destaque configurável com opções inspiradas no Tailwind.
 - Navegação inferior com Lucide Icons via CDN.
-- Topbar fixa com saudação e saldo sempre visíveis.
+- Topbar fixa com saudação, saldo total e saldo semanal sempre visíveis.
 - Animações leves ao trocar de tela.
 - Feedback sutil ao tocar em botões e modais em estilo bottom sheet.
 - Gráfico simples de variação das compras com linha de mediana.

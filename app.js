@@ -96,9 +96,11 @@ const el = {
   navButtons: [...document.querySelectorAll(".nav-button")],
   remainingBalance: document.querySelector("#remainingBalance"),
   spentBudgetRatio: document.querySelector("#spentBudgetRatio"),
+  spentBudgetSpent: document.querySelector("#spentBudgetSpent"),
+  spentBudgetTotal: document.querySelector("#spentBudgetTotal"),
   purchaseCountLabel: document.querySelector("#purchaseCountLabel"),
-  weeklyBudgetValues: [...document.querySelectorAll(".weeklyBudgetValue")],
-  weeksUntilClosingLabels: [...document.querySelectorAll(".weeksUntilClosingLabel")],
+  topbarWeeklyBudget: document.querySelector("#topbarWeeklyBudget"),
+  topbarWeeklyLabel: document.querySelector("#topbarWeeklyLabel"),
   itemCountLabel: document.querySelector("#itemCountLabel"),
   welcomeTitle: document.querySelector("#welcomeTitle"),
   userAvatar: document.querySelector("#userAvatar"),
@@ -143,7 +145,6 @@ const el = {
   fabMenu: document.querySelector("#fabMenu"),
   quickAddItemButton: document.querySelector("#quickAddItemButton"),
   quickAddPurchaseButton: document.querySelector("#quickAddPurchaseButton"),
-  inlineAddButton: document.querySelector("#inlineAddButton"),
   listMenuButton: document.querySelector("#listMenuButton"),
   listMenu: document.querySelector("#listMenu"),
   openCategoryDialogButton: document.querySelector("#openCategoryDialogButton"),
@@ -389,8 +390,9 @@ function renderDashboard() {
   const weeksLeft = weeksUntilClosing(state.settings.cardClosingDay);
 
   el.remainingBalance.textContent = formatCurrency(remaining);
-  if (el.spentBudgetRatio) {
-    el.spentBudgetRatio.textContent = `${formatCurrency(spent)} / ${formatCurrency(budget)}`;
+  if (el.spentBudgetRatio && el.spentBudgetSpent && el.spentBudgetTotal) {
+    el.spentBudgetSpent.textContent = formatCurrency(spent);
+    el.spentBudgetTotal.textContent = formatCurrency(budget);
   }
   if (el.purchaseCountLabel) {
     el.purchaseCountLabel.textContent = `${monthPurchases.length} ${monthPurchases.length === 1 ? "compra" : "compras"}`;
@@ -452,24 +454,16 @@ function renderPurchaseChart() {
 }
 
 function renderWeeklyBudget(remaining, weeksLeft) {
-  if (!el.weeklyBudgetValues.length || !el.weeksUntilClosingLabels.length) return;
+  if (!el.topbarWeeklyBudget || !el.topbarWeeklyLabel) return;
 
   if (!weeksLeft) {
-    el.weeklyBudgetValues.forEach((value) => {
-      value.textContent = formatCurrency(remaining);
-    });
-    el.weeksUntilClosingLabels.forEach((label) => {
-      label.textContent = "Informe o dia de fechamento em Ajustes.";
-    });
+    el.topbarWeeklyBudget.textContent = "--";
+    el.topbarWeeklyLabel.textContent = "Semana";
     return;
   }
 
-  el.weeklyBudgetValues.forEach((value) => {
-    value.textContent = formatCurrency(remaining / weeksLeft);
-  });
-  el.weeksUntilClosingLabels.forEach((label) => {
-    label.textContent = `${weeksLeft} ${weeksLeft === 1 ? "semana restante" : "semanas restantes"} até o fechamento.`;
-  });
+  el.topbarWeeklyBudget.textContent = formatCurrency(remaining / weeksLeft);
+  el.topbarWeeklyLabel.textContent = "por semana";
 }
 
 function renderProfile() {
@@ -575,7 +569,7 @@ function renderCategorySections() {
           <i data-lucide="plus" aria-hidden="true"></i>
         </button>
       </div>
-      <ul class="item-list category-items" id="${listId}" ${isCollapsed ? "hidden" : ""}></ul>
+      <ul class="item-list category-items" id="${listId}" data-collapsed="${isCollapsed}" aria-hidden="${isCollapsed}"></ul>
     `;
 
     const list = section.querySelector(".category-items");
@@ -981,7 +975,7 @@ function beginItemPointerDrag(event, itemId, row) {
       target.classList.remove("is-drop-target");
     });
     const target = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY)?.closest(".category-section");
-    target?.querySelector(".category-items:not([hidden])")?.classList.add("is-drop-target");
+    target?.querySelector(".category-items:not([data-collapsed='true'])")?.classList.add("is-drop-target");
   };
 
   const finish = async (finishEvent) => {
@@ -1106,10 +1100,6 @@ function toggleTheme(event) {
 
 function changeAccent(event) {
   applyAccent(event.currentTarget.value);
-}
-
-function openQuickAdd() {
-  openItemEditor();
 }
 
 function handleFabButton() {
@@ -1361,7 +1351,6 @@ function bindEvents() {
   el.quickAddButton.addEventListener("click", handleFabButton);
   el.quickAddItemButton?.addEventListener("click", openQuickItem);
   el.quickAddPurchaseButton?.addEventListener("click", openQuickPurchase);
-  el.inlineAddButton.addEventListener("click", openQuickAdd);
   el.listMenuButton?.addEventListener("click", toggleListMenu);
   el.openCategoryDialogButton?.addEventListener("click", openCategoryDialog);
   document.addEventListener("click", (event) => {

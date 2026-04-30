@@ -31,24 +31,21 @@
             <h1 id="welcomeTitle">Boas-vindas</h1>
           </div>
         </div>
-        <div class="balance-pill">
-          <span>Saldo</span>
-          <strong id="remainingBalance">R$ 0,00</strong>
+        <div class="topbar-metrics" aria-label="Resumo financeiro">
+          <div class="topbar-metric">
+            <span>Saldo</span>
+            <strong id="remainingBalance">R$ 0,00</strong>
+          </div>
+          <div class="topbar-metric">
+            <span id="topbarWeeklyLabel">Semana</span>
+            <strong id="topbarWeeklyBudget">--</strong>
+          </div>
         </div>
       </header>
 
       <main>
         <section id="dashboardView" class="view is-active" aria-label="Resumo">
           <div class="home-panel">
-            <section class="weekly-widget" aria-labelledby="weeklyBudgetTitle">
-              <div>
-                <h3 id="weeklyBudgetTitle">Saldo por semana</h3>
-              </div>
-              <strong class="weeklyBudgetValue" id="weeklyBudgetValue">R$ 0,00</strong>
-              <span class="weeksUntilClosingLabel" id="weeksUntilClosingLabel">Configure o fechamento nos ajustes.</span>
-            </section>
-            <div class="section-separator" aria-hidden="true"></div>
-
             <section class="home-list" aria-labelledby="listTitle">
               <div class="block-title-row">
                 <h3 id="listTitle">Lista de mercado</h3>
@@ -86,24 +83,13 @@
                 <i data-lucide="ellipsis" aria-hidden="true"></i>
               </button>
               <div class="list-menu" id="listMenu" hidden>
-                <button type="button" id="openCategoryDialogButton">Adicionar seção</button>
+                <button type="button" id="openCategoryDialogButton">
+                  <i data-lucide="plus" aria-hidden="true"></i>
+                  Adicionar seção
+                </button>
               </div>
             </div>
           </div>
-
-          <section class="weekly-widget compact-widget" aria-label="Planejamento semanal">
-            <div>
-              <h3>Saldo por semana</h3>
-            </div>
-            <strong class="weeklyBudgetValue">R$ 0,00</strong>
-            <span class="weeksUntilClosingLabel">Configure o fechamento nos ajustes.</span>
-          </section>
-          <div class="section-separator" aria-hidden="true"></div>
-
-          <button class="inline-add-button" id="inlineAddButton" type="button">
-            <i data-lucide="plus" aria-hidden="true"></i>
-            Adicionar item
-          </button>
 
           <div class="category-list" id="itemList"></div>
           <p class="empty-state" id="emptyItems">Sua lista ainda está vazia.</p>
@@ -120,19 +106,14 @@
             </button>
           </div>
 
-          <section class="weekly-widget compact-widget" aria-label="Planejamento semanal">
-            <div>
-              <h3>Saldo por semana</h3>
-            </div>
-            <strong class="weeklyBudgetValue">R$ 0,00</strong>
-            <span class="weeksUntilClosingLabel">Configure o fechamento nos ajustes.</span>
-          </section>
-          <div class="section-separator" aria-hidden="true"></div>
-
           <div class="metrics-grid report-grid">
             <article class="metric">
-              <span>Gasto / budget</span>
-              <strong id="spentBudgetRatio">R$ 0,00 / R$ 0,00</strong>
+              <span>Gasto / Orçamento</span>
+              <strong class="spent-budget-ratio" id="spentBudgetRatio">
+                <b id="spentBudgetSpent">R$ 0,00</b>
+                <small>/</small>
+                <small id="spentBudgetTotal">R$ 0,00</small>
+              </strong>
             </article>
           </div>
 
@@ -167,7 +148,7 @@
           <form class="budget-form" id="budgetForm">
             <div class="settings-fields">
               <label for="budgetInput">
-                Budget mensal
+                Orçamento mensal
                 <input id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
               </label>
               <label for="cardClosingDayInput">
@@ -242,7 +223,7 @@
           <section class="danger-zone" aria-labelledby="resetTitle">
             <div>
               <h3 id="resetTitle">Resetar dados</h3>
-              <p>Apaga lista, compras e restaura o budget inicial.</p>
+              <p>Apaga lista, compras e restaura o orçamento inicial.</p>
             </div>
             <button class="danger-button" id="resetDatabaseButton" type="button">Resetar</button>
           </section>

@@ -330,10 +330,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v38
+feira-v40
 ```
 
-O cache foi atualizado para `feira-v38` depois de adicionar animação de entrada e sombra reforçada aos toasts.
+O cache foi atualizado para `feira-v40` depois de refinar a tela de lista com acordeon animado, botões de seção neutros, checklist com borda fria e indicador gasto/budget alinhado à direita.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -438,7 +438,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Toasts no topo com animação de entrada e sombra reforçada.
+Acordeon animado nas seções, lista mais limpa e indicador gasto/budget refinado.
 ```
 
 Arquivos alterados nesse marco:
