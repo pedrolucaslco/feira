@@ -41,6 +41,7 @@ Arquivo obrigatório:
 - `sw.js`
   - Atualizar `CACHE_NAME`, por exemplo de `feira-v30` para `feira-v31`.
   - Fazer isso sempre que mudar qualquer asset cacheado: `index.html`, `styles.css`, `app.js`, `manifest.webmanifest` ou `icon.svg`.
+  - Este projeto deve sempre incrementar o cache nessas mudanças.
 
 Arquivo de contexto que também deve acompanhar:
 
@@ -186,7 +187,7 @@ Regra prática:
    - último marco;
    - arquivos alterados.
 6. Atualizar `README.md` se a funcionalidade for visível, pública ou remover um próximo passo.
-7. Rodar um servidor estático para validar:
+7. Rodar um servidor estático somente quando for necessário ou quando o usuário pedir:
 
 ```bash
 python3 -m http.server 5174
@@ -198,7 +199,7 @@ URL esperada:
 http://localhost:5174/
 ```
 
-8. Fazer verificação manual no navegador quando possível, especialmente em alterações de UI/PWA.
+8. Fazer verificação manual no navegador quando possível e solicitado, especialmente em alterações de UI/PWA.
 
 ## Observações Importantes
 

@@ -26,9 +26,11 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Tela inicial com saldo no topo, planejamento semanal e resumos rápidos.
 - Campo de fechamento do cartão para calcular semanas restantes e saldo sugerido por semana.
 - Atalhos para adicionar item e compra direto pelos resumos da tela inicial.
+- Botão flutuante contextual: dropdown no resumo, novo item na lista e nova compra em compras.
 - Tela de lista completa com adição inline e botão flutuante de atalho.
 - Modal compartilhado para adicionar e editar itens.
 - Tela de compras com histórico, gasto/budget, gráfico de variação e planejamento semanal.
+- Preferência para criar e editar itens/compras em modal ou inline.
 - Controle de budget mensal.
 - Aba de ajustes.
 - Perfil local com nome, avatar e saudação no topo.
@@ -36,6 +38,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Modo escuro AMOLED com accent emerald.
 - Cor de destaque configurável com opções inspiradas no Tailwind.
 - Navegação inferior com Lucide Icons via CDN.
+- Topbar fixa com saudação e saldo sempre visíveis.
 - Animações leves ao trocar de tela.
 - Feedback sutil ao tocar em botões e modais em estilo bottom sheet.
 - Gráfico simples de variação das compras com linha de mediana.
@@ -133,7 +136,8 @@ settings: {
   monthlyBudget: number,
   cardClosingDay: number | "",
   userName: string,
-  userGender: "neutral" | "male" | "female"
+  userGender: "neutral" | "male" | "female",
+  editorMode: "modal" | "inline"
 }
 ```
 

@@ -130,7 +130,8 @@ settings: {
   monthlyBudget: number,
   cardClosingDay: number | "",
   userName: string,
-  userGender: "neutral" | "male" | "female"
+  userGender: "neutral" | "male" | "female",
+  editorMode: "modal" | "inline"
 }
 ```
 
@@ -246,6 +247,15 @@ Esses dados são usados para exibir a saudação no topo do app e o avatar.
 
 A aba também tem a ação **Atualizar app**, pensada para uso em PWA instalado. Ela recarrega o estado, pede atualização do service worker quando disponível e força reload da janela.
 
+A aba também permite escolher o modo de edição para itens da lista e compras:
+
+```txt
+modal
+inline
+```
+
+No modo `modal`, criar ou editar abre os modais existentes. No modo `inline`, criar ou editar insere um formulário direto na lista ou no histórico.
+
 ### Lista de Mercado
 
 O usuário pode:
@@ -270,7 +280,7 @@ A tela inicial mostra um resumo com os 3 últimos itens e permite marcar e edita
 
 O clique no fundo ou no texto de qualquer item abre o modal de edição. O botão de editar separado foi removido para reduzir ruído visual.
 
-O botão flutuante e a linha inline acima da lista abrem o modal de novo item. Ao editar, o mesmo modal é reutilizado com os dados do item.
+O botão flutuante abre um novo item diretamente quando o usuário está na tela **Lista**. A linha inline acima da lista também inicia a criação de item. No modo `modal`, o modal de item é reutilizado; no modo `inline`, o formulário aparece dentro da seção correspondente.
 
 A tela **Lista** organiza itens por seções criadas pelo usuário. Há uma seção automática **Sem seção** para itens antigos ou itens adicionados sem categoria. As seções ficam somente na tela de lista completa; os resumos continuam mostrando os últimos itens adicionados. A criação de seções fica em um modal aberto pelo menu de três pontos, mantendo a tela principal mais minimalista.
 
@@ -290,14 +300,15 @@ Nessa tela:
 - O usuário vê quantidade de compras.
 - O usuário vê o histórico completo de compras registradas.
 - O usuário pode nomear a compra para substituir o título automático no histórico.
+- O botão de ação no topo da tela registra uma nova compra.
 
 ### Registrar Compra
 
 Ao registrar:
 
-1. O usuário abre o menu flutuante.
-2. Escolhe **Registrar compra**.
-3. O app abre um modal pedindo nome opcional, data e total da compra.
+1. O usuário abre o dropdown na tela inicial ou usa o botão de adicionar na tela Compras.
+2. Escolhe **Registrar compra** quando estiver no resumo.
+3. O app abre um modal ou formulário inline pedindo nome opcional, data e total da compra, conforme a preferência de edição.
 4. Salva uma entrada em `purchases`.
 5. Desmarca todos os itens da lista.
 6. Atualiza dashboard, compras e saldo.
@@ -319,10 +330,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v32
+feira-v34
 ```
 
-O cache foi atualizado para `feira-v32` depois de corrigir o acordeon das seções da lista, além de mover o handle de arrastar itens para o lado direito, bloquear seleção de texto e permitir editar nome/data das compras.
+O cache foi atualizado para `feira-v34` depois de fixar a topbar no topo, ajustar o destaque ativo do bottom nav e trocar o fundo claro creme por branco suave.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -370,16 +381,18 @@ fatal: not a git repository
 Direção visual atual:
 
 - Interface mobile-first.
+- Topbar fixa com saudação e saldo sempre visíveis.
 - Navegação inferior fixa.
 - Transição animada ao trocar de aba, respeitando `prefers-reduced-motion`.
 - Modais em estilo bottom sheet com animação de subida.
 - Botões com feedback sutil ao toque.
 - Cards simples com raio de 8px.
 - Modo escuro AMOLED com base neutral e accent emerald.
-- Accent configurável para modo claro e escuro.
+- Tema claro com fundo branco suave e accent configurável para modo claro e escuro.
 - Saldo sempre visível no topo.
 - Resumo inicial com indicadores e atalhos para telas completas.
-- FAB com menu para novo item ou nova compra.
+- FAB contextual: abre dropdown no resumo, novo item na lista e nova compra em compras.
+- Preferência para criar e editar itens/compras em modal ou inline.
 - Textos da interface não ficam selecionáveis durante o uso.
 
 O app evita uma landing page e abre direto na experiência funcional.
@@ -425,7 +438,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Correção do acordeon das seções, handle de arrastar à direita, bloqueio de seleção de texto e edição de nome/data em compras.
+Topbar fixa, bottom nav com ativo por cor de ícone e tema claro em branco suave.
 ```
 
 Arquivos alterados nesse marco:
@@ -436,3 +449,4 @@ Arquivos alterados nesse marco:
 - `sw.js`
 - `README.md`
 - `CONTEXTO_PROJETO.md`
+- `CONTEXTO_CODEX.md`
