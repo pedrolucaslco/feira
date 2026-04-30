@@ -25,7 +25,6 @@
     <div class="app-shell">
       <header class="topbar">
         <div class="brand">
-          <div class="brand-mark" id="userAvatar" aria-hidden="true">F</div>
           <div class="brand-copy">
             <p class="eyebrow" id="welcomeTitle">Boas-vindas</p>
             <div class="space-switcher-wrap">
@@ -157,11 +156,18 @@
         <section id="settingsView" class="view" aria-labelledby="settingsTitle">
           <div class="section-head">
             <div>
-              <p class="eyebrow">Preferências</p>
               <h2 id="settingsTitle">Ajustes</h2>
             </div>
           </div>
 
+          <p class="settings-group-label">Usuário</p>
+          <form class="profile-form" id="profileForm">
+            <label for="userNameInput">Nome</label>
+            <input id="userNameInput" name="name" autocomplete="name" placeholder="Seu nome" />
+            <button type="submit">Salvar perfil</button>
+          </form>
+
+          <p class="settings-group-label">Orçamento</p>
           <form class="budget-form" id="budgetForm">
             <div class="settings-fields">
               <label for="budgetInput">
@@ -176,22 +182,11 @@
             </div>
           </form>
 
-          <form class="profile-form" id="profileForm">
-            <label for="userNameInput">Nome</label>
-            <input id="userNameInput" name="name" autocomplete="name" placeholder="Seu nome" />
-            <label for="userGenderInput">Avatar</label>
-            <select id="userGenderInput" name="gender">
-              <option value="neutral">Neutro</option>
-              <option value="male">Masculino</option>
-              <option value="female">Feminino</option>
-            </select>
-            <button type="submit">Salvar perfil</button>
-          </form>
-
+          <p class="settings-group-label">Interface</p>
           <section class="settings-card" aria-labelledby="themeTitle">
             <div>
               <h3 id="themeTitle">Modo escuro</h3>
-              <p>Ajusta as cores da interface neste dispositivo.</p>
+              <p>Cores neste dispositivo.</p>
             </div>
             <label class="theme-switch" for="themeToggle">
               <input id="themeToggle" type="checkbox" role="switch" aria-label="Ativar modo escuro" />
@@ -202,7 +197,7 @@
           <section class="settings-card" aria-labelledby="accentTitle">
             <div>
               <h3 id="accentTitle">Cor de destaque</h3>
-              <p>Escolha o accent usado nos botões e indicadores.</p>
+              <p>Botões e indicadores.</p>
             </div>
             <select class="accent-select" id="accentColorInput" name="accentColor" aria-label="Cor de destaque">
               <option value="emerald">Emerald</option>
@@ -221,7 +216,7 @@
           <section class="settings-card" aria-labelledby="editorModeTitle">
             <div>
               <h3 id="editorModeTitle">Edição</h3>
-              <p>Define como itens e compras são criados ou editados.</p>
+              <p>Itens e compras.</p>
             </div>
             <select class="accent-select" id="editorModeInput" name="editorMode" aria-label="Modo de edição">
               <option value="modal">Modal</option>
@@ -229,10 +224,11 @@
             </select>
           </section>
 
+          <p class="settings-group-label">Espaço</p>
           <section class="settings-card share-settings" aria-labelledby="spacesTitle">
             <div>
               <h3 id="spacesTitle">Espaços</h3>
-              <p>Crie ou entre em um espaço compartilhado por código.</p>
+              <p>Compartilhe por código.</p>
             </div>
             <form class="compact-form" id="createSpaceForm">
               <label for="createSpaceNameInput">Novo espaço</label>
@@ -253,7 +249,7 @@
           <section class="settings-card share-settings" id="shareSpaceCard" aria-labelledby="currentSpaceTitle" hidden>
             <div>
               <h3 id="currentSpaceTitle">Espaço atual</h3>
-              <p>Use o código para convidar outra pessoa.</p>
+              <p>Código de convite.</p>
             </div>
             <label for="currentSpaceNameInput">Nome do espaço</label>
             <div class="input-row">
@@ -267,10 +263,11 @@
             </div>
           </section>
 
+          <p class="settings-group-label">App</p>
           <section class="settings-card" aria-labelledby="refreshAppTitle">
             <div>
               <h3 id="refreshAppTitle">Atualizar app</h3>
-              <p>Recarrega a interface e busca a versão mais recente disponível.</p>
+              <p>Busca a versão recente.</p>
             </div>
             <button class="secondary-button" id="manualRefreshButton" type="button">Atualizar</button>
           </section>
@@ -278,7 +275,7 @@
           <section class="danger-zone" aria-labelledby="resetTitle">
             <div>
               <h3 id="resetTitle">Resetar dados</h3>
-              <p>Apaga lista, compras e restaura o orçamento inicial.</p>
+              <p>Apaga dados locais.</p>
             </div>
             <button class="danger-button" id="resetDatabaseButton" type="button">Resetar</button>
           </section>

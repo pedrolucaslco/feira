@@ -179,7 +179,7 @@ body {
   min-height: 100vh;
   background: var(--bg);
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 :root[data-theme="dark"] body {
@@ -252,55 +252,22 @@ select,
 
 .brand {
   flex: 1;
-  gap: 12px;
   min-width: 0;
 }
 
 .brand-copy {
-  min-width: 0;
-}
-
-.brand-mark {
   display: grid;
-  flex: 0 0 auto;
-  width: 54px;
-  height: 54px;
-  place-items: center;
-  border-radius: 16px;
-  background: var(--surface-strong);
-  color: var(--teal);
-  font-size: 1.35rem;
-  font-weight: 950;
-  box-shadow: var(--shadow);
-}
-
-.brand-mark[data-gender="male"] {
-  background: #d8f1ff;
-  color: #145079;
-}
-
-.brand-mark[data-gender="female"] {
-  background: #ffe2ee;
-  color: #9c315c;
-}
-
-:root[data-theme="dark"] .brand-mark[data-gender="male"] {
-  background: #173047;
-  color: #9dd8ff;
-}
-
-:root[data-theme="dark"] .brand-mark[data-gender="female"] {
-  background: #442033;
-  color: #ffb4d0;
+  gap: 2px;
+  min-width: 0;
 }
 
 .eyebrow {
   margin: 0 0 3px;
-  color: var(--teal-2);
-  font-size: 0.76rem;
-  font-weight: 800;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 500;
   letter-spacing: 0;
-  text-transform: uppercase;
+  text-transform: none;
 }
 
 h1,
@@ -323,7 +290,7 @@ h1 {
 }
 
 .space-switcher-button {
-  max-width: min(46vw, 340px);
+  max-width: min(54vw, 420px);
   min-height: 28px;
   gap: 4px;
   padding: 0;
@@ -335,9 +302,9 @@ h1 {
 
 .space-switcher-button strong {
   overflow: hidden;
-  font-size: clamp(1.25rem, 4vw, 1.85rem);
-  font-weight: 850;
-  line-height: 1.05;
+  font-size: 0.85rem;
+  font-weight: 750;
+  line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -352,10 +319,9 @@ h1 {
 .sync-status {
   display: inline-flex;
   max-width: 100%;
-  margin-top: 3px;
   color: var(--muted);
-  font-size: 0.76rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .space-menu {
@@ -404,7 +370,7 @@ h1 {
 
 .space-menu small {
   color: var(--muted);
-  font-weight: 600;
+  font-weight: 400;
 }
 
 h2 {
@@ -447,7 +413,7 @@ h3 {
 label {
   color: var(--muted);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .topbar-metric strong {
@@ -543,7 +509,7 @@ label {
 .conflict-banner span {
   margin-top: 2px;
   font-size: 0.84rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .home-panel h2 {
@@ -696,7 +662,7 @@ label {
 .category-toggle small {
   color: var(--muted);
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .category-add-button {
@@ -742,7 +708,7 @@ label {
   border-radius: 8px;
   color: var(--muted);
   font-size: 0.86rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .metric {
@@ -780,7 +746,7 @@ label {
 .spent-budget-ratio small {
   color: var(--muted);
   font-size: inherit;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .metric-primary {
@@ -1028,7 +994,7 @@ select:focus {
   background: transparent;
   color: var(--muted);
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 500;
   padding: 0 10px;
   text-align: left;
 }
@@ -1103,7 +1069,7 @@ select:focus {
 .purchase-row strong,
 .item-main strong {
   display: block;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .purchase-row > strong {
@@ -1119,7 +1085,7 @@ select:focus {
 .item-main span {
   color: var(--muted);
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .check-button {
@@ -1197,7 +1163,8 @@ select:focus {
 .settings-card p {
   margin-bottom: 0;
   color: var(--muted);
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 400;
 }
 
 .theme-switch {
@@ -1279,7 +1246,8 @@ select:focus {
 .danger-zone p {
   margin-bottom: 0;
   color: var(--muted);
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .danger-button {
@@ -1358,7 +1326,7 @@ select:focus {
   display: none;
   margin: 12px 0 0;
   color: var(--muted);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .empty-state.is-visible {
@@ -1367,7 +1335,7 @@ select:focus {
 
 .profile-form {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: 10px;
   margin-top: 14px;
@@ -1390,19 +1358,23 @@ select:focus {
   grid-column: 1;
 }
 
-.profile-form label:nth-of-type(2) {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.profile-form #userGenderInput {
-  grid-column: 2;
-}
-
 .profile-form button {
-  grid-column: 3;
+  grid-column: 2;
   grid-row: 1 / span 2;
   align-self: end;
+}
+
+.settings-group-label {
+  margin: 22px 0 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.section-head + .settings-group-label {
+  margin-top: 18px;
 }
 
 .bottom-nav {
@@ -1624,7 +1596,7 @@ select:focus {
   margin-bottom: 4px;
   color: var(--muted);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .preset-grid label {
@@ -1756,11 +1728,11 @@ select:focus {
   }
 
   .space-switcher-button {
-    max-width: 34vw;
+    max-width: 42vw;
   }
 
   .space-switcher-button strong {
-    font-size: 1.2rem;
+    font-size: 0.85rem;
   }
 
   .topbar-metric {
@@ -1818,12 +1790,9 @@ select:focus {
 
   .profile-form label,
   .profile-form input,
-  .profile-form select,
   .profile-form button,
   .profile-form label:nth-of-type(1),
-  .profile-form label:nth-of-type(2),
-  .profile-form #userNameInput,
-  .profile-form #userGenderInput {
+  .profile-form #userNameInput {
     grid-column: 1;
     grid-row: auto;
   }
@@ -1835,13 +1804,7 @@ select:focus {
   }
 
   .space-switcher-button {
-    max-width: 30vw;
-  }
-
-  .brand-mark {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+    max-width: 38vw;
   }
 
   .topbar-metric {

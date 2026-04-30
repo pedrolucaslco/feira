@@ -209,7 +209,6 @@ const el = {
   syncStatusLabel: document.querySelector("#syncStatusLabel"),
   conflictBanner: document.querySelector("#conflictBanner"),
   openConflictsButton: document.querySelector("#openConflictsButton"),
-  userAvatar: document.querySelector("#userAvatar"),
   summaryItemList: document.querySelector("#summaryItemList"),
   emptySummaryItems: document.querySelector("#emptySummaryItems"),
   summaryPurchaseList: document.querySelector("#summaryPurchaseList"),
@@ -224,7 +223,6 @@ const el = {
   cardClosingDayInput: document.querySelector("#cardClosingDayInput"),
   profileForm: document.querySelector("#profileForm"),
   userNameInput: document.querySelector("#userNameInput"),
-  userGenderInput: document.querySelector("#userGenderInput"),
   itemForm: document.querySelector("#itemForm"),
   itemName: document.querySelector("#itemName"),
   itemQuantity: document.querySelector("#itemQuantity"),
@@ -662,7 +660,6 @@ function renderDashboard() {
   el.budgetInput.value = budget ? String(budget).replace(".", ",") : "";
   el.cardClosingDayInput.value = state.settings.cardClosingDay || "";
   el.userNameInput.value = state.settings.userName || "";
-  el.userGenderInput.value = state.settings.userGender || "neutral";
   renderWeeklyBudget(remaining, weeksLeft);
   renderProfile();
 
@@ -730,13 +727,10 @@ function renderWeeklyBudget(remaining, weeksLeft) {
 
 function renderProfile() {
   const name = (state.settings.userName || "").trim();
-  const gender = state.settings.userGender || "neutral";
   el.welcomeTitle.textContent = name ? `Olá, ${name}` : "Boas-vindas";
   if (el.activeSpaceName) {
     el.activeSpaceName.textContent = activeSpace().name;
   }
-  el.userAvatar.textContent = gender === "female" ? "♀" : gender === "male" ? "♂" : "F";
-  el.userAvatar.dataset.gender = gender;
 }
 
 function renderSpaces() {
@@ -1804,10 +1798,9 @@ async function saveBudget(event) {
 async function saveProfile(event) {
   event.preventDefault();
   const userName = el.userNameInput.value.trim();
-  const userGender = el.userGenderInput.value;
 
-  saveLocalProfile(userName, userGender);
-  await putOne("settings", normalizeSettings({ ...state.settings, userName, userGender }));
+  saveLocalProfile(userName, "neutral");
+  await putOne("settings", normalizeSettings({ ...state.settings, userName, userGender: "neutral" }));
   await reloadAndRender();
   showToast("Perfil atualizado.");
 }
