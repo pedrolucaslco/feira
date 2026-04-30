@@ -279,6 +279,10 @@
           </div>
           <button class="icon-button" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">×</button>
         </div>
+        <label for="purchaseName">Nome da compra</label>
+        <input id="purchaseName" name="name" autocomplete="off" placeholder="Compra do mercado" />
+        <label for="purchaseDate">Data da compra</label>
+        <input id="purchaseDate" name="date" type="date" required />
         <label for="purchaseTotal">Valor pago</label>
         <input id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
         <button class="danger-text-button" id="deletePurchaseButton" type="button" hidden>Excluir compra</button>

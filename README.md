@@ -39,7 +39,8 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Animações leves ao trocar de tela.
 - Feedback sutil ao tocar em botões e modais em estilo bottom sheet.
 - Gráfico simples de variação das compras com linha de mediana.
-- Edição de compras registradas e remoção apenas pelo modal de edição.
+- Edição de compras registradas, incluindo nome, data e valor.
+- Remoção de compras apenas pelo modal de edição.
 - Cálculo de saldo restante.
 - Total gasto no mês.
 - Número de compras realizadas no cabeçalho do histórico.
@@ -122,6 +123,7 @@ items: {
 
 purchases: {
   id: string,
+  name: string,
   total: number,
   date: number
 }
@@ -138,7 +140,6 @@ settings: {
 ## Próximos passos
 
 - Melhorar o histórico de compras.
-- Permitir editar ou remover compras.
 - Visualizar meses anteriores.
 - Adicionar confirmação antes de remover itens.
 - Melhorar o comportamento offline/cache.

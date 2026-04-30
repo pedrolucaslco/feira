@@ -144,6 +144,8 @@ const el = {
   checkoutDialog: document.querySelector("#checkoutDialog"),
   checkoutDialogTitle: document.querySelector("#checkoutDialogTitle"),
   checkoutForm: document.querySelector("#checkoutForm"),
+  purchaseName: document.querySelector("#purchaseName"),
+  purchaseDate: document.querySelector("#purchaseDate"),
   purchaseTotal: document.querySelector("#purchaseTotal"),
   savePurchaseButton: document.querySelector("#savePurchaseButton"),
   deletePurchaseButton: document.querySelector("#deletePurchaseButton"),
@@ -293,6 +295,32 @@ function formatDate(timestamp) {
   }).format(new Date(timestamp));
 }
 
+function formatDateInput(timestamp = Date.now()) {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateInput(value) {
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return NaN;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return NaN;
+  }
+  return date.getTime();
+}
+
+function purchaseTitle(purchase, index) {
+  const name = (purchase.name || "").trim();
+  return name || `Compra #${state.purchases.length - index}`;
+}
+
 function itemCategoryId(item) {
   return item.categoryId || UNCATEGORIZED_ID;
 }
@@ -440,6 +468,10 @@ function createItemRow(item, { removable, draggable = false } = {}) {
     row.draggable = true;
     row.dataset.itemId = item.id;
     row.addEventListener("dragstart", (event) => {
+      if (!event.target.closest(".drag-handle")) {
+        event.preventDefault();
+        return;
+      }
       event.stopPropagation();
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData("text/plain", item.id);
@@ -450,12 +482,12 @@ function createItemRow(item, { removable, draggable = false } = {}) {
 
   const quantity = item.quantity ? `<span class="item-quantity">${escapeHtml(item.quantity)}</span>` : "";
   row.innerHTML = `
-    ${draggable ? `<button class="drag-handle" type="button" aria-label="Mover item"><i data-lucide="grip-vertical" aria-hidden="true"></i></button>` : ""}
     <button class="check-button" type="button" aria-label="Marcar ${escapeHtml(item.name)}">✓</button>
     <div class="item-main">
       <strong>${escapeHtml(item.name)}</strong>
       ${quantity}
     </div>
+    ${draggable ? `<button class="drag-handle" type="button" aria-label="Mover item"><i data-lucide="grip-vertical" aria-hidden="true"></i></button>` : ""}
   `;
 
   const dragHandle = row.querySelector(".drag-handle");
@@ -610,7 +642,7 @@ function createPurchaseRow(purchase, index, { summary = false } = {}) {
   row.setAttribute("aria-label", `Editar compra de ${formatCurrency(purchase.total)}`);
   row.innerHTML = `
     <div class="purchase-main">
-      <strong>Compra #${state.purchases.length - index}</strong>
+      <strong>${escapeHtml(purchaseTitle(purchase, index))}</strong>
       <span>${formatDate(purchase.date)}</span>
     </div>
     <strong>${formatCurrency(purchase.total)}</strong>
@@ -932,6 +964,8 @@ function openCheckout(id = null) {
   el.checkoutDialogTitle.textContent = purchase ? "Editar compra" : "Registrar compra";
   el.savePurchaseButton.textContent = purchase ? "Salvar" : "Salvar";
   el.deletePurchaseButton.hidden = !purchase;
+  el.purchaseName.value = purchase?.name || "";
+  el.purchaseDate.value = formatDateInput(purchase?.date || Date.now());
   el.purchaseTotal.value = purchase ? String(purchase.total).replace(".", ",") : "";
   if (typeof el.checkoutDialog.showModal === "function") {
     el.checkoutDialog.showModal();
@@ -943,7 +977,13 @@ function openCheckout(id = null) {
 
 async function finishPurchase(event) {
   event.preventDefault();
+  const name = el.purchaseName.value.trim();
+  const date = parseDateInput(el.purchaseDate.value);
   const total = parseCurrency(el.purchaseTotal.value);
+  if (!Number.isFinite(date)) {
+    showToast("Informe a data da compra.");
+    return;
+  }
   if (!Number.isFinite(total) || total <= 0) {
     showToast("Informe o total da compra.");
     return;
@@ -951,12 +991,13 @@ async function finishPurchase(event) {
 
   const purchase = state.purchases.find((current) => current.id === state.editingPurchaseId);
   if (purchase) {
-    await putOne("purchases", { ...purchase, total });
+    await putOne("purchases", { ...purchase, name, date, total });
   } else {
     await putOne("purchases", {
       id: createId(),
+      name,
       total,
-      date: Date.now(),
+      date,
     });
 
     await bulkPut(

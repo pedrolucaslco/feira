@@ -120,6 +120,7 @@ categories: {
 
 purchases: {
   id: string,
+  name: string,
   total: number,
   date: number
 }
@@ -288,6 +289,7 @@ Nessa tela:
 - O usuário vê budget mensal.
 - O usuário vê quantidade de compras.
 - O usuário vê o histórico completo de compras registradas.
+- O usuário pode nomear a compra para substituir o título automático no histórico.
 
 ### Registrar Compra
 
@@ -295,7 +297,7 @@ Ao registrar:
 
 1. O usuário abre o menu flutuante.
 2. Escolhe **Registrar compra**.
-3. O app abre um modal pedindo o total da compra.
+3. O app abre um modal pedindo nome opcional, data e total da compra.
 4. Salva uma entrada em `purchases`.
 5. Desmarca todos os itens da lista.
 6. Atualiza dashboard, compras e saldo.
@@ -303,7 +305,7 @@ Ao registrar:
 
 Os itens permanecem na lista após a compra. Apenas os checks são resetados.
 
-Ao editar uma compra existente, o app reaproveita o modal de compra, altera apenas o valor total e preserva a data original. A edição não altera os checks da lista. A exclusão não aparece inline no histórico; ela fica disponível apenas dentro do modal de edição para reduzir exclusões acidentais.
+Ao editar uma compra existente, o app reaproveita o modal de compra e permite alterar nome, data e valor total. A edição não altera os checks da lista. A exclusão não aparece inline no histórico; ela fica disponível apenas dentro do modal de edição para reduzir exclusões acidentais.
 
 ## PWA e Cache
 
@@ -317,10 +319,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v30
+feira-v32
 ```
 
-O cache foi atualizado para `feira-v30` depois de mover criação de seções para modal e exclusão de itens para o modal de edição.
+O cache foi atualizado para `feira-v32` depois de corrigir o acordeon das seções da lista, além de mover o handle de arrastar itens para o lado direito, bloquear seleção de texto e permitir editar nome/data das compras.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -378,6 +380,7 @@ Direção visual atual:
 - Saldo sempre visível no topo.
 - Resumo inicial com indicadores e atalhos para telas completas.
 - FAB com menu para novo item ou nova compra.
+- Textos da interface não ficam selecionáveis durante o uso.
 
 O app evita uma landing page e abre direto na experiência funcional.
 
@@ -393,8 +396,6 @@ O app evita uma landing page e abre direto na experiência funcional.
 
 Melhorias pequenas e naturais:
 
-- Editar compras do histórico.
-- Remover compras do histórico.
 - Mostrar compras de meses anteriores.
 - Configurar troca de mês/fechamento mensal.
 - Adicionar campo de observação em compra.
@@ -424,7 +425,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Seções em modal minimalista e exclusão de itens apenas pelo modal de edição.
+Correção do acordeon das seções, handle de arrastar à direita, bloqueio de seleção de texto e edição de nome/data em compras.
 ```
 
 Arquivos alterados nesse marco:
@@ -433,3 +434,5 @@ Arquivos alterados nesse marco:
 - `app.js`
 - `styles.css`
 - `sw.js`
+- `README.md`
+- `CONTEXTO_PROJETO.md`
