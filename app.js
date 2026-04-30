@@ -554,6 +554,12 @@ function renderPurchaseSummary() {
   el.emptySummaryPurchases.classList.toggle("is-visible", state.purchases.length === 0);
 }
 
+function focusDialogInput(input) {
+  if (!input) return;
+  input.focus({ preventScroll: true });
+  requestAnimationFrame(() => input.focus({ preventScroll: true }));
+}
+
 async function saveItem(event) {
   event.preventDefault();
   const name = el.itemName.value.trim();
@@ -598,7 +604,7 @@ function openItemDialog(id = null) {
   } else {
     el.itemDialog.setAttribute("open", "");
   }
-  setTimeout(() => el.itemName.focus(), 80);
+  focusDialogInput(el.itemName);
 }
 
 function closeItemDialog() {
@@ -712,7 +718,7 @@ function openCheckout() {
   } else {
     el.checkoutDialog.setAttribute("open", "");
   }
-  setTimeout(() => el.purchaseTotal.focus(), 80);
+  focusDialogInput(el.purchaseTotal);
 }
 
 async function finishPurchase(event) {

@@ -297,10 +297,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v23
+feira-v24
 ```
 
-O cache foi atualizado para `feira-v23` depois de neutralizar o widget semanal e simplificar os indicadores da tela de compras.
+O cache foi atualizado para `feira-v24` depois de reforçar o foco automático no primeiro input dos modais.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -404,7 +404,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Widget semanal neutro e indicadores de compras simplificados.
+Foco automático no primeiro input ao abrir modais.
 ```
 
 Arquivos alterados nesse marco:
