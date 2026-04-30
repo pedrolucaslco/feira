@@ -29,16 +29,17 @@ Funcionalidades do MVP:
 - Modo escuro com preferência local.
 - Navegação inferior com Lucide Icons via CDN.
 - Tela inicial minimalista.
+- Indicador de planejamento semanal baseado no fechamento do cartão.
 - Tela Compras para histórico e métricas.
 - Perfil local com nome, avatar e saudação.
-- Lista de mercado mesclada na tela inicial.
+- Resumo da lista de mercado na tela inicial.
+- Tela de lista completa.
 - Modal compartilhado para adicionar e editar itens.
 - Saldo restante no topo ao lado da saudação.
 - Adição inline acima da lista.
 - Total gasto no mês.
 - Saldo restante.
 - Número de compras feitas.
-- Média por compra.
 - Lista de mercado com nome, quantidade e marcado/desmarcado.
 - Registro de compra pelo menu flutuante.
 - Modal de compra com valor total.
@@ -117,7 +118,10 @@ purchases: {
 
 settings: {
   id: "main",
-  monthlyBudget: number
+  monthlyBudget: number,
+  cardClosingDay: number | "",
+  userName: string,
+  userGender: "neutral" | "male" | "female"
 }
 ```
 
@@ -143,18 +147,28 @@ Café
 Mostra:
 
 - Saldo restante.
-- Botão flutuante para adicionar item.
-- Botão inline para adicionar item acima da lista.
-- Lista de mercado.
+- Planejamento semanal.
+- Resumo com os 3 últimos itens da lista de mercado.
+- Resumo com as 3 últimas compras.
+- Botões **Adicionar** nos resumos para abrir os modais de item e compra.
+- Botões **Ver mais** no final de cada resumo para ir para Lista e Compras.
+
+O planejamento semanal usa o dia de fechamento do cartão configurado em **Ajustes**:
+
+```txt
+saldo sugerido por semana = saldo restante / semanas até o fechamento
+```
+
+Se o fechamento estiver configurado para um dia que não existe no mês atual, como 31 em fevereiro, o app usa o último dia válido daquele mês.
 
 ### Compras
 
 Mostra:
 
-- Gasto no mês.
-- Budget mensal.
-- Quantidade de compras no mês.
-- Média por compra.
+- Planejamento semanal.
+- Gasto do mês e budget no mesmo indicador.
+- Gráfico simples de barras para variação das compras, com linha de mediana.
+- Quantidade de compras no cabeçalho do histórico.
 - Histórico de compras do mês.
 
 O saldo é calculado assim:
@@ -167,7 +181,7 @@ O histórico exibido no dashboard considera apenas o mês atual.
 
 ### Ajustes
 
-O usuário pode editar o budget mensal na aba **Ajustes**.
+O usuário pode editar o budget mensal e o dia de fechamento do cartão na aba **Ajustes**.
 
 O campo aceita valores em formato brasileiro, por exemplo:
 
@@ -181,7 +195,7 @@ A aba também tem a função de resetar os dados locais. O reset:
 
 1. Apaga os itens.
 2. Apaga as compras.
-3. Restaura o budget padrão.
+3. Restaura o budget padrão e limpa o dia de fechamento do cartão.
 4. Deixa a lista vazia.
 5. Volta para a tela de resumo.
 
@@ -200,6 +214,14 @@ dark
 
 O reset do banco não apaga essa preferência visual.
 
+A aba também permite escolher a cor de destaque. A preferência é salva em `localStorage`, com a chave:
+
+```txt
+feira:accent
+```
+
+As opções usam cores inspiradas no Tailwind, como emerald, green, sky, blue, purple, fuchsia, rose, amber, teal e cyan. O accent afeta tanto o modo claro quanto o modo escuro.
+
 A aba também permite salvar um perfil local:
 
 ```js
@@ -211,6 +233,8 @@ settings: {
 
 Esses dados são usados para exibir a saudação no topo do app e o avatar.
 
+A aba também tem a ação **Atualizar app**, pensada para uso em PWA instalado. Ela recarrega o estado, pede atualização do service worker quando disponível e força reload da janela.
+
 ### Lista de Mercado
 
 O usuário pode:
@@ -221,15 +245,15 @@ O usuário pode:
 - Remover item.
 - Editar item.
 
-A lista aparece na tela inicial. Cada item tem:
+A tela inicial mostra um resumo com os 3 últimos itens e permite marcar, editar e excluir por ali. A tela **Lista** mostra todos os itens e inclui a adição inline no topo. Cada item tem:
 
-- Botão de check.
-- Nome.
-- Quantidade.
-- Botão de editar.
-- Botão de remover.
+- Botão circular de check.
+- Nome e quantidade na mesma linha quando houver quantidade.
+- Botão de remover com confirmação inline antes de excluir.
 
-O botão flutuante e a linha inline acima da lista abrem o modal de novo item. Ao clicar em editar, o mesmo modal é reutilizado com os dados do item.
+O clique no fundo ou no texto de qualquer item abre o modal de edição. O botão de editar separado foi removido para reduzir ruído visual.
+
+O botão flutuante e a linha inline acima da lista abrem o modal de novo item. Ao editar, o mesmo modal é reutilizado com os dados do item.
 
 - Campo de nome.
 - Campo de quantidade.
@@ -273,12 +297,12 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v13
+feira-v23
 ```
 
-O cache foi atualizado para `feira-v13` depois de tornar o render tolerante a HTML antigo em cache.
+O cache foi atualizado para `feira-v23` depois de neutralizar o widget semanal e simplificar os indicadores da tela de compras.
 
-Se alguma alteração não aparecer no navegador, fazer reload forte ou limpar o service worker/cache do site.
+Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
 ## Como Rodar
 
@@ -325,10 +349,15 @@ Direção visual atual:
 
 - Interface mobile-first.
 - Navegação inferior fixa.
+- Transição animada ao trocar de aba, respeitando `prefers-reduced-motion`.
+- Modais em estilo bottom sheet com animação de subida.
+- Botões com feedback sutil ao toque.
 - Cards simples com raio de 8px.
-- Botão grande para começar/finalizar compra.
+- Modo escuro AMOLED com base neutral e accent emerald.
+- Accent configurável para modo claro e escuro.
 - Saldo sempre visível no topo.
-- Modo compra separado para foco.
+- Resumo inicial com indicadores e atalhos para telas completas.
+- FAB com menu para novo item ou nova compra.
 
 O app evita uma landing page e abre direto na experiência funcional.
 
@@ -375,7 +404,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Resumo com listas curtas, Lista completa, Compras com indicadores e FAB com ações de novo item/nova compra.
+Widget semanal neutro e indicadores de compras simplificados.
 ```
 
 Arquivos alterados nesse marco:

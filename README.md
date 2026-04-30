@@ -23,28 +23,35 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 ## Funcionalidades atuais
 
 - Dashboard com resumo do mês.
-- Tela inicial com saldo no topo e lista de mercado.
-- Adição inline acima da lista e botão flutuante de atalho.
+- Tela inicial com saldo no topo, planejamento semanal e resumos rápidos.
+- Campo de fechamento do cartão para calcular semanas restantes e saldo sugerido por semana.
+- Atalhos para adicionar item e compra direto pelos resumos da tela inicial.
+- Tela de lista completa com adição inline e botão flutuante de atalho.
 - Modal compartilhado para adicionar e editar itens.
-- Tela de compras com histórico, budget, total gasto e quantidade de compras.
+- Tela de compras com histórico, gasto/budget, gráfico de variação e planejamento semanal.
 - Controle de budget mensal.
 - Aba de ajustes.
 - Perfil local com nome, avatar e saudação no topo.
 - Modo escuro com preferência salva no dispositivo.
+- Modo escuro AMOLED com accent emerald.
+- Cor de destaque configurável com opções inspiradas no Tailwind.
 - Navegação inferior com Lucide Icons via CDN.
+- Animações leves ao trocar de tela.
+- Feedback sutil ao tocar em botões e modais em estilo bottom sheet.
+- Gráfico simples de variação das compras com linha de mediana.
 - Cálculo de saldo restante.
 - Total gasto no mês.
-- Número de compras realizadas.
-- Média por compra.
+- Número de compras realizadas no cabeçalho do histórico.
 - Lista de mercado offline na tela inicial.
 - Adição de itens com quantidade opcional.
 - Edição de nome e quantidade dos itens.
-- Remoção de itens.
-- Checklist para marcar itens já comprados.
+- Remoção de itens com confirmação inline.
+- Checklist para marcar itens já comprados, inclusive no resumo da tela inicial.
 - Registro de compra pelo menu flutuante.
 - Modal de compra com valor total.
 - Histórico simples das compras do mês.
 - Reset dos dados locais para começar do zero.
+- Atualização manual do app pela tela de ajustes.
 - PWA com manifest e service worker básico.
 
 ## Status
@@ -118,7 +125,10 @@ purchases: {
 
 settings: {
   id: "main",
-  monthlyBudget: number
+  monthlyBudget: number,
+  cardClosingDay: number | "",
+  userName: string,
+  userGender: "neutral" | "male" | "female"
 }
 ```
 

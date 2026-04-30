@@ -2,6 +2,9 @@ const DB_NAME = "feira-db";
 const DB_VERSION = 1;
 const SETTINGS_ID = "main";
 const THEME_STORAGE_KEY = "feira:theme";
+const ACCENT_STORAGE_KEY = "feira:accent";
+const VALID_ACCENTS = ["emerald", "green", "sky", "blue", "purple", "fuchsia", "rose", "amber", "teal", "cyan"];
+const VIEW_ORDER = ["dashboardView", "listView", "purchaseView", "settingsView"];
 const DEFAULT_ITEMS = [
   { name: "Arroz", quantity: "1 pacote" },
   { name: "Feijão", quantity: "1 kg" },
@@ -32,16 +35,35 @@ function getInitialTheme() {
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   localStorage.setItem(THEME_STORAGE_KEY, theme);
-  document.querySelector("#themeColorMeta")?.setAttribute("content", theme === "dark" ? "#0e1615" : "#145c58");
+  updateThemeColor();
+}
+
+function getInitialAccent() {
+  const storedAccent = localStorage.getItem(ACCENT_STORAGE_KEY);
+  return VALID_ACCENTS.includes(storedAccent) ? storedAccent : "emerald";
+}
+
+function applyAccent(accent) {
+  const safeAccent = VALID_ACCENTS.includes(accent) ? accent : "emerald";
+  document.documentElement.dataset.accent = safeAccent;
+  localStorage.setItem(ACCENT_STORAGE_KEY, safeAccent);
+  updateThemeColor();
+}
+
+function updateThemeColor() {
+  const theme = document.documentElement.dataset.theme;
+  const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+  document.querySelector("#themeColorMeta")?.setAttribute("content", theme === "dark" ? "#000000" : accent || "#059669");
 }
 
 applyTheme(getInitialTheme());
+applyAccent(getInitialAccent());
 
 const state = {
   db: null,
   items: [],
   purchases: [],
-  settings: { id: SETTINGS_ID, monthlyBudget: 1200, userName: "", userGender: "neutral" },
+  settings: { id: SETTINGS_ID, monthlyBudget: 1200, cardClosingDay: "", userName: "", userGender: "neutral" },
   activeView: "dashboardView",
   editingItemId: null,
 };
@@ -56,12 +78,11 @@ function createId() {
 const el = {
   views: [...document.querySelectorAll(".view")],
   navButtons: [...document.querySelectorAll(".nav-button")],
-  monthLabel: document.querySelector("#monthLabel"),
   remainingBalance: document.querySelector("#remainingBalance"),
-  spentMonth: document.querySelector("#spentMonth"),
-  monthlyBudget: document.querySelector("#monthlyBudget"),
-  purchaseCount: document.querySelector("#purchaseCount"),
-  averagePurchase: document.querySelector("#averagePurchase"),
+  spentBudgetRatio: document.querySelector("#spentBudgetRatio"),
+  purchaseCountLabel: document.querySelector("#purchaseCountLabel"),
+  weeklyBudgetValues: [...document.querySelectorAll(".weeklyBudgetValue")],
+  weeksUntilClosingLabels: [...document.querySelectorAll(".weeksUntilClosingLabel")],
   itemCountLabel: document.querySelector("#itemCountLabel"),
   welcomeTitle: document.querySelector("#welcomeTitle"),
   userAvatar: document.querySelector("#userAvatar"),
@@ -71,8 +92,12 @@ const el = {
   emptySummaryPurchases: document.querySelector("#emptySummaryPurchases"),
   purchaseList: document.querySelector("#purchaseList"),
   emptyPurchases: document.querySelector("#emptyPurchases"),
+  purchaseChart: document.querySelector("#purchaseChart"),
+  purchaseMedianLabel: document.querySelector("#purchaseMedianLabel"),
+  emptyPurchaseChart: document.querySelector("#emptyPurchaseChart"),
   budgetForm: document.querySelector("#budgetForm"),
   budgetInput: document.querySelector("#budgetInput"),
+  cardClosingDayInput: document.querySelector("#cardClosingDayInput"),
   profileForm: document.querySelector("#profileForm"),
   userNameInput: document.querySelector("#userNameInput"),
   userGenderInput: document.querySelector("#userGenderInput"),
@@ -87,12 +112,16 @@ const el = {
   itemList: document.querySelector("#itemList"),
   emptyItems: document.querySelector("#emptyItems"),
   resetDatabaseButton: document.querySelector("#resetDatabaseButton"),
+  manualRefreshButton: document.querySelector("#manualRefreshButton"),
   themeToggle: document.querySelector("#themeToggle"),
+  accentColorInput: document.querySelector("#accentColorInput"),
   quickAddButton: document.querySelector("#quickAddButton"),
   fabMenu: document.querySelector("#fabMenu"),
   quickAddItemButton: document.querySelector("#quickAddItemButton"),
   quickAddPurchaseButton: document.querySelector("#quickAddPurchaseButton"),
   inlineAddButton: document.querySelector("#inlineAddButton"),
+  addSummaryItemButton: document.querySelector("#addSummaryItemButton"),
+  addSummaryPurchaseButton: document.querySelector("#addSummaryPurchaseButton"),
   viewFullListButton: document.querySelector("#viewFullListButton"),
   viewPurchasesButton: document.querySelector("#viewPurchasesButton"),
   refreshButton: document.querySelector("#refreshButton"),
@@ -240,6 +269,13 @@ function formatDate(timestamp) {
   }).format(new Date(timestamp));
 }
 
+function median(values) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
 function parseCurrency(value) {
   const normalized = String(value)
     .trim()
@@ -251,23 +287,51 @@ function parseCurrency(value) {
   return Number.isFinite(parsed) ? parsed : NaN;
 }
 
+function daysInMonth(year, month) {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function closingDateForMonth(day, year, month) {
+  const safeDay = Math.min(Math.max(Number(day), 1), 31);
+  return new Date(year, month, Math.min(safeDay, daysInMonth(year, month)));
+}
+
+function nextClosingDate(day, date = new Date()) {
+  const today = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const candidate = closingDateForMonth(day, date.getFullYear(), date.getMonth());
+  if (candidate < today) {
+    return closingDateForMonth(day, date.getFullYear(), date.getMonth() + 1);
+  }
+  return candidate;
+}
+
+function weeksUntilClosing(day) {
+  if (!day) return null;
+  const now = new Date();
+  const closing = nextClosingDate(day, now);
+  const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+  return Math.max(1, Math.ceil((closing - now) / msPerWeek));
+}
+
 function renderDashboard() {
   const monthPurchases = currentMonthPurchases();
   const spent = monthPurchases.reduce((sum, purchase) => sum + purchase.total, 0);
   const budget = state.settings.monthlyBudget;
   const remaining = budget - spent;
-  const average = monthPurchases.length ? spent / monthPurchases.length : 0;
-  const monthName = new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(new Date());
+  const weeksLeft = weeksUntilClosing(state.settings.cardClosingDay);
 
-  el.monthLabel.textContent = monthName;
   el.remainingBalance.textContent = formatCurrency(remaining);
-  el.spentMonth.textContent = formatCurrency(spent);
-  el.monthlyBudget.textContent = formatCurrency(budget);
-  el.purchaseCount.textContent = String(monthPurchases.length);
-  el.averagePurchase.textContent = `Média ${formatCurrency(average)}`;
+  if (el.spentBudgetRatio) {
+    el.spentBudgetRatio.textContent = `${formatCurrency(spent)} / ${formatCurrency(budget)}`;
+  }
+  if (el.purchaseCountLabel) {
+    el.purchaseCountLabel.textContent = `${monthPurchases.length} ${monthPurchases.length === 1 ? "compra" : "compras"}`;
+  }
   el.budgetInput.value = budget ? String(budget).replace(".", ",") : "";
+  el.cardClosingDayInput.value = state.settings.cardClosingDay || "";
   el.userNameInput.value = state.settings.userName || "";
   el.userGenderInput.value = state.settings.userGender || "neutral";
+  renderWeeklyBudget(remaining, weeksLeft);
   renderProfile();
 
   el.purchaseList.innerHTML = "";
@@ -286,6 +350,57 @@ function renderDashboard() {
 
   el.emptyPurchases.classList.toggle("is-visible", state.purchases.length === 0);
   renderPurchaseSummary();
+  renderPurchaseChart();
+}
+
+function renderPurchaseChart() {
+  if (!el.purchaseChart || !el.purchaseMedianLabel || !el.emptyPurchaseChart) return;
+
+  const purchases = state.purchases.slice(0, 8).reverse();
+  const totals = purchases.map((purchase) => purchase.total);
+  const max = Math.max(...totals, 0);
+  const medianValue = median(totals);
+
+  el.purchaseChart.innerHTML = "";
+  el.purchaseMedianLabel.textContent = `Mediana ${formatCurrency(medianValue)}`;
+  el.emptyPurchaseChart.classList.toggle("is-visible", purchases.length === 0);
+
+  if (!purchases.length) return;
+
+  const medianLine = document.createElement("span");
+  medianLine.className = "median-line";
+  medianLine.style.bottom = `${Math.max(8, Math.min(94, (medianValue / max) * 100))}%`;
+  el.purchaseChart.append(medianLine);
+
+  purchases.forEach((purchase, index) => {
+    const bar = document.createElement("span");
+    bar.className = "purchase-bar";
+    bar.style.height = `${Math.max(12, (purchase.total / max) * 100)}%`;
+    bar.title = `${formatDate(purchase.date)} - ${formatCurrency(purchase.total)}`;
+    bar.setAttribute("aria-label", `Compra ${index + 1}: ${formatCurrency(purchase.total)}`);
+    el.purchaseChart.append(bar);
+  });
+}
+
+function renderWeeklyBudget(remaining, weeksLeft) {
+  if (!el.weeklyBudgetValues.length || !el.weeksUntilClosingLabels.length) return;
+
+  if (!weeksLeft) {
+    el.weeklyBudgetValues.forEach((value) => {
+      value.textContent = formatCurrency(remaining);
+    });
+    el.weeksUntilClosingLabels.forEach((label) => {
+      label.textContent = "Informe o dia de fechamento em Ajustes.";
+    });
+    return;
+  }
+
+  el.weeklyBudgetValues.forEach((value) => {
+    value.textContent = formatCurrency(remaining / weeksLeft);
+  });
+  el.weeksUntilClosingLabels.forEach((label) => {
+    label.textContent = `${weeksLeft} ${weeksLeft === 1 ? "semana restante" : "semanas restantes"} até o fechamento.`;
+  });
 }
 
 function renderProfile() {
@@ -299,8 +414,11 @@ function renderProfile() {
 function createItemRow(item, { removable }) {
   const row = document.createElement("li");
   row.className = `item-row${item.checked ? " is-checked" : ""}`;
+  row.setAttribute("role", "button");
+  row.setAttribute("tabindex", "0");
+  row.setAttribute("aria-label", `Editar ${item.name}`);
 
-  const quantity = item.quantity ? `<span>${escapeHtml(item.quantity)}</span>` : "<span>Sem quantidade</span>";
+  const quantity = item.quantity ? `<span class="item-quantity">${escapeHtml(item.quantity)}</span>` : "";
   row.innerHTML = `
     <button class="check-button" type="button" aria-label="Marcar ${escapeHtml(item.name)}">✓</button>
     <div class="item-main">
@@ -311,37 +429,52 @@ function createItemRow(item, { removable }) {
       removable
         ? `
           <div class="item-actions">
-            <button class="edit-button" type="button" aria-label="Editar item">✎</button>
             <button class="delete-button" type="button" aria-label="Remover item">×</button>
+            <div class="delete-confirm" hidden>
+              <span>Excluir?</span>
+              <button class="confirm-delete-button" type="button">Confirmar</button>
+            </div>
           </div>
         `
         : ""
     }
   `;
 
-  row.querySelector(".check-button").addEventListener("click", () => toggleItem(item.id));
-  const editButton = row.querySelector(".edit-button");
-  if (editButton) {
-    editButton.addEventListener("click", () => openItemDialog(item.id));
-  }
+  row.addEventListener("click", () => openItemDialog(item.id));
+  row.addEventListener("keydown", (event) => {
+    if (event.target !== row) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openItemDialog(item.id);
+    }
+  });
+
+  row.querySelector(".check-button").addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleItem(item.id);
+  });
   const deleteButton = row.querySelector(".delete-button");
   if (deleteButton) {
-    deleteButton.addEventListener("click", () => removeItem(item.id));
+    deleteButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const confirmBox = row.querySelector(".delete-confirm");
+      if (confirmBox) {
+        confirmBox.hidden = !confirmBox.hidden;
+      }
+    });
+  }
+  const confirmBox = row.querySelector(".delete-confirm");
+  if (confirmBox) {
+    confirmBox.addEventListener("click", (event) => event.stopPropagation());
+  }
+  const confirmDeleteButton = row.querySelector(".confirm-delete-button");
+  if (confirmDeleteButton) {
+    confirmDeleteButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      removeItem(item.id);
+    });
   }
 
-  return row;
-}
-
-function createSummaryItemRow(item) {
-  const row = document.createElement("li");
-  row.className = `item-row summary-row${item.checked ? " is-checked" : ""}`;
-  const quantity = item.quantity ? `<span>${escapeHtml(item.quantity)}</span>` : "<span>Sem quantidade</span>";
-  row.innerHTML = `
-    <div class="item-main">
-      <strong>${escapeHtml(item.name)}</strong>
-      ${quantity}
-    </div>
-  `;
   return row;
 }
 
@@ -354,7 +487,7 @@ function renderItems() {
   });
 
   state.items.slice(0, 3).forEach((item) => {
-    el.summaryItemList.append(createSummaryItemRow(item));
+    el.summaryItemList.append(createItemRow(item, { removable: true }));
   });
 
   el.emptyItems.classList.toggle("is-visible", state.items.length === 0);
@@ -371,6 +504,9 @@ function renderNavigation() {
 
 function renderSettings() {
   el.themeToggle.checked = document.documentElement.dataset.theme === "dark";
+  if (el.accentColorInput) {
+    el.accentColorInput.value = document.documentElement.dataset.accent || "emerald";
+  }
 }
 
 function renderIcons() {
@@ -388,6 +524,14 @@ function render() {
 }
 
 function setView(viewId) {
+  if (state.activeView === viewId) {
+    closeFabMenu();
+    return;
+  }
+
+  const currentIndex = VIEW_ORDER.indexOf(state.activeView);
+  const nextIndex = VIEW_ORDER.indexOf(viewId);
+  document.documentElement.dataset.navDirection = nextIndex > currentIndex ? "forward" : "back";
   state.activeView = viewId;
   renderNavigation();
   closeFabMenu();
@@ -486,12 +630,17 @@ async function removeItem(id) {
 async function saveBudget(event) {
   event.preventDefault();
   const value = parseCurrency(el.budgetInput.value);
+  const cardClosingDay = el.cardClosingDayInput.value ? Number(el.cardClosingDayInput.value) : "";
   if (!Number.isFinite(value) || value < 0) {
     showToast("Informe um budget válido.");
     return;
   }
+  if (cardClosingDay && (cardClosingDay < 1 || cardClosingDay > 31)) {
+    showToast("Informe um dia de fechamento entre 1 e 31.");
+    return;
+  }
 
-  await putOne("settings", { ...state.settings, id: SETTINGS_ID, monthlyBudget: value });
+  await putOne("settings", { ...state.settings, id: SETTINGS_ID, monthlyBudget: value, cardClosingDay });
   await reloadAndRender();
   showToast("Budget atualizado.");
 }
@@ -511,7 +660,7 @@ async function resetDatabase() {
   if (!confirmed) return;
 
   await Promise.all([clearStore("items"), clearStore("purchases"), clearStore("settings")]);
-  await putOne("settings", { id: SETTINGS_ID, monthlyBudget: 1200, userName: "", userGender: "neutral" });
+  await putOne("settings", { id: SETTINGS_ID, monthlyBudget: 1200, cardClosingDay: "", userName: "", userGender: "neutral" });
 
   state.editingItemId = null;
 
@@ -523,6 +672,10 @@ async function resetDatabase() {
 function toggleTheme(event) {
   const theme = event.currentTarget.checked ? "dark" : "light";
   applyTheme(theme);
+}
+
+function changeAccent(event) {
+  applyAccent(event.currentTarget.value);
 }
 
 function openQuickAdd() {
@@ -616,6 +769,22 @@ async function reloadAndRender() {
   render();
 }
 
+async function refreshApp() {
+  showToast("Atualizando app...");
+  await reloadAndRender();
+
+  try {
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map((registration) => registration.update()));
+    }
+  } catch (error) {
+    console.info("Não foi possível atualizar o service worker antes do reload.", error);
+  }
+
+  window.setTimeout(() => window.location.reload(), 250);
+}
+
 function bindEvents() {
   el.navButtons.forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.view));
@@ -626,11 +795,15 @@ function bindEvents() {
   el.budgetForm.addEventListener("submit", saveBudget);
   el.profileForm.addEventListener("submit", saveProfile);
   el.resetDatabaseButton.addEventListener("click", resetDatabase);
+  el.manualRefreshButton?.addEventListener("click", refreshApp);
   el.themeToggle.addEventListener("change", toggleTheme);
+  el.accentColorInput?.addEventListener("change", changeAccent);
   el.quickAddButton.addEventListener("click", toggleFabMenu);
   el.quickAddItemButton?.addEventListener("click", openQuickItem);
   el.quickAddPurchaseButton?.addEventListener("click", openQuickPurchase);
   el.inlineAddButton.addEventListener("click", openQuickAdd);
+  el.addSummaryItemButton?.addEventListener("click", openQuickItem);
+  el.addSummaryPurchaseButton?.addEventListener("click", openQuickPurchase);
   el.viewFullListButton?.addEventListener("click", () => setView("listView"));
   el.viewPurchasesButton?.addEventListener("click", () => setView("purchaseView"));
   el.checkoutForm.addEventListener("submit", finishPurchase);

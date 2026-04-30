@@ -16,6 +16,7 @@
               ? "dark"
               : "light";
         document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.accent = localStorage.getItem("feira:accent") || "emerald";
       })();
     </script>
     <link rel="stylesheet" href="./styles.css" />
@@ -39,32 +40,52 @@
       <main>
         <section id="dashboardView" class="view is-active" aria-label="Resumo">
           <div class="home-panel">
-            <p class="eyebrow" id="monthLabel">Mês atual</p>
+            <section class="weekly-widget" aria-labelledby="weeklyBudgetTitle">
+              <div>
+                <h3 id="weeklyBudgetTitle">Saldo por semana</h3>
+              </div>
+              <strong class="weeklyBudgetValue" id="weeklyBudgetValue">R$ 0,00</strong>
+              <span class="weeksUntilClosingLabel" id="weeksUntilClosingLabel">Configure o fechamento nos ajustes.</span>
+            </section>
+
             <section class="home-list" aria-labelledby="listTitle">
               <div class="block-title-row">
                 <h3 id="listTitle">Lista de mercado</h3>
-                <button class="link-button" id="viewFullListButton" type="button">Ver mais</button>
+                <button class="link-button icon-link-button" id="addSummaryItemButton" type="button" aria-label="Adicionar item">
+                  <i data-lucide="plus" aria-hidden="true"></i>
+                </button>
               </div>
               <ul class="item-list summary-list" id="summaryItemList"></ul>
               <p class="empty-state" id="emptySummaryItems">Sua lista ainda está vazia.</p>
+              <button class="ghost-list-button" id="viewFullListButton" type="button">Ver mais</button>
             </section>
 
             <section class="home-list" aria-labelledby="summaryPurchasesTitle">
               <div class="block-title-row">
                 <h3 id="summaryPurchasesTitle">Últimas compras</h3>
-                <button class="link-button" id="viewPurchasesButton" type="button">Ver mais</button>
+                <button class="link-button icon-link-button" id="addSummaryPurchaseButton" type="button" aria-label="Registrar compra">
+                  <i data-lucide="plus" aria-hidden="true"></i>
+                </button>
               </div>
               <ul class="purchase-list summary-list" id="summaryPurchaseList"></ul>
               <p class="empty-state" id="emptySummaryPurchases">Nenhuma compra registrada.</p>
+              <button class="ghost-list-button" id="viewPurchasesButton" type="button">Ver mais</button>
             </section>
           </div>
         </section>
 
         <section id="listView" class="view" aria-labelledby="fullListTitle">
+          <section class="weekly-widget compact-widget" aria-label="Planejamento semanal">
+            <div>
+              <h3>Saldo por semana</h3>
+            </div>
+            <strong class="weeklyBudgetValue">R$ 0,00</strong>
+            <span class="weeksUntilClosingLabel">Configure o fechamento nos ajustes.</span>
+          </section>
+
           <div class="section-head">
             <div>
-              <p class="eyebrow">Checklist</p>
-              <h2 id="fullListTitle">Lista completa</h2>
+              <h2 id="fullListTitle">Lista de compras</h2>
             </div>
             <span id="itemCountLabel" class="soft-label">0 itens</span>
           </div>
@@ -79,6 +100,14 @@
         </section>
 
         <section id="purchaseView" class="view" aria-labelledby="purchaseTitle">
+          <section class="weekly-widget compact-widget" aria-label="Planejamento semanal">
+            <div>
+              <h3>Saldo por semana</h3>
+            </div>
+            <strong class="weeklyBudgetValue">R$ 0,00</strong>
+            <span class="weeksUntilClosingLabel">Configure o fechamento nos ajustes.</span>
+          </section>
+
           <div class="section-head">
             <div>
               <p class="eyebrow">Compras</p>
@@ -91,23 +120,24 @@
 
           <div class="metrics-grid report-grid">
             <article class="metric">
-              <span>Gasto no mês</span>
-              <strong id="spentMonth">R$ 0,00</strong>
-            </article>
-            <article class="metric">
-              <span>Budget</span>
-              <strong id="monthlyBudget">R$ 0,00</strong>
-            </article>
-            <article class="metric">
-              <span>Compras</span>
-              <strong id="purchaseCount">0</strong>
+              <span>Gasto / budget</span>
+              <strong id="spentBudgetRatio">R$ 0,00 / R$ 0,00</strong>
             </article>
           </div>
+
+          <section class="content-block chart-block" aria-labelledby="purchaseChartTitle">
+            <div class="block-title-row">
+              <h3 id="purchaseChartTitle">Variação das compras</h3>
+              <span id="purchaseMedianLabel" class="soft-label">Mediana R$ 0,00</span>
+            </div>
+            <div class="purchase-chart" id="purchaseChart" aria-label="Gráfico de barras das compras"></div>
+            <p class="empty-state" id="emptyPurchaseChart">Registre compras para ver a variação.</p>
+          </section>
 
           <section class="content-block" aria-labelledby="latestTitle">
             <div class="block-title-row">
               <h3 id="latestTitle">Compras realizadas</h3>
-              <span id="averagePurchase" class="soft-label">Média R$ 0,00</span>
+              <span id="purchaseCountLabel" class="soft-label">0 compras</span>
             </div>
             <ul class="purchase-list" id="purchaseList"></ul>
             <p class="empty-state" id="emptyPurchases">Nenhuma compra registrada.</p>
@@ -123,9 +153,15 @@
           </div>
 
           <form class="budget-form" id="budgetForm">
-            <label for="budgetInput">Budget mensal</label>
-            <div class="input-row">
-              <input id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
+            <div class="settings-fields">
+              <label for="budgetInput">
+                Budget mensal
+                <input id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
+              </label>
+              <label for="cardClosingDayInput">
+                Fechamento do cartão
+                <input id="cardClosingDayInput" name="cardClosingDay" type="number" min="1" max="31" inputmode="numeric" autocomplete="off" placeholder="Dia" />
+              </label>
               <button type="submit">Salvar</button>
             </div>
           </form>
@@ -151,6 +187,33 @@
               <input id="themeToggle" type="checkbox" role="switch" aria-label="Ativar modo escuro" />
               <span aria-hidden="true"></span>
             </label>
+          </section>
+
+          <section class="settings-card" aria-labelledby="accentTitle">
+            <div>
+              <h3 id="accentTitle">Cor de destaque</h3>
+              <p>Escolha o accent usado nos botões e indicadores.</p>
+            </div>
+            <select class="accent-select" id="accentColorInput" name="accentColor" aria-label="Cor de destaque">
+              <option value="emerald">Emerald</option>
+              <option value="green">Green</option>
+              <option value="sky">Sky</option>
+              <option value="blue">Blue</option>
+              <option value="purple">Purple</option>
+              <option value="fuchsia">Fuchsia</option>
+              <option value="rose">Rose</option>
+              <option value="amber">Amber</option>
+              <option value="teal">Teal</option>
+              <option value="cyan">Cyan</option>
+            </select>
+          </section>
+
+          <section class="settings-card" aria-labelledby="refreshAppTitle">
+            <div>
+              <h3 id="refreshAppTitle">Atualizar app</h3>
+              <p>Recarrega a interface e busca a versão mais recente disponível.</p>
+            </div>
+            <button class="secondary-button" id="manualRefreshButton" type="button">Atualizar</button>
           </section>
 
           <section class="danger-zone" aria-labelledby="resetTitle">
