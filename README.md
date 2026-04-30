@@ -34,6 +34,9 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Controle de budget mensal.
 - Aba de ajustes.
 - Perfil local com nome, avatar e saudação no topo.
+- Seletor de Espaços na topbar, com `Espaço local` e espaços compartilhados.
+- Criação de espaço compartilhado vazio e entrada por código.
+- Base offline-first para sincronização com Supabase, outbox local, Realtime e resolução inicial de conflitos.
 - Modo escuro com preferência salva no dispositivo.
 - Modo escuro AMOLED com accent emerald.
 - Cor de destaque configurável com opções inspiradas no Tailwind.
@@ -71,13 +74,14 @@ Este repositório começou como um POC rápido e está evoluindo aos poucos. A v
 
 ## Stack atual
 
-Por enquanto, o app foi implementado sem dependências externas:
+Por enquanto, o app segue sem build e usa dependências via CDN quando necessário:
 
 - HTML
 - CSS
 - JavaScript
 - IndexedDB
 - Service Worker
+- Supabase opcional para compartilhamento
 - Vercel
 
 A ideia inicial considera uma futura migração para:
@@ -105,12 +109,17 @@ Também é possível abrir o `index.html` diretamente, mas o servidor local é r
 
 ## Modelo de dados
 
-O app usa IndexedDB local com três coleções principais:
+O app usa IndexedDB local com coleções por espaço:
 
 ```txt
 items
+categories
 purchases
 settings
+spaces
+syncOutbox
+syncMeta
+syncConflicts
 ```
 
 Estrutura conceitual:
@@ -118,28 +127,57 @@ Estrutura conceitual:
 ```js
 items: {
   id: string,
+  spaceId: string,
   name: string,
   quantity: string,
+  categoryId: string,
   checked: boolean,
+  createdAt: number
+}
+
+categories: {
+  id: string,
+  spaceId: string,
+  name: string,
   createdAt: number
 }
 
 purchases: {
   id: string,
+  spaceId: string,
   name: string,
   total: number,
   date: number
 }
 
 settings: {
-  id: "main",
+  id: `${spaceId}:main`,
+  spaceId: string,
   monthlyBudget: number,
-  cardClosingDay: number | "",
+  cardClosingDay: number | ""
+}
+```
+
+Preferências pessoais ficam locais no dispositivo:
+
+```js
+profile: {
   userName: string,
   userGender: "neutral" | "male" | "female",
   editorMode: "modal" | "inline"
 }
 ```
+
+## Compartilhamento com Supabase
+
+O compartilhamento é opcional. Sem configuração, o app continua funcionando com o `Espaço local`.
+
+Para ativar:
+
+1. Crie um projeto Supabase.
+2. Habilite Auth anônimo.
+3. Execute o SQL de `supabase.sql`.
+4. Preencha `supabase-config.js` com a URL e a anon/publishable key pública do projeto.
 
 ## Próximos passos
 
@@ -148,8 +186,8 @@ settings: {
 - Adicionar confirmação antes de remover itens.
 - Melhorar o comportamento offline/cache.
 - Migrar para React + Dexie.
-- Adicionar backend e sincronização no futuro.
-- Permitir compartilhamento da lista.
+- Melhorar a resolução visual de conflitos.
+- Adicionar login por email para recuperar espaços em outros dispositivos.
 
 ## Visão futura
 

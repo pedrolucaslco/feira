@@ -26,6 +26,8 @@ O projeto é um PWA estático, sem build:
 - `styles.css`: layout mobile-first, tema claro/escuro, accent colors, cards, modais, lista, gráficos e responsividade.
 - `app.js`: estado, IndexedDB, regras de negócio, renderização manual, eventos, formulários, modais, drag and drop e PWA refresh.
 - `sw.js`: service worker, lista de assets cacheados e versão do cache.
+- `supabase-config.js`: configuração pública opcional do Supabase (`url` e `anonKey`).
+- `supabase.sql`: schema, RLS, Realtime e RPCs para espaços compartilhados.
 - `manifest.webmanifest`: metadados PWA, nome, cores e ícones.
 - `icon.svg`: ícone do app.
 - `README.md`: documentação pública.
@@ -40,7 +42,7 @@ Arquivo obrigatório:
 
 - `sw.js`
   - Atualizar `CACHE_NAME`, por exemplo de `feira-v30` para `feira-v31`.
-  - Fazer isso sempre que mudar qualquer asset cacheado: `index.html`, `styles.css`, `app.js`, `manifest.webmanifest` ou `icon.svg`.
+  - Fazer isso sempre que mudar qualquer asset cacheado: `index.html`, `styles.css`, `app.js`, `supabase-config.js`, `manifest.webmanifest` ou `icon.svg`.
   - Este projeto deve sempre incrementar o cache nessas mudanças.
 
 Arquivo de contexto que também deve acompanhar:
@@ -172,6 +174,7 @@ Exemplos observados:
 Regra prática:
 
 - Se a mudança afeta o que o usuário vê ou baixa no PWA, incluir `sw.js` com cache incrementado.
+- Se a mudança envolver compartilhamento, conferir `supabase.sql`, `supabase-config.js`, stores de sync e isolamento por `spaceId`.
 - Se a mudança é interna e pequena, como um ajuste pontual em JS, pode não exigir README, mas ainda pode exigir cache se o objetivo for publicar a alteração para usuários com PWA/cache.
 - Se a mudança muda escopo, fluxo, tela, persistência ou comportamento documentável, atualizar `CONTEXTO_PROJETO.md`.
 

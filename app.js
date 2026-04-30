@@ -1,8 +1,20 @@
 const DB_NAME = "feira-db";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const SETTINGS_ID = "main";
+const LOCAL_SPACE_ID = "local";
+const ACTIVE_SPACE_STORAGE_KEY = "feira:active-space";
 const THEME_STORAGE_KEY = "feira:theme";
 const ACCENT_STORAGE_KEY = "feira:accent";
+const PROFILE_STORAGE_KEY = "feira:profile";
+const EDITOR_MODE_STORAGE_KEY = "feira:editor-mode";
+const SUPABASE_CONFIG = globalThis.FEIRA_SUPABASE || {};
+const STORE_TO_ENTITY = {
+  items: "item",
+  categories: "category",
+  purchases: "purchase",
+  settings: "settings",
+};
+const ENTITY_TO_STORE = Object.fromEntries(Object.entries(STORE_TO_ENTITY).map(([storeName, entityType]) => [entityType, storeName]));
 const VALID_ACCENTS = ["emerald", "green", "sky", "blue", "purple", "fuchsia", "rose", "amber", "teal", "cyan"];
 const VIEW_ORDER = ["dashboardView", "listView", "purchaseView", "settingsView"];
 const DEFAULT_ITEMS = [
@@ -65,15 +77,40 @@ function updateThemeColor() {
   document.querySelector("#themeColorMeta")?.setAttribute("content", theme === "dark" ? "#000000" : accent || "#059669");
 }
 
+function localPersonalSettings() {
+  let profile = {};
+  try {
+    profile = JSON.parse(localStorage.getItem(PROFILE_STORAGE_KEY) || "{}");
+  } catch (error) {
+    profile = {};
+  }
+  return {
+    userName: profile.userName || "",
+    userGender: profile.userGender || "neutral",
+    editorMode: localStorage.getItem(EDITOR_MODE_STORAGE_KEY) || "modal",
+  };
+}
+
+function saveLocalProfile(userName, userGender) {
+  localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ userName, userGender }));
+}
+
 applyTheme(getInitialTheme());
 applyAccent(getInitialAccent());
 
 const state = {
   db: null,
+  supabase: null,
+  syncChannel: null,
   items: [],
   categories: [],
   purchases: [],
+  spaces: [],
+  syncOutbox: [],
+  syncConflicts: [],
   settings: { ...DEFAULT_SETTINGS },
+  activeSpaceId: localStorage.getItem(ACTIVE_SPACE_STORAGE_KEY) || LOCAL_SPACE_ID,
+  syncStatus: "local",
   activeView: "dashboardView",
   editingItemId: null,
   editingPurchaseId: null,
@@ -165,6 +202,13 @@ const el = {
   topbarWeeklyLabel: document.querySelector("#topbarWeeklyLabel"),
   itemCountLabel: document.querySelector("#itemCountLabel"),
   welcomeTitle: document.querySelector("#welcomeTitle"),
+  activeSpaceName: document.querySelector("#activeSpaceName"),
+  spaceSwitcherButton: document.querySelector("#spaceSwitcherButton"),
+  spaceMenu: document.querySelector("#spaceMenu"),
+  spaceMenuList: document.querySelector("#spaceMenuList"),
+  syncStatusLabel: document.querySelector("#syncStatusLabel"),
+  conflictBanner: document.querySelector("#conflictBanner"),
+  openConflictsButton: document.querySelector("#openConflictsButton"),
   userAvatar: document.querySelector("#userAvatar"),
   summaryItemList: document.querySelector("#summaryItemList"),
   emptySummaryItems: document.querySelector("#emptySummaryItems"),
@@ -203,6 +247,15 @@ const el = {
   themeToggle: document.querySelector("#themeToggle"),
   accentColorInput: document.querySelector("#accentColorInput"),
   editorModeInput: document.querySelector("#editorModeInput"),
+  createSpaceForm: document.querySelector("#createSpaceForm"),
+  createSpaceNameInput: document.querySelector("#createSpaceNameInput"),
+  joinSpaceForm: document.querySelector("#joinSpaceForm"),
+  joinSpaceCodeInput: document.querySelector("#joinSpaceCodeInput"),
+  shareSpaceCard: document.querySelector("#shareSpaceCard"),
+  currentSpaceNameInput: document.querySelector("#currentSpaceNameInput"),
+  renameSpaceButton: document.querySelector("#renameSpaceButton"),
+  inviteCodeInput: document.querySelector("#inviteCodeInput"),
+  copyInviteButton: document.querySelector("#copyInviteButton"),
   quickAddButton: document.querySelector("#quickAddButton"),
   fabMenu: document.querySelector("#fabMenu"),
   quickAddItemButton: document.querySelector("#quickAddItemButton"),
@@ -226,6 +279,9 @@ const el = {
   deletePurchaseButton: document.querySelector("#deletePurchaseButton"),
   closeCheckoutButton: document.querySelector("#closeCheckoutButton"),
   cancelCheckoutButton: document.querySelector("#cancelCheckoutButton"),
+  conflictDialog: document.querySelector("#conflictDialog"),
+  conflictList: document.querySelector("#conflictList"),
+  closeConflictDialogButton: document.querySelector("#closeConflictDialogButton"),
   toast: document.querySelector("#toast"),
 };
 
@@ -246,6 +302,18 @@ function openDatabase() {
       }
       if (!db.objectStoreNames.contains("categories")) {
         db.createObjectStore("categories", { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains("spaces")) {
+        db.createObjectStore("spaces", { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains("syncOutbox")) {
+        db.createObjectStore("syncOutbox", { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains("syncMeta")) {
+        db.createObjectStore("syncMeta", { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains("syncConflicts")) {
+        db.createObjectStore("syncConflicts", { keyPath: "id" });
       }
     };
 
@@ -308,20 +376,119 @@ function bulkPut(name, values) {
   });
 }
 
+function activeSettingsId(spaceId = state.activeSpaceId) {
+  return `${spaceId}:${SETTINGS_ID}`;
+}
+
+function activeSpace() {
+  return state.spaces.find((space) => space.id === state.activeSpaceId) || { id: LOCAL_SPACE_ID, name: "Espaço local", type: "local" };
+}
+
+function isSharedSpace(space = activeSpace()) {
+  return space.id !== LOCAL_SPACE_ID && space.type === "shared";
+}
+
+function withSpace(record, spaceId = state.activeSpaceId) {
+  return { ...record, spaceId };
+}
+
+function normalizeSettings(settings, spaceId = state.activeSpaceId) {
+  const personalSettings = localPersonalSettings();
+  return {
+    ...DEFAULT_SETTINGS,
+    ...personalSettings,
+    ...(settings || {}),
+    ...personalSettings,
+    id: activeSettingsId(spaceId),
+    spaceId,
+  };
+}
+
+function syncMetaId(spaceId, entityType, entityId) {
+  return `${spaceId}:${entityType}:${entityId}`;
+}
+
+function outboxId() {
+  return `op:${Date.now()}:${createId()}`;
+}
+
+function publicRecordData(storeName, value) {
+  const { id, spaceId, syncStatus, pendingSync, ...data } = value;
+  if (storeName === "settings") {
+    return {
+      monthlyBudget: data.monthlyBudget,
+      cardClosingDay: data.cardClosingDay,
+    };
+  }
+  return data;
+}
+
+async function enqueueSync(storeName, value, action = "upsert") {
+  const space = activeSpace();
+  if (!isSharedSpace(space) || !STORE_TO_ENTITY[storeName]) return;
+
+  const entityType = STORE_TO_ENTITY[storeName];
+  const entityId = storeName === "settings" ? SETTINGS_ID : value.id;
+  const meta = await getOne("syncMeta", syncMetaId(space.id, entityType, entityId));
+  await putOne("syncOutbox", {
+    id: outboxId(),
+    spaceId: space.id,
+    entityType,
+    entityId,
+    action,
+    data: action === "delete" ? null : publicRecordData(storeName, value),
+    baseVersion: meta?.version || 0,
+    createdAt: Date.now(),
+  });
+}
+
+async function saveRecord(storeName, value, { sync = true } = {}) {
+  const record = withSpace(value);
+  await putOne(storeName, record);
+  if (sync) {
+    await enqueueSync(storeName, record);
+    syncNow();
+  }
+  return record;
+}
+
+async function deleteRecord(storeName, id, { sync = true } = {}) {
+  const value = await getOne(storeName, id);
+  await deleteOne(storeName, id);
+  if (sync && value) {
+    await enqueueSync(storeName, value, "delete");
+    syncNow();
+  }
+}
+
 async function seedData() {
-  const settings = await getOne("settings", SETTINGS_ID);
+  const spaces = await getAll("spaces");
+  if (!spaces.some((space) => space.id === LOCAL_SPACE_ID)) {
+    await putOne("spaces", {
+      id: LOCAL_SPACE_ID,
+      name: "Espaço local",
+      type: "local",
+      createdAt: Date.now(),
+    });
+  }
+
+  await migrateLocalRecords();
+
+  const settings = await getOne("settings", activeSettingsId(LOCAL_SPACE_ID));
   const isFirstRun = !settings;
 
   if (isFirstRun) {
-    await putOne("settings", state.settings);
+    await putOne("settings", normalizeSettings(state.settings, LOCAL_SPACE_ID));
   }
 
   const items = await getAll("items");
-  if (isFirstRun && !items.length) {
+  const localItems = items.filter((item) => (item.spaceId || LOCAL_SPACE_ID) === LOCAL_SPACE_ID);
+  if (isFirstRun && !localItems.length) {
     await bulkPut(
       "items",
       DEFAULT_ITEMS.map((item) => ({
         id: createId(),
+        spaceId: LOCAL_SPACE_ID,
         name: item.name,
         quantity: item.quantity,
         checked: false,
@@ -332,17 +499,50 @@ async function seedData() {
 }
 
 async function loadState() {
-  const [items, categories, purchases, settings] = await Promise.all([
+  const [items, categories, purchases, settings, spaces, syncOutbox, syncConflicts] = await Promise.all([
     getAll("items"),
     getAll("categories"),
     getAll("purchases"),
-    getOne("settings", SETTINGS_ID),
+    getOne("settings", activeSettingsId()),
+    getAll("spaces"),
+    getAll("syncOutbox"),
+    getAll("syncConflicts"),
   ]);
 
-  state.items = items.sort((a, b) => b.createdAt - a.createdAt);
-  state.categories = categories.sort((a, b) => a.createdAt - b.createdAt);
-  state.purchases = purchases.sort((a, b) => b.date - a.date);
-  state.settings = { ...DEFAULT_SETTINGS, ...(settings || {}) };
+  if (!spaces.some((space) => space.id === state.activeSpaceId)) {
+    state.activeSpaceId = LOCAL_SPACE_ID;
+    localStorage.setItem(ACTIVE_SPACE_STORAGE_KEY, state.activeSpaceId);
+  }
+
+  state.spaces = spaces.sort((a, b) => (a.type === "local" ? -1 : b.type === "local" ? 1 : a.name.localeCompare(b.name)));
+  state.items = items.filter((item) => (item.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => b.createdAt - a.createdAt);
+  state.categories = categories.filter((category) => (category.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => a.createdAt - b.createdAt);
+  state.purchases = purchases.filter((purchase) => (purchase.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => b.date - a.date);
+  state.settings = normalizeSettings(settings, state.activeSpaceId);
+  state.syncOutbox = syncOutbox.filter((operation) => operation.spaceId === state.activeSpaceId);
+  state.syncConflicts = syncConflicts.filter((conflict) => conflict.spaceId === state.activeSpaceId);
+}
+
+async function migrateLocalRecords() {
+  const [items, categories, purchases, settings] = await Promise.all([getAll("items"), getAll("categories"), getAll("purchases"), getAll("settings")]);
+  const migratedItems = items.filter((item) => !item.spaceId).map((item) => ({ ...item, spaceId: LOCAL_SPACE_ID }));
+  const migratedCategories = categories.filter((category) => !category.spaceId).map((category) => ({ ...category, spaceId: LOCAL_SPACE_ID }));
+  const migratedPurchases = purchases.filter((purchase) => !purchase.spaceId).map((purchase) => ({ ...purchase, spaceId: LOCAL_SPACE_ID }));
+  const legacySettings = settings.find((setting) => setting.id === SETTINGS_ID);
+
+  if (migratedItems.length) await bulkPut("items", migratedItems);
+  if (migratedCategories.length) await bulkPut("categories", migratedCategories);
+  if (migratedPurchases.length) await bulkPut("purchases", migratedPurchases);
+  if (legacySettings) {
+    if (legacySettings.userName || legacySettings.userGender) {
+      saveLocalProfile(legacySettings.userName || "", legacySettings.userGender || "neutral");
+    }
+    if (legacySettings.editorMode) {
+      localStorage.setItem(EDITOR_MODE_STORAGE_KEY, legacySettings.editorMode);
+    }
+    await putOne("settings", normalizeSettings(legacySettings, LOCAL_SPACE_ID));
+    await deleteOne("settings", SETTINGS_ID);
+  }
 }
 
 function monthBounds(date = new Date()) {
@@ -532,8 +732,52 @@ function renderProfile() {
   const name = (state.settings.userName || "").trim();
   const gender = state.settings.userGender || "neutral";
   el.welcomeTitle.textContent = name ? `Olá, ${name}` : "Boas-vindas";
+  if (el.activeSpaceName) {
+    el.activeSpaceName.textContent = activeSpace().name;
+  }
   el.userAvatar.textContent = gender === "female" ? "♀" : gender === "male" ? "♂" : "F";
   el.userAvatar.dataset.gender = gender;
+}
+
+function renderSpaces() {
+  const space = activeSpace();
+  const pendingCount = state.syncOutbox.length;
+  const conflictCount = state.syncConflicts.length;
+  if (el.spaceSwitcherButton) {
+    el.spaceSwitcherButton.setAttribute("aria-expanded", String(!el.spaceMenu?.hidden));
+  }
+  if (el.spaceMenuList) {
+    el.spaceMenuList.innerHTML = "";
+    state.spaces.forEach((current) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = current.id === state.activeSpaceId ? "is-active" : "";
+      button.innerHTML = `
+        <span>${escapeHtml(current.name)}</span>
+        <small>${current.type === "shared" ? "Compartilhado" : "Local"}</small>
+      `;
+      button.addEventListener("click", () => switchSpace(current.id));
+      el.spaceMenuList.append(button);
+    });
+  }
+  if (el.syncStatusLabel) {
+    if (!isSharedSpace(space)) {
+      el.syncStatusLabel.textContent = "Local";
+    } else if (conflictCount) {
+      el.syncStatusLabel.textContent = `${conflictCount} conflito${conflictCount === 1 ? "" : "s"}`;
+    } else if (pendingCount) {
+      el.syncStatusLabel.textContent = "Sincronizando";
+    } else {
+      el.syncStatusLabel.textContent = state.syncStatus === "offline" ? "Offline" : "Sincronizado";
+    }
+  }
+  if (el.conflictBanner) {
+    el.conflictBanner.hidden = conflictCount === 0;
+    const label = el.conflictBanner.querySelector("strong");
+    if (label) {
+      label.textContent = `${conflictCount} conflito${conflictCount === 1 ? "" : "s"} de sincronização`;
+    }
+  }
 }
 
 function createItemRow(item, { removable, draggable = false } = {}) {
@@ -687,6 +931,16 @@ function renderSettings() {
   if (el.editorModeInput) {
     el.editorModeInput.value = editorMode();
   }
+  const space = activeSpace();
+  if (el.shareSpaceCard) {
+    el.shareSpaceCard.hidden = !isSharedSpace(space);
+  }
+  if (el.currentSpaceNameInput) {
+    el.currentSpaceNameInput.value = space.name;
+  }
+  if (el.inviteCodeInput) {
+    el.inviteCodeInput.value = space.inviteCode || "";
+  }
 }
 
 function renderIcons() {
@@ -700,6 +954,7 @@ function render() {
   renderItems();
   renderNavigation();
   renderSettings();
+  renderSpaces();
   renderIcons();
 }
 
@@ -717,6 +972,422 @@ function setView(viewId) {
   renderNavigation();
   closeFabMenu();
   closeListMenu();
+}
+
+function toggleSpaceMenu() {
+  if (!el.spaceMenu) return;
+  el.spaceMenu.hidden = !el.spaceMenu.hidden;
+  renderSpaces();
+}
+
+function closeSpaceMenu() {
+  if (!el.spaceMenu) return;
+  el.spaceMenu.hidden = true;
+  renderSpaces();
+}
+
+async function switchSpace(spaceId) {
+  if (spaceId === state.activeSpaceId) {
+    closeSpaceMenu();
+    return;
+  }
+  state.activeSpaceId = spaceId;
+  localStorage.setItem(ACTIVE_SPACE_STORAGE_KEY, spaceId);
+  state.editingItemId = null;
+  state.editingPurchaseId = null;
+  state.inlineItemEditor = null;
+  state.inlinePurchaseEditor = null;
+  state.pendingItemCategoryId = "";
+  state.collapsedCategoryIds.clear();
+  closeSpaceMenu();
+  await reloadAndRender();
+  await pullSpaceRecords();
+  subscribeToSpace();
+  syncNow();
+}
+
+function supabaseConfigured() {
+  return Boolean(SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey && window.supabase);
+}
+
+async function ensureSupabase() {
+  if (state.supabase) return state.supabase;
+  if (!supabaseConfigured()) {
+    showToast("Configure o Supabase para usar espaços compartilhados.");
+    return null;
+  }
+
+  state.supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  });
+
+  const { data } = await state.supabase.auth.getSession();
+  if (!data.session) {
+    const { error } = await state.supabase.auth.signInAnonymously();
+    if (error) {
+      console.info("Falha ao autenticar anonimamente no Supabase.", error);
+      showToast("Não foi possível conectar ao compartilhamento.");
+      return null;
+    }
+  }
+  return state.supabase;
+}
+
+async function createSharedSpace(event) {
+  event.preventDefault();
+  const name = el.createSpaceNameInput.value.trim() || "Novo espaço";
+  const client = await ensureSupabase();
+  if (!client) return;
+
+  const { data, error } = await client.rpc("create_space", { space_name: name });
+  if (error) {
+    console.info("Erro ao criar espaço.", error);
+    showToast("Não foi possível criar o espaço.");
+    return;
+  }
+
+  const space = Array.isArray(data) ? data[0] : data;
+  await putOne("spaces", {
+    id: space.id,
+    name: space.name || name,
+    type: "shared",
+    inviteCode: space.invite_code || space.inviteCode || "",
+    createdAt: Date.now(),
+  });
+  el.createSpaceForm.reset();
+  await switchSpace(space.id);
+  showToast("Espaço criado.");
+}
+
+async function joinSharedSpace(event) {
+  event.preventDefault();
+  const code = el.joinSpaceCodeInput.value.trim().toUpperCase();
+  if (!code) {
+    showToast("Informe o código do espaço.");
+    return;
+  }
+  const client = await ensureSupabase();
+  if (!client) return;
+
+  const { data, error } = await client.rpc("join_space", { invite_code_input: code });
+  if (error) {
+    console.info("Erro ao entrar no espaço.", error);
+    showToast("Código inválido ou indisponível.");
+    return;
+  }
+
+  const space = Array.isArray(data) ? data[0] : data;
+  await putOne("spaces", {
+    id: space.id,
+    name: space.name || "Espaço compartilhado",
+    type: "shared",
+    inviteCode: space.invite_code || space.inviteCode || code,
+    createdAt: Date.now(),
+  });
+  el.joinSpaceForm.reset();
+  await switchSpace(space.id);
+  showToast("Espaço adicionado.");
+}
+
+async function renameCurrentSpace() {
+  const space = activeSpace();
+  if (!isSharedSpace(space)) return;
+  const name = el.currentSpaceNameInput.value.trim();
+  if (!name) {
+    showToast("Informe o nome do espaço.");
+    return;
+  }
+  await putOne("spaces", { ...space, name });
+  const client = await ensureSupabase();
+  if (client) {
+    const { error } = await client.from("spaces").update({ name }).eq("id", space.id);
+    if (error) {
+      console.info("Erro ao renomear espaço na nuvem.", error);
+    }
+  }
+  await reloadAndRender();
+  showToast("Espaço atualizado.");
+}
+
+async function copyInviteCode() {
+  const code = el.inviteCodeInput.value.trim();
+  if (!code) return;
+  try {
+    await navigator.clipboard.writeText(code);
+    showToast("Código copiado.");
+  } catch (error) {
+    el.inviteCodeInput.select();
+    showToast("Selecione e copie o código.");
+  }
+}
+
+function entityRecordId(entityType, entityId, spaceId = state.activeSpaceId) {
+  if (entityType === "settings") return activeSettingsId(spaceId);
+  return entityId;
+}
+
+function fromRemoteRecord(record) {
+  const storeName = ENTITY_TO_STORE[record.entity_type];
+  if (!storeName) return null;
+  const id = entityRecordId(record.entity_type, record.entity_id, record.space_id);
+  return {
+    storeName,
+    value: {
+      ...(record.data || {}),
+      id,
+      spaceId: record.space_id,
+    },
+  };
+}
+
+async function pullSpaceRecords() {
+  const space = activeSpace();
+  if (!isSharedSpace(space)) return;
+  const client = await ensureSupabase();
+  if (!client) return;
+
+  const { data, error } = await client.from("space_records").select("*").eq("space_id", space.id);
+  if (error) {
+    console.info("Erro ao buscar registros do espaço.", error);
+    state.syncStatus = "offline";
+    renderSpaces();
+    return;
+  }
+
+  await Promise.all((data || []).map((record) => applyRemoteRecord(record)));
+  await reloadAndRender();
+}
+
+async function applyRemoteRecord(record) {
+  const mapped = fromRemoteRecord(record);
+  if (!mapped) return;
+  const metaId = syncMetaId(record.space_id, record.entity_type, record.entity_id);
+  const pending = (await getAll("syncOutbox")).some((operation) => operation.spaceId === record.space_id && operation.entityType === record.entity_type && operation.entityId === record.entity_id);
+  if (pending) {
+    await createConflict(record, mapped.value);
+    return;
+  }
+
+  if (record.deleted_at) {
+    await deleteOne(mapped.storeName, mapped.value.id);
+  } else {
+    if (mapped.storeName === "settings") {
+      const currentSettings = await getOne("settings", mapped.value.id);
+      await putOne("settings", normalizeSettings({ ...(currentSettings || {}), ...mapped.value }, record.space_id));
+    } else {
+      await putOne(mapped.storeName, mapped.value);
+    }
+  }
+  await putOne("syncMeta", {
+    id: metaId,
+    spaceId: record.space_id,
+    entityType: record.entity_type,
+    entityId: record.entity_id,
+    version: record.version || 0,
+    updatedAt: Date.now(),
+  });
+}
+
+async function createConflict(remoteRecord, remoteValue) {
+  const storeName = ENTITY_TO_STORE[remoteRecord.entity_type];
+  if (!storeName) return;
+  const recordId = remoteValue?.id || entityRecordId(remoteRecord.entity_type, remoteRecord.entity_id, remoteRecord.space_id);
+  const current = await getOne(storeName, recordId);
+  await putOne("syncConflicts", {
+    id: syncMetaId(remoteRecord.space_id, remoteRecord.entity_type, remoteRecord.entity_id),
+    spaceId: remoteRecord.space_id,
+    entityType: remoteRecord.entity_type,
+    entityId: remoteRecord.entity_id,
+    local: current || null,
+    remote: remoteValue,
+    remoteVersion: remoteRecord.version || 0,
+    createdAt: Date.now(),
+  });
+}
+
+async function syncNow() {
+  const space = activeSpace();
+  if (!isSharedSpace(space) || syncNow.running) return;
+  const client = await ensureSupabase();
+  if (!client) return;
+
+  syncNow.running = true;
+  state.syncStatus = "syncing";
+  renderSpaces();
+  try {
+    let failed = false;
+    const operations = (await getAll("syncOutbox")).filter((operation) => operation.spaceId === space.id).sort((a, b) => a.createdAt - b.createdAt);
+    for (const operation of operations) {
+      const { data, error } = await client.rpc("apply_space_change", {
+        target_space_id: operation.spaceId,
+        target_entity_type: operation.entityType,
+        target_entity_id: operation.entityId,
+        change_data: operation.data,
+        base_version: operation.baseVersion,
+        is_deleted: operation.action === "delete",
+      });
+      if (error) {
+        console.info("Erro ao sincronizar operação.", error);
+        state.syncStatus = navigator.onLine ? "offline" : "offline";
+        failed = true;
+        break;
+      }
+
+      const result = Array.isArray(data) ? data[0] : data;
+      if (result?.status === "conflict") {
+        const remoteRecord = result.remote_record || result.record;
+        if (remoteRecord) {
+          const mapped = fromRemoteRecord(remoteRecord);
+          await createConflict(remoteRecord, mapped?.value || null);
+        }
+        await deleteOne("syncOutbox", operation.id);
+        continue;
+      }
+
+      await putOne("syncMeta", {
+        id: syncMetaId(operation.spaceId, operation.entityType, operation.entityId),
+        spaceId: operation.spaceId,
+        entityType: operation.entityType,
+        entityId: operation.entityId,
+        version: result?.version || operation.baseVersion + 1,
+        updatedAt: Date.now(),
+      });
+      await deleteOne("syncOutbox", operation.id);
+    }
+    if (!failed) {
+      state.syncStatus = "synced";
+    }
+  } finally {
+    syncNow.running = false;
+    await loadState();
+    renderSpaces();
+  }
+}
+
+function subscribeToSpace() {
+  if (state.syncChannel) {
+    state.supabase?.removeChannel(state.syncChannel);
+    state.syncChannel = null;
+  }
+  const space = activeSpace();
+  if (!state.supabase || !isSharedSpace(space)) return;
+
+  state.syncChannel = state.supabase
+    .channel(`space-records-${space.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "space_records",
+        filter: `space_id=eq.${space.id}`,
+      },
+      async (payload) => {
+        const record = payload.new || payload.old;
+        if (!record) return;
+        await applyRemoteRecord(record);
+        await reloadAndRender();
+      },
+    )
+    .subscribe();
+}
+
+function renderConflicts() {
+  if (!el.conflictList) return;
+  el.conflictList.innerHTML = "";
+  if (!state.syncConflicts.length) {
+    el.conflictList.innerHTML = `<p class="empty-state is-visible">Nenhum conflito pendente.</p>`;
+    return;
+  }
+
+  state.syncConflicts.forEach((conflict) => {
+    const card = document.createElement("article");
+    card.className = "conflict-card";
+    card.innerHTML = `
+      <h3>${escapeHtml(conflict.entityType)} ${escapeHtml(conflict.entityId)}</h3>
+      <div class="conflict-versions">
+        <div class="conflict-version">
+          <span>Local</span>
+          <pre>${escapeHtml(JSON.stringify(conflict.local, null, 2))}</pre>
+        </div>
+        <div class="conflict-version">
+          <span>Nuvem</span>
+          <pre>${escapeHtml(JSON.stringify(conflict.remote, null, 2))}</pre>
+        </div>
+      </div>
+      <div class="conflict-actions">
+        <button class="secondary-button" type="button" data-resolution="cloud">Usar nuvem</button>
+        <button class="primary-dialog-button" type="button" data-resolution="local">Usar local</button>
+      </div>
+    `;
+    card.querySelector("[data-resolution='cloud']").addEventListener("click", () => resolveConflict(conflict.id, "cloud"));
+    card.querySelector("[data-resolution='local']").addEventListener("click", () => resolveConflict(conflict.id, "local"));
+    el.conflictList.append(card);
+  });
+}
+
+function openConflictDialog() {
+  renderConflicts();
+  if (typeof el.conflictDialog.showModal === "function") {
+    el.conflictDialog.showModal();
+  } else {
+    el.conflictDialog.setAttribute("open", "");
+  }
+}
+
+function closeConflictDialog() {
+  if (typeof el.conflictDialog.close === "function") {
+    el.conflictDialog.close();
+  } else {
+    el.conflictDialog.removeAttribute("open");
+  }
+}
+
+async function resolveConflict(conflictId, resolution) {
+  const conflict = await getOne("syncConflicts", conflictId);
+  if (!conflict) return;
+  const storeName = ENTITY_TO_STORE[conflict.entityType];
+  if (!storeName) return;
+
+  if (resolution === "cloud") {
+    if (conflict.remote) {
+      if (storeName === "settings") {
+        const currentSettings = await getOne("settings", conflict.remote.id);
+        await putOne("settings", normalizeSettings({ ...(currentSettings || {}), ...conflict.remote }, conflict.spaceId));
+      } else {
+        await putOne(storeName, conflict.remote);
+      }
+    } else {
+      await deleteOne(storeName, entityRecordId(conflict.entityType, conflict.entityId, conflict.spaceId));
+    }
+    await putOne("syncMeta", {
+      id: conflict.id,
+      spaceId: conflict.spaceId,
+      entityType: conflict.entityType,
+      entityId: conflict.entityId,
+      version: conflict.remoteVersion,
+      updatedAt: Date.now(),
+    });
+  } else if (conflict.local) {
+    await putOne("syncMeta", {
+      id: conflict.id,
+      spaceId: conflict.spaceId,
+      entityType: conflict.entityType,
+      entityId: conflict.entityId,
+      version: conflict.remoteVersion,
+      updatedAt: Date.now(),
+    });
+    await enqueueSync(storeName, conflict.local);
+  }
+
+  await deleteOne("syncConflicts", conflict.id);
+  await reloadAndRender();
+  renderConflicts();
+  syncNow();
+  showToast("Conflito resolvido.");
 }
 
 function renderPurchaseSummary() {
@@ -856,9 +1527,9 @@ async function saveItem(event) {
 
   const item = state.items.find((current) => current.id === state.editingItemId);
   if (item) {
-    await putOne("items", { ...item, name, quantity });
+    await saveRecord("items", { ...item, name, quantity });
   } else {
-    await putOne("items", {
+    await saveRecord("items", {
       id: createId(),
       name,
       quantity,
@@ -910,9 +1581,9 @@ async function saveInlineItem(event, id = null, categoryId = "") {
 
   const item = state.items.find((current) => current.id === id);
   if (item) {
-    await putOne("items", { ...item, name, quantity });
+    await saveRecord("items", { ...item, name, quantity });
   } else {
-    await putOne("items", {
+    await saveRecord("items", {
       id: createId(),
       name,
       quantity,
@@ -982,9 +1653,8 @@ async function saveCategory(event) {
     return;
   }
 
-  await bulkPut(
-    "categories",
-    categories.map((name, index) => ({
+  await Promise.all(
+    categories.map((name, index) => saveRecord("categories", {
       id: createId(),
       name,
       createdAt: Date.now() + index,
@@ -1081,7 +1751,7 @@ async function moveItemToCategory(itemId, categoryId) {
   const normalizedCategoryId = categoryId === UNCATEGORIZED_ID ? "" : categoryId;
   if ((item.categoryId || "") === normalizedCategoryId) return;
 
-  await putOne("items", { ...item, categoryId: normalizedCategoryId });
+  await saveRecord("items", { ...item, categoryId: normalizedCategoryId });
   await reloadAndRender();
   showToast("Item movido.");
 }
@@ -1090,7 +1760,7 @@ async function toggleItem(id) {
   const item = state.items.find((current) => current.id === id);
   if (!item) return;
 
-  await putOne("items", { ...item, checked: !item.checked });
+  await saveRecord("items", { ...item, checked: !item.checked });
   await reloadAndRender();
 }
 
@@ -1105,7 +1775,7 @@ async function removeItem(id) {
   if (state.inlineItemEditor?.id === id) {
     state.inlineItemEditor = null;
   }
-  await deleteOne("items", id);
+  await deleteRecord("items", id);
   if (el.itemDialog.open) {
     closeItemDialog();
   }
@@ -1126,7 +1796,7 @@ async function saveBudget(event) {
     return;
   }
 
-  await putOne("settings", { ...state.settings, id: SETTINGS_ID, monthlyBudget: value, cardClosingDay });
+  await saveRecord("settings", normalizeSettings({ ...state.settings, monthlyBudget: value, cardClosingDay }));
   await reloadAndRender();
   showToast("Budget atualizado.");
 }
@@ -1136,7 +1806,8 @@ async function saveProfile(event) {
   const userName = el.userNameInput.value.trim();
   const userGender = el.userGenderInput.value;
 
-  await putOne("settings", { ...state.settings, id: SETTINGS_ID, userName, userGender });
+  saveLocalProfile(userName, userGender);
+  await putOne("settings", normalizeSettings({ ...state.settings, userName, userGender }));
   await reloadAndRender();
   showToast("Perfil atualizado.");
 }
@@ -1145,17 +1816,22 @@ async function changeEditorMode(event) {
   const editorModeValue = event.currentTarget.value === "inline" ? "inline" : "modal";
   state.inlineItemEditor = null;
   state.inlinePurchaseEditor = null;
-  await putOne("settings", { ...state.settings, id: SETTINGS_ID, editorMode: editorModeValue });
+  localStorage.setItem(EDITOR_MODE_STORAGE_KEY, editorModeValue);
+  await putOne("settings", normalizeSettings({ ...state.settings, editorMode: editorModeValue }));
   await reloadAndRender();
   showToast(editorModeValue === "inline" ? "Editor inline ativado." : "Editor em modal ativado.");
 }
 
 async function resetDatabase() {
-  const confirmed = window.confirm("Tem certeza que deseja apagar todos os dados e começar do zero?");
+  const confirmed = window.confirm("Tem certeza que deseja apagar os dados deste espaço e começar do zero?");
   if (!confirmed) return;
 
-  await Promise.all([clearStore("items"), clearStore("categories"), clearStore("purchases"), clearStore("settings")]);
-  await putOne("settings", { ...DEFAULT_SETTINGS });
+  await Promise.all([
+    ...state.items.map((item) => deleteRecord("items", item.id)),
+    ...state.categories.map((category) => deleteRecord("categories", category.id)),
+    ...state.purchases.map((purchase) => deleteRecord("purchases", purchase.id)),
+  ]);
+  await saveRecord("settings", normalizeSettings({ ...state.settings, monthlyBudget: DEFAULT_SETTINGS.monthlyBudget, cardClosingDay: "" }));
 
   state.editingItemId = null;
   state.editingPurchaseId = null;
@@ -1166,7 +1842,7 @@ async function resetDatabase() {
 
   await reloadAndRender();
   setView("dashboardView");
-  showToast("Dados resetados.");
+  showToast("Espaço resetado.");
 }
 
 function toggleTheme(event) {
@@ -1268,19 +1944,16 @@ async function saveInlinePurchase(event, id = null) {
 
   const purchase = state.purchases.find((current) => current.id === id);
   if (purchase) {
-    await putOne("purchases", { ...purchase, name, date, total });
+    await saveRecord("purchases", { ...purchase, name, date, total });
   } else {
-    await putOne("purchases", {
+    await saveRecord("purchases", {
       id: createId(),
       name,
       total,
       date,
     });
 
-    await bulkPut(
-      "items",
-      state.items.map((item) => ({ ...item, checked: false })),
-    );
+    await Promise.all(state.items.map((item) => saveRecord("items", { ...item, checked: false })));
   }
 
   state.inlinePurchaseEditor = null;
@@ -1324,19 +1997,16 @@ async function finishPurchase(event) {
 
   const purchase = state.purchases.find((current) => current.id === state.editingPurchaseId);
   if (purchase) {
-    await putOne("purchases", { ...purchase, name, date, total });
+    await saveRecord("purchases", { ...purchase, name, date, total });
   } else {
-    await putOne("purchases", {
+    await saveRecord("purchases", {
       id: createId(),
       name,
       total,
       date,
     });
 
-    await bulkPut(
-      "items",
-      state.items.map((item) => ({ ...item, checked: false })),
-    );
+    await Promise.all(state.items.map((item) => saveRecord("items", { ...item, checked: false })));
   }
 
   closeCheckout();
@@ -1360,7 +2030,7 @@ async function removePurchase(id) {
   const confirmed = window.confirm("Excluir esta compra?");
   if (!confirmed) return;
 
-  await deleteOne("purchases", id);
+  await deleteRecord("purchases", id);
   if (state.inlinePurchaseEditor?.id === id) {
     state.inlinePurchaseEditor = null;
   }
@@ -1424,12 +2094,23 @@ function bindEvents() {
   el.themeToggle.addEventListener("change", toggleTheme);
   el.accentColorInput?.addEventListener("change", changeAccent);
   el.editorModeInput?.addEventListener("change", changeEditorMode);
+  el.spaceSwitcherButton?.addEventListener("click", toggleSpaceMenu);
+  el.createSpaceForm?.addEventListener("submit", createSharedSpace);
+  el.joinSpaceForm?.addEventListener("submit", joinSharedSpace);
+  el.renameSpaceButton?.addEventListener("click", renameCurrentSpace);
+  el.copyInviteButton?.addEventListener("click", copyInviteCode);
+  el.openConflictsButton?.addEventListener("click", openConflictDialog);
+  el.closeConflictDialogButton?.addEventListener("click", closeConflictDialog);
+  window.addEventListener("online", () => syncNow());
   el.quickAddButton.addEventListener("click", handleFabButton);
   el.quickAddItemButton?.addEventListener("click", openQuickItem);
   el.quickAddPurchaseButton?.addEventListener("click", openQuickPurchase);
   el.listMenuButton?.addEventListener("click", toggleListMenu);
   el.openCategoryDialogButton?.addEventListener("click", openCategoryDialog);
   document.addEventListener("click", (event) => {
+    if (el.spaceMenu && !el.spaceMenu.hidden && !event.target.closest(".space-switcher-wrap")) {
+      closeSpaceMenu();
+    }
     if (!el.listMenu || el.listMenu.hidden) return;
     if (event.target.closest(".list-menu-wrap")) return;
     closeListMenu();
@@ -1461,6 +2142,12 @@ async function init() {
     await loadState();
     bindEvents();
     render();
+    if (supabaseConfigured()) {
+      await ensureSupabase();
+      await pullSpaceRecords();
+      subscribeToSpace();
+      syncNow();
+    }
     registerServiceWorker();
   } catch (error) {
     console.error(error);

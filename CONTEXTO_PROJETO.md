@@ -79,6 +79,8 @@ Arquivos principais:
 - `app.js`: lógica de estado, IndexedDB, renderização e eventos.
 - `manifest.webmanifest`: configuração PWA.
 - `sw.js`: service worker e cache offline.
+- `supabase-config.js`: configuração pública opcional do Supabase.
+- `supabase.sql`: schema/RLS/RPCs para espaços compartilhados.
 - `icon.svg`: ícone do app.
 - `ideia.md`: documento original da ideia.
 - `CONTEXTO_PROJETO.md`: este arquivo.
@@ -98,6 +100,10 @@ items
 categories
 purchases
 settings
+spaces
+syncOutbox
+syncMeta
+syncConflicts
 ```
 
 Modelo atual dos dados:
@@ -105,6 +111,7 @@ Modelo atual dos dados:
 ```js
 items: {
   id: string,
+  spaceId: string,
   name: string,
   quantity: string,
   categoryId: string,
@@ -114,24 +121,39 @@ items: {
 
 categories: {
   id: string,
+  spaceId: string,
   name: string,
   createdAt: number
 }
 
 purchases: {
   id: string,
+  spaceId: string,
   name: string,
   total: number,
   date: number
 }
 
 settings: {
-  id: "main",
+  id: `${spaceId}:main`,
+  spaceId: string,
   monthlyBudget: number,
-  cardClosingDay: number | "",
+  cardClosingDay: number | ""
+}
+
+preferências locais:
+{
   userName: string,
   userGender: "neutral" | "male" | "female",
   editorMode: "modal" | "inline"
+}
+
+spaces: {
+  id: "local" | string,
+  name: string,
+  type: "local" | "shared",
+  inviteCode?: string,
+  createdAt: number
 }
 ```
 
@@ -330,10 +352,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v42
+feira-v43
 ```
 
-O cache foi atualizado para `feira-v42` depois de trocar a animação do acordeon para transição por altura real calculada no JavaScript.
+O cache foi atualizado para `feira-v43` depois de adicionar espaços compartilháveis, configuração Supabase e camada inicial de sincronização offline-first.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -394,6 +416,8 @@ Direção visual atual:
 - FAB contextual: abre dropdown no resumo, novo item na lista e nova compra em compras.
 - Preferência para criar e editar itens/compras em modal ou inline.
 - Textos da interface não ficam selecionáveis durante o uso.
+- Topbar exibe o seletor de Espaço atual, mantendo o saldo e o indicador semanal.
+- Espaços compartilhados usam código de convite e continuam com escrita local instantânea.
 
 O app evita uma landing page e abre direto na experiência funcional.
 
@@ -414,6 +438,7 @@ Melhorias pequenas e naturais:
 - Adicionar campo de observação em compra.
 - Adicionar confirmação antes de remover item.
 - Melhorar estados vazios das telas de lista e compras.
+- Refinar tela de conflitos com comparação mais amigável por campo.
 
 Evolução técnica:
 
@@ -423,11 +448,11 @@ Evolução técnica:
 - Separar camadas de banco, estado e UI.
 - Adicionar testes.
 - Inicializar Git.
+- Validar o SQL `supabase.sql` no projeto Supabase de produção e habilitar Auth anônimo.
 
 Evolução de produto:
 
-- Compartilhamento com esposa/família.
-- Backend e sync.
+- Login por email para recuperar espaços em outros dispositivos.
 - Sugestão automática de compras recorrentes.
 - Divisão semanal do budget.
 - Alertas ao se aproximar ou passar do limite.
@@ -438,7 +463,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Correção da animação do acordeon das seções usando altura real calculada.
+Espaços compartilháveis com base local multi-espaço, Supabase opcional, outbox offline-first e resolução inicial de conflitos.
 ```
 
 Arquivos alterados nesse marco:
@@ -447,6 +472,8 @@ Arquivos alterados nesse marco:
 - `app.js`
 - `styles.css`
 - `sw.js`
+- `supabase-config.js`
+- `supabase.sql`
 - `README.md`
 - `CONTEXTO_PROJETO.md`
 - `CONTEXTO_CODEX.md`

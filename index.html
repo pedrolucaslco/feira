@@ -26,9 +26,18 @@
       <header class="topbar">
         <div class="brand">
           <div class="brand-mark" id="userAvatar" aria-hidden="true">F</div>
-          <div>
-            <p class="eyebrow">Feira</p>
-            <h1 id="welcomeTitle">Boas-vindas</h1>
+          <div class="brand-copy">
+            <p class="eyebrow" id="welcomeTitle">Boas-vindas</p>
+            <div class="space-switcher-wrap">
+              <button class="space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="true" aria-expanded="false">
+                <strong id="activeSpaceName">Espaço local</strong>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+              </button>
+              <div class="space-menu" id="spaceMenu" hidden>
+                <div id="spaceMenuList"></div>
+              </div>
+            </div>
+            <span class="sync-status" id="syncStatusLabel">Local</span>
           </div>
         </div>
         <div class="topbar-metrics" aria-label="Resumo financeiro">
@@ -44,6 +53,14 @@
       </header>
 
       <main>
+        <section class="conflict-banner" id="conflictBanner" hidden>
+          <div>
+            <strong>Conflitos de sincronização</strong>
+            <span>Escolha qual versão manter para continuar sincronizando.</span>
+          </div>
+          <button class="secondary-button" id="openConflictsButton" type="button">Resolver</button>
+        </section>
+
         <section id="dashboardView" class="view is-active" aria-label="Resumo">
           <div class="home-panel">
             <section class="home-list" aria-labelledby="listTitle">
@@ -212,6 +229,44 @@
             </select>
           </section>
 
+          <section class="settings-card share-settings" aria-labelledby="spacesTitle">
+            <div>
+              <h3 id="spacesTitle">Espaços</h3>
+              <p>Crie ou entre em um espaço compartilhado por código.</p>
+            </div>
+            <form class="compact-form" id="createSpaceForm">
+              <label for="createSpaceNameInput">Novo espaço</label>
+              <div class="input-row">
+                <input id="createSpaceNameInput" name="name" autocomplete="off" placeholder="Ex.: Casa" />
+                <button class="secondary-button" type="submit">Criar</button>
+              </div>
+            </form>
+            <form class="compact-form" id="joinSpaceForm">
+              <label for="joinSpaceCodeInput">Entrar por código</label>
+              <div class="input-row">
+                <input id="joinSpaceCodeInput" name="code" autocomplete="off" autocapitalize="characters" placeholder="ABC123" />
+                <button class="secondary-button" type="submit">Entrar</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="settings-card share-settings" id="shareSpaceCard" aria-labelledby="currentSpaceTitle" hidden>
+            <div>
+              <h3 id="currentSpaceTitle">Espaço atual</h3>
+              <p>Use o código para convidar outra pessoa.</p>
+            </div>
+            <label for="currentSpaceNameInput">Nome do espaço</label>
+            <div class="input-row">
+              <input id="currentSpaceNameInput" name="spaceName" autocomplete="off" />
+              <button class="secondary-button" id="renameSpaceButton" type="button">Salvar</button>
+            </div>
+            <label for="inviteCodeInput">Código de convite</label>
+            <div class="input-row">
+              <input id="inviteCodeInput" name="inviteCode" readonly />
+              <button class="secondary-button" id="copyInviteButton" type="button">Copiar</button>
+            </div>
+          </section>
+
           <section class="settings-card" aria-labelledby="refreshAppTitle">
             <div>
               <h3 id="refreshAppTitle">Atualizar app</h3>
@@ -336,8 +391,23 @@
       </form>
     </dialog>
 
+    <dialog class="item-dialog" id="conflictDialog">
+      <div>
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Sincronização</p>
+            <h2>Resolver conflitos</h2>
+          </div>
+          <button class="icon-button" id="closeConflictDialogButton" type="button" aria-label="Fechar">×</button>
+        </div>
+        <div class="conflict-list" id="conflictList"></div>
+      </div>
+    </dialog>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="./supabase-config.js" defer></script>
     <script src="./app.js" defer></script>
   </body>
 </html>

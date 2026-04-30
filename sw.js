@@ -1,9 +1,10 @@
-const CACHE_NAME = "feira-v42";
+const CACHE_NAME = "feira-v43";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
+  "./supabase-config.js",
   "./manifest.webmanifest",
   "./icon.svg",
 ];
