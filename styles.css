@@ -387,6 +387,8 @@ h3 {
 }
 
 .topbar-metrics {
+  display: flex;
+  align-items: center;
   flex: 0 1 auto;
   gap: 8px;
   min-width: 0;
@@ -420,6 +422,29 @@ label {
   font-size: 1.05rem;
   font-weight: 850;
   white-space: nowrap;
+}
+
+.topbar-refresh-button {
+  width: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  margin-left: 2px;
+  border-color: var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.topbar-refresh-button svg,
+.topbar-refresh-button [data-lucide] {
+  width: 17px;
+  height: 17px;
+}
+
+.topbar-refresh-button:hover,
+.topbar-refresh-button:focus-visible {
+  color: var(--ink);
+  background: var(--surface-strong);
 }
 
 .view {
@@ -1880,6 +1905,12 @@ select:focus {
 
   .topbar-metric strong {
     font-size: 0.9rem;
+  }
+
+  .topbar-refresh-button {
+    width: 34px;
+    min-width: 34px;
+    min-height: 34px;
   }
 
   .metrics-grid {
