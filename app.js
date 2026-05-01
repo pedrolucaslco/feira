@@ -206,8 +206,8 @@ const el = {
   purchasePeriodRule: document.querySelector("#purchasePeriodRule"),
   topbarWeeklyBudget: document.querySelector("#topbarWeeklyBudget"),
   topbarWeeklyLabel: document.querySelector("#topbarWeeklyLabel"),
+  topbarRefreshButton: document.querySelector("#topbarRefreshButton"),
   itemCountLabel: document.querySelector("#itemCountLabel"),
-  welcomeTitle: document.querySelector("#welcomeTitle"),
   activeSpaceName: document.querySelector("#activeSpaceName"),
   spaceSwitcherButton: document.querySelector("#spaceSwitcherButton"),
   spaceMenu: document.querySelector("#spaceMenu"),
@@ -836,8 +836,6 @@ function renderWeeklyBudget(remaining, weeksLeft) {
 }
 
 function renderProfile() {
-  const name = (state.settings.userName || "").trim();
-  el.welcomeTitle.textContent = name ? `Olá, ${name}` : "Boas-vindas";
   if (el.activeSpaceName) {
     el.activeSpaceName.textContent = activeSpace().name;
   }
@@ -2413,6 +2411,7 @@ function bindEvents() {
   el.profileForm.addEventListener("submit", saveProfile);
   el.resetDatabaseButton.addEventListener("click", resetDatabase);
   el.manualRefreshButton?.addEventListener("click", refreshApp);
+  el.topbarRefreshButton?.addEventListener("click", refreshApp);
   el.themeToggle.addEventListener("change", toggleTheme);
   el.accentColorInput?.addEventListener("change", changeAccent);
   el.editorModeInput?.addEventListener("change", changeEditorMode);
