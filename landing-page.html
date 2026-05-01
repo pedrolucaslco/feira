@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Feira - compras de casa sem perder o orçamento</title>
+    <meta
+      name="description"
+      content="Feira é uma lista de mercado compartilhada com controle simples do orçamento do mês para casais."
+    />
+    <style>
+      :root {
+        --bg: #f7faf9;
+        --surface: #ffffff;
+        --surface-soft: #edf7f3;
+        --ink: #142523;
+        --muted: #60736f;
+        --line: #dce8e3;
+        --accent: #0f766e;
+        --accent-strong: #145c58;
+        --accent-soft: #d9f3ea;
+        --gold: #f2b84b;
+        --danger: #b45309;
+        --shadow: 0 22px 60px rgba(20, 37, 35, 0.12);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .page {
+        width: min(100%, 1120px);
+        margin: 0 auto;
+        padding: 18px 18px 28px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 4px 0 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        font-weight: 850;
+      }
+
+      .brand img {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+      }
+
+      .topbar-link {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 750;
+        padding: 0 12px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: center;
+        gap: 24px;
+        min-height: calc(100svh - 82px);
+        padding: 8px 0 24px;
+      }
+
+      .hero-copy {
+        display: grid;
+        gap: 18px;
+      }
+
+      .eyebrow {
+        width: fit-content;
+        margin: 0;
+        border: 1px solid rgba(15, 118, 110, 0.18);
+        border-radius: 8px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-size: 0.78rem;
+        font-weight: 850;
+        padding: 7px 10px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 0;
+        font-size: clamp(3rem, 16vw, 6.8rem);
+        font-weight: 950;
+        line-height: 0.86;
+        letter-spacing: 0;
+      }
+
+      .subheadline {
+        max-width: 760px;
+        margin-bottom: 0;
+        font-size: clamp(1.42rem, 7vw, 3.55rem);
+        font-weight: 900;
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      .hero-text {
+        max-width: 620px;
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+        font-weight: 560;
+        line-height: 1.55;
+      }
+
+      .cta-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        max-width: 420px;
+      }
+
+      .button {
+        min-height: 50px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-weight: 850;
+        padding: 0 18px;
+      }
+
+      .button-primary {
+        background: var(--accent);
+        color: #ffffff;
+        box-shadow: 0 14px 30px rgba(15, 118, 110, 0.22);
+      }
+
+      .button-secondary {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--ink);
+      }
+
+      .proof-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        max-width: 520px;
+      }
+
+      .proof {
+        min-height: 72px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.72);
+        padding: 10px;
+      }
+
+      .proof strong,
+      .proof span {
+        display: block;
+      }
+
+      .proof strong {
+        font-size: 1.08rem;
+      }
+
+      .proof span {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+        line-height: 1.25;
+      }
+
+      .mockup-wrap {
+        display: grid;
+        justify-items: center;
+      }
+
+      .phone {
+        width: min(100%, 348px);
+        border: 1px solid rgba(20, 37, 35, 0.1);
+        border-radius: 34px;
+        background: #102421;
+        box-shadow: var(--shadow);
+        padding: 12px;
+      }
+
+      .phone-screen {
+        overflow: hidden;
+        min-height: 616px;
+        border-radius: 24px;
+        background: #f8faf9;
+        color: var(--ink);
+      }
+
+      .app-top {
+        padding: 18px 16px 10px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .app-greeting {
+        margin-bottom: 4px;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 750;
+      }
+
+      .app-space {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-weight: 900;
+      }
+
+      .app-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 12px 16px;
+      }
+
+      .app-metric,
+      .app-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      .app-metric {
+        padding: 12px;
+      }
+
+      .app-metric span,
+      .app-card-header span,
+      .purchase-date {
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 750;
+      }
+
+      .app-metric strong {
+        display: block;
+        margin-top: 7px;
+        font-size: 1.05rem;
+      }
+
+      .app-stack {
+        display: grid;
+        gap: 10px;
+        padding: 0 16px 16px;
+      }
+
+      .app-card {
+        padding: 13px;
+      }
+
+      .app-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .app-card-header strong {
+        font-size: 0.96rem;
+      }
+
+      .item,
+      .purchase {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 42px;
+        border-top: 1px solid #edf2ef;
+      }
+
+      .item:first-of-type,
+      .purchase:first-of-type {
+        border-top: 0;
+      }
+
+      .item-left {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+      }
+
+      .check {
+        width: 23px;
+        height: 23px;
+        display: grid;
+        flex: 0 0 auto;
+        place-items: center;
+        border: 2px solid var(--accent);
+        border-radius: 999px;
+        background: var(--accent);
+        color: #ffffff;
+        font-size: 0.76rem;
+        font-weight: 900;
+      }
+
+      .check.empty {
+        background: #ffffff;
+        color: transparent;
+      }
+
+      .item-name,
+      .purchase-name {
+        overflow-wrap: anywhere;
+        font-weight: 800;
+      }
+
+      .item-qty {
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 750;
+        white-space: nowrap;
+      }
+
+      .purchase-main {
+        display: grid;
+        gap: 3px;
+      }
+
+      .purchase-total {
+        font-weight: 900;
+      }
+
+      .section {
+        padding: 26px 0;
+      }
+
+      .section-head {
+        display: grid;
+        gap: 8px;
+        max-width: 720px;
+        margin-bottom: 16px;
+      }
+
+      .section-kicker {
+        margin-bottom: 0;
+        color: var(--accent);
+        font-size: 0.82rem;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        margin-bottom: 0;
+        font-size: clamp(1.8rem, 8vw, 3.5rem);
+        font-weight: 920;
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .section-head p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+
+      .grid-three,
+      .steps,
+      .trust-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .feature-card,
+      .step-card,
+      .trust-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 16px;
+      }
+
+      .feature-card h3,
+      .step-card h3,
+      .trust-card h3 {
+        margin-bottom: 8px;
+        font-size: 1rem;
+      }
+
+      .feature-card p,
+      .step-card p,
+      .trust-card p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.45;
+      }
+
+      .feature-icon,
+      .step-number {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 14px;
+        border-radius: 8px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-weight: 900;
+      }
+
+      .step-number {
+        background: var(--accent);
+        color: #ffffff;
+      }
+
+      .final-cta {
+        display: grid;
+        gap: 16px;
+        align-items: center;
+        margin: 28px 0 18px;
+        border: 1px solid rgba(15, 118, 110, 0.2);
+        border-radius: 8px;
+        background: var(--accent-strong);
+        color: #ffffff;
+        padding: 18px;
+      }
+
+      .final-cta h2 {
+        font-size: clamp(1.7rem, 7vw, 3rem);
+      }
+
+      .final-cta p {
+        margin-bottom: 0;
+        color: rgba(255, 255, 255, 0.76);
+        line-height: 1.5;
+      }
+
+      .final-cta .button-primary {
+        background: #ffffff;
+        color: var(--accent-strong);
+        box-shadow: none;
+      }
+
+      footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.9rem;
+        padding: 18px 0 0;
+      }
+
+      footer strong {
+        color: var(--ink);
+      }
+
+      @media (min-width: 720px) {
+        .page {
+          padding: 24px 28px 34px;
+        }
+
+        .hero {
+          grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.78fr);
+          gap: 34px;
+          min-height: calc(100svh - 92px);
+        }
+
+        .cta-row {
+          grid-template-columns: auto auto;
+          max-width: none;
+          justify-content: start;
+        }
+
+        .grid-three {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .steps {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .trust-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .final-cta {
+          grid-template-columns: minmax(0, 1fr) auto;
+          padding: 24px;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .page {
+          padding-inline: 14px;
+        }
+
+        .proof-strip {
+          grid-template-columns: 1fr;
+        }
+
+        .phone {
+          border-radius: 26px;
+          padding: 9px;
+        }
+
+        .phone-screen {
+          min-height: 560px;
+          border-radius: 19px;
+        }
+
+        .app-metrics {
+          grid-template-columns: 1fr;
+        }
+
+        footer {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar" aria-label="Topo">
+        <a class="brand" href="./landing-page.html" aria-label="Feira">
+          <img src="./icon.svg" alt="" />
+          <span>Feira</span>
+        </a>
+        <a class="topbar-link" href="./index.html">Abrir app</a>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="heroTitle">
+          <div class="hero-copy">
+            <p class="eyebrow">Para compras a dois</p>
+            <h1 id="heroTitle">Feira</h1>
+            <p class="subheadline">
+              Lista de mercado compartilhada com controle simples do orçamento do mês.
+            </p>
+            <p class="hero-text">
+              Combine o que falta comprar, acompanhe quanto já foi gasto e veja quanto ainda
+              dá para usar antes da próxima compra.
+            </p>
+            <div class="cta-row" aria-label="Ações principais">
+              <a
+                class="button button-primary"
+                href="https://wa.me/SEU_NUMERO?text=Quero%20testar%20o%20Feira%20com%20meu%20par"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Quero testar com meu par
+              </a>
+              <a class="button button-secondary" href="./index.html">Abrir app</a>
+            </div>
+            <div class="proof-strip" aria-label="Resumo do produto">
+              <div class="proof">
+                <strong>Offline</strong>
+                <span>Funciona no mercado</span>
+              </div>
+              <div class="proof">
+                <strong>R$</strong>
+                <span>Saldo sempre visível</span>
+              </div>
+              <div class="proof">
+                <strong>Código</strong>
+                <span>Espaço compartilhado</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mockup-wrap" aria-label="Prévia visual do aplicativo">
+            <div class="phone" role="img" aria-label="Mockup do app Feira em um celular">
+              <div class="phone-screen">
+                <div class="app-top">
+                  <p class="app-greeting">Olá, vocês</p>
+                  <div class="app-space">
+                    <span>Casa</span>
+                    <span>Sincronizado</span>
+                  </div>
+                </div>
+
+                <div class="app-metrics">
+                  <div class="app-metric">
+                    <span>Saldo</span>
+                    <strong>R$ 742,60</strong>
+                  </div>
+                  <div class="app-metric">
+                    <span>por semana</span>
+                    <strong>R$ 185,65</strong>
+                  </div>
+                </div>
+
+                <div class="app-stack">
+                  <section class="app-card" aria-labelledby="mockListTitle">
+                    <div class="app-card-header">
+                      <strong id="mockListTitle">Lista de mercado</strong>
+                      <span>5 itens</span>
+                    </div>
+                    <div class="item">
+                      <div class="item-left">
+                        <span class="check">✓</span>
+                        <span class="item-name">Arroz</span>
+                      </div>
+                      <span class="item-qty">1 pacote</span>
+                    </div>
+                    <div class="item">
+                      <div class="item-left">
+                        <span class="check empty">✓</span>
+                        <span class="item-name">Leite</span>
+                      </div>
+                      <span class="item-qty">2 un</span>
+                    </div>
+                    <div class="item">
+                      <div class="item-left">
+                        <span class="check empty">✓</span>
+                        <span class="item-name">Café</span>
+                      </div>
+                      <span class="item-qty">500 g</span>
+                    </div>
+                  </section>
+
+                  <section class="app-card" aria-labelledby="mockPurchaseTitle">
+                    <div class="app-card-header">
+                      <strong id="mockPurchaseTitle">Últimas compras</strong>
+                      <span>mês atual</span>
+                    </div>
+                    <div class="purchase">
+                      <div class="purchase-main">
+                        <span class="purchase-name">Mercado da semana</span>
+                        <span class="purchase-date">18/04</span>
+                      </div>
+                      <span class="purchase-total">R$ 214,30</span>
+                    </div>
+                    <div class="purchase">
+                      <div class="purchase-main">
+                        <span class="purchase-name">Hortifruti</span>
+                        <span class="purchase-date">12/04</span>
+                      </div>
+                      <span class="purchase-total">R$ 86,90</span>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="benefitsTitle">
+          <div class="section-head">
+            <p class="section-kicker">Por que usar</p>
+            <h2 id="benefitsTitle">Menos conversa perdida, mais clareza no carrinho.</h2>
+            <p>
+              Feira junta a lista e o orçamento em um fluxo simples para quem divide as compras
+              de casa.
+            </p>
+          </div>
+          <div class="grid-three">
+            <article class="feature-card">
+              <div class="feature-icon">01</div>
+              <h3>Lista para os dois</h3>
+              <p>Itens, quantidades e check rápido no mercado para ninguém comprar no escuro.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">02</div>
+              <h3>Orçamento visível</h3>
+              <p>Saldo restante, gasto do mês e sugestão semanal sempre perto da lista.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">03</div>
+              <h3>Espaços por código</h3>
+              <p>Entre no mesmo espaço sem login complexo e mantenha a rotina alinhada.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="stepsTitle">
+          <div class="section-head">
+            <p class="section-kicker">Como funciona</p>
+            <h2 id="stepsTitle">Do “precisa comprar” ao saldo atualizado.</h2>
+          </div>
+          <div class="steps">
+            <article class="step-card">
+              <div class="step-number">1</div>
+              <h3>Montem a lista</h3>
+              <p>Adicionem o que está faltando em casa com quantidade opcional.</p>
+            </article>
+            <article class="step-card">
+              <div class="step-number">2</div>
+              <h3>Marquem no mercado</h3>
+              <p>Use o checklist no corredor para acompanhar o que já foi para o carrinho.</p>
+            </article>
+            <article class="step-card">
+              <div class="step-number">3</div>
+              <h3>Registrem o total</h3>
+              <p>Ao finalizar, salvem o valor pago para atualizar o histórico.</p>
+            </article>
+            <article class="step-card">
+              <div class="step-number">4</div>
+              <h3>Acompanhem o saldo</h3>
+              <p>Veja o que ainda cabe no mês antes da próxima ida ao mercado.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="trustTitle">
+          <div class="section-head">
+            <p class="section-kicker">Estado atual</p>
+            <h2 id="trustTitle">Simples o suficiente para usar hoje.</h2>
+          </div>
+          <div class="trust-grid">
+            <article class="trust-card">
+              <h3>Funciona offline no celular</h3>
+              <p>A lista continua disponível mesmo quando o sinal do mercado falha.</p>
+            </article>
+            <article class="trust-card">
+              <h3>PWA simples</h3>
+              <p>Abra no navegador e instale na tela inicial quando fizer sentido.</p>
+            </article>
+            <article class="trust-card">
+              <h3>Compartilhamento opcional em desenvolvimento</h3>
+              <p>Espaços compartilhados por código estão evoluindo aos poucos.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="final-cta" aria-labelledby="finalCtaTitle">
+          <div>
+            <h2 id="finalCtaTitle">Teste o Feira com quem divide a lista com você.</h2>
+            <p>
+              A ideia é pequena: transformar a compra de mercado em uma rotina mais combinada,
+              previsível e leve.
+            </p>
+          </div>
+          <a
+            class="button button-primary"
+            href="https://wa.me/SEU_NUMERO?text=Quero%20testar%20o%20Feira%20com%20meu%20par"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Quero testar
+          </a>
+        </section>
+      </main>
+
+      <footer>
+        <div>
+          <strong>Feira</strong>
+          <span> - Um app em evolução para compras de casa.</span>
+        </div>
+        <a href="./index.html">Abrir app</a>
+      </footer>
+    </div>
+  </body>
+</html>

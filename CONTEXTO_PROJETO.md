@@ -99,6 +99,7 @@ Stores:
 items
 categories
 purchases
+meals
 settings
 spaces
 syncOutbox
@@ -132,6 +133,20 @@ purchases: {
   name: string,
   total: number,
   date: number
+}
+
+meals: {
+  id: string,
+  spaceId: string,
+  name: string,
+  items: Array<{
+    id: string,
+    name: string,
+    quantity: string,
+    createdAt: number
+  }>,
+  createdAt: number,
+  updatedAt: number
 }
 
 settings: {
@@ -193,25 +208,37 @@ saldo sugerido por semana = saldo restante / semanas até o fechamento
 
 Se o fechamento estiver configurado para um dia que não existe no mês atual, como 31 em fevereiro, o app usa o último dia válido daquele mês.
 
+### Refeições
+
+Mostra:
+
+- Refeições salvas com listas isoladas de itens.
+- Modal para criar, editar e excluir refeições.
+- Botão para adicionar os itens de uma refeição à lista de compras atual.
+- Mesclagem por nome ao copiar, somando quantidades como texto quando forem diferentes.
+
 ### Compras
 
 Mostra:
 
 - Planejamento semanal.
-- Gasto do mês e budget no mesmo indicador.
+- Período financeiro atual, com data inicial e final.
+- Gasto do período e budget no mesmo indicador.
 - Gráfico simples de barras para variação das compras, com linha de mediana.
 - Quantidade de compras no cabeçalho do histórico.
-- Histórico de compras do mês.
+- Histórico de compras do período.
 - Edição de compra ao clicar na linha.
 - Remoção de compra apenas dentro do modal de edição.
 
 O saldo é calculado assim:
 
 ```txt
-saldo = monthlyBudget - soma das compras do mês atual
+saldo = monthlyBudget - soma das compras do período financeiro atual
 ```
 
-O histórico exibido no dashboard considera apenas o mês atual.
+Se houver dia de fechamento, o período começa nesse dia e termina no dia anterior ao próximo fechamento. Ex.: com fechamento dia 24, o ciclo de maio vai de 24/04 a 23/05; compras em 24/04 já entram em maio.
+
+Sem dia de fechamento, o app usa o mês do calendário.
 
 ### Ajustes
 

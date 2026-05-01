@@ -122,6 +122,17 @@
             </button>
           </div>
 
+          <section class="period-card" aria-labelledby="purchasePeriodTitle">
+            <div>
+              <span>Período atual</span>
+              <strong id="purchasePeriodTitle">Mês atual</strong>
+            </div>
+            <div>
+              <b id="purchasePeriodRange">--</b>
+              <small id="purchasePeriodRule">Configure o fechamento do cartão para usar ciclos.</small>
+            </div>
+          </section>
+
           <div class="metrics-grid report-grid">
             <article class="metric">
               <span>Gasto / Orçamento</span>
@@ -151,6 +162,21 @@
             <ul class="purchase-list" id="purchaseList"></ul>
             <p class="empty-state" id="emptyPurchases">Nenhuma compra registrada.</p>
           </section>
+        </section>
+
+        <section id="mealsView" class="view" aria-labelledby="mealsTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="mealsTitle">Refeições</h2>
+              <span id="mealCountLabel" class="soft-label">0 refeições</span>
+            </div>
+            <button class="icon-button" id="createFirstMealButton" type="button" aria-label="Nova refeição">
+              <i data-lucide="plus" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div class="meal-list" id="mealList"></div>
+          <p class="empty-state" id="emptyMeals">Nenhuma refeição criada.</p>
         </section>
 
         <section id="settingsView" class="view" aria-labelledby="settingsTitle">
@@ -291,6 +317,10 @@
           <i data-lucide="list-checks" aria-hidden="true"></i>
           <b>Lista</b>
         </button>
+        <button class="nav-button" type="button" data-view="mealsView" aria-label="Refeições">
+          <i data-lucide="utensils" aria-hidden="true"></i>
+          <b>Refeições</b>
+        </button>
         <button class="nav-button" type="button" data-view="purchaseView" aria-label="Compras">
           <i data-lucide="shopping-basket" aria-hidden="true"></i>
           <b>Compras</b>
@@ -384,6 +414,33 @@
         <div class="dialog-actions">
           <button class="secondary-button" id="cancelCategoryDialogButton" type="button">Cancelar</button>
           <button class="primary-dialog-button" type="submit">Adicionar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="item-dialog meal-dialog" id="mealDialog">
+      <form id="mealForm">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Refeições</p>
+            <h2 id="mealDialogTitle">Nova refeição</h2>
+          </div>
+          <button class="icon-button" id="closeMealDialogButton" type="button" aria-label="Fechar">×</button>
+        </div>
+        <label for="mealName">Nome da refeição</label>
+        <input id="mealName" name="name" autocomplete="off" placeholder="Ex.: Strogonoff" required />
+        <div class="meal-editor-head">
+          <label>Itens da refeição</label>
+          <button class="secondary-button" id="addMealItemButton" type="button">
+            <i data-lucide="plus" aria-hidden="true"></i>
+            Item
+          </button>
+        </div>
+        <div class="meal-items-editor" id="mealItemsEditor"></div>
+        <button class="danger-text-button" id="deleteMealButton" type="button" hidden>Excluir refeição</button>
+        <div class="dialog-actions">
+          <button class="secondary-button" id="cancelMealDialogButton" type="button">Cancelar</button>
+          <button class="primary-dialog-button" id="saveMealButton" type="submit">Adicionar</button>
         </div>
       </form>
     </dialog>

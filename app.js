@@ -1,5 +1,5 @@
 const DB_NAME = "feira-db";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const SETTINGS_ID = "main";
 const LOCAL_SPACE_ID = "local";
 const ACTIVE_SPACE_STORAGE_KEY = "feira:active-space";
@@ -12,11 +12,12 @@ const STORE_TO_ENTITY = {
   items: "item",
   categories: "category",
   purchases: "purchase",
+  meals: "meal",
   settings: "settings",
 };
 const ENTITY_TO_STORE = Object.fromEntries(Object.entries(STORE_TO_ENTITY).map(([storeName, entityType]) => [entityType, storeName]));
 const VALID_ACCENTS = ["emerald", "green", "sky", "blue", "purple", "fuchsia", "rose", "amber", "teal", "cyan"];
-const VIEW_ORDER = ["dashboardView", "listView", "purchaseView", "settingsView"];
+const VIEW_ORDER = ["dashboardView", "listView", "mealsView", "purchaseView", "settingsView"];
 const DEFAULT_ITEMS = [
   { name: "Arroz", quantity: "1 pacote" },
   { name: "Feijão", quantity: "1 kg" },
@@ -105,6 +106,7 @@ const state = {
   items: [],
   categories: [],
   purchases: [],
+  meals: [],
   spaces: [],
   syncOutbox: [],
   syncConflicts: [],
@@ -114,6 +116,7 @@ const state = {
   activeView: "dashboardView",
   editingItemId: null,
   editingPurchaseId: null,
+  editingMealId: null,
   inlineItemEditor: null,
   inlinePurchaseEditor: null,
   pendingItemCategoryId: "",
@@ -198,6 +201,9 @@ const el = {
   spentBudgetSpent: document.querySelector("#spentBudgetSpent"),
   spentBudgetTotal: document.querySelector("#spentBudgetTotal"),
   purchaseCountLabel: document.querySelector("#purchaseCountLabel"),
+  purchasePeriodTitle: document.querySelector("#purchasePeriodTitle"),
+  purchasePeriodRange: document.querySelector("#purchasePeriodRange"),
+  purchasePeriodRule: document.querySelector("#purchasePeriodRule"),
   topbarWeeklyBudget: document.querySelector("#topbarWeeklyBudget"),
   topbarWeeklyLabel: document.querySelector("#topbarWeeklyLabel"),
   itemCountLabel: document.querySelector("#itemCountLabel"),
@@ -240,6 +246,10 @@ const el = {
   cancelCategoryDialogButton: document.querySelector("#cancelCategoryDialogButton"),
   itemList: document.querySelector("#itemList"),
   emptyItems: document.querySelector("#emptyItems"),
+  mealCountLabel: document.querySelector("#mealCountLabel"),
+  mealList: document.querySelector("#mealList"),
+  emptyMeals: document.querySelector("#emptyMeals"),
+  createFirstMealButton: document.querySelector("#createFirstMealButton"),
   resetDatabaseButton: document.querySelector("#resetDatabaseButton"),
   manualRefreshButton: document.querySelector("#manualRefreshButton"),
   themeToggle: document.querySelector("#themeToggle"),
@@ -277,6 +287,16 @@ const el = {
   deletePurchaseButton: document.querySelector("#deletePurchaseButton"),
   closeCheckoutButton: document.querySelector("#closeCheckoutButton"),
   cancelCheckoutButton: document.querySelector("#cancelCheckoutButton"),
+  mealDialog: document.querySelector("#mealDialog"),
+  mealForm: document.querySelector("#mealForm"),
+  mealDialogTitle: document.querySelector("#mealDialogTitle"),
+  mealName: document.querySelector("#mealName"),
+  mealItemsEditor: document.querySelector("#mealItemsEditor"),
+  addMealItemButton: document.querySelector("#addMealItemButton"),
+  saveMealButton: document.querySelector("#saveMealButton"),
+  deleteMealButton: document.querySelector("#deleteMealButton"),
+  closeMealDialogButton: document.querySelector("#closeMealDialogButton"),
+  cancelMealDialogButton: document.querySelector("#cancelMealDialogButton"),
   conflictDialog: document.querySelector("#conflictDialog"),
   conflictList: document.querySelector("#conflictList"),
   closeConflictDialogButton: document.querySelector("#closeConflictDialogButton"),
@@ -294,6 +314,9 @@ function openDatabase() {
       }
       if (!db.objectStoreNames.contains("purchases")) {
         db.createObjectStore("purchases", { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains("meals")) {
+        db.createObjectStore("meals", { keyPath: "id" });
       }
       if (!db.objectStoreNames.contains("settings")) {
         db.createObjectStore("settings", { keyPath: "id" });
@@ -497,10 +520,11 @@ async function seedData() {
 }
 
 async function loadState() {
-  const [items, categories, purchases, settings, spaces, syncOutbox, syncConflicts] = await Promise.all([
+  const [items, categories, purchases, meals, settings, spaces, syncOutbox, syncConflicts] = await Promise.all([
     getAll("items"),
     getAll("categories"),
     getAll("purchases"),
+    getAll("meals"),
     getOne("settings", activeSettingsId()),
     getAll("spaces"),
     getAll("syncOutbox"),
@@ -516,21 +540,24 @@ async function loadState() {
   state.items = items.filter((item) => (item.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => b.createdAt - a.createdAt);
   state.categories = categories.filter((category) => (category.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => a.createdAt - b.createdAt);
   state.purchases = purchases.filter((purchase) => (purchase.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => b.date - a.date);
+  state.meals = meals.filter((meal) => (meal.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => b.updatedAt - a.updatedAt);
   state.settings = normalizeSettings(settings, state.activeSpaceId);
   state.syncOutbox = syncOutbox.filter((operation) => operation.spaceId === state.activeSpaceId);
   state.syncConflicts = syncConflicts.filter((conflict) => conflict.spaceId === state.activeSpaceId);
 }
 
 async function migrateLocalRecords() {
-  const [items, categories, purchases, settings] = await Promise.all([getAll("items"), getAll("categories"), getAll("purchases"), getAll("settings")]);
+  const [items, categories, purchases, meals, settings] = await Promise.all([getAll("items"), getAll("categories"), getAll("purchases"), getAll("meals"), getAll("settings")]);
   const migratedItems = items.filter((item) => !item.spaceId).map((item) => ({ ...item, spaceId: LOCAL_SPACE_ID }));
   const migratedCategories = categories.filter((category) => !category.spaceId).map((category) => ({ ...category, spaceId: LOCAL_SPACE_ID }));
   const migratedPurchases = purchases.filter((purchase) => !purchase.spaceId).map((purchase) => ({ ...purchase, spaceId: LOCAL_SPACE_ID }));
+  const migratedMeals = meals.filter((meal) => !meal.spaceId).map((meal) => ({ ...meal, spaceId: LOCAL_SPACE_ID }));
   const legacySettings = settings.find((setting) => setting.id === SETTINGS_ID);
 
   if (migratedItems.length) await bulkPut("items", migratedItems);
   if (migratedCategories.length) await bulkPut("categories", migratedCategories);
   if (migratedPurchases.length) await bulkPut("purchases", migratedPurchases);
+  if (migratedMeals.length) await bulkPut("meals", migratedMeals);
   if (legacySettings) {
     if (legacySettings.userName || legacySettings.userGender) {
       saveLocalProfile(legacySettings.userName || "", legacySettings.userGender || "neutral");
@@ -546,11 +573,29 @@ async function migrateLocalRecords() {
 function monthBounds(date = new Date()) {
   const start = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
   const end = new Date(date.getFullYear(), date.getMonth() + 1, 1).getTime();
-  return { start, end };
+  return { start, end, labelDate: date, usesClosingDay: false };
+}
+
+function billingPeriodBounds(date = new Date(), closingDay = state.settings.cardClosingDay) {
+  if (!closingDay) return monthBounds(date);
+
+  const currentDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const currentClosing = closingDateForMonth(closingDay, date.getFullYear(), date.getMonth());
+  const startsCurrentCycle = currentDay >= currentClosing;
+  const start = startsCurrentCycle ? currentClosing : closingDateForMonth(closingDay, date.getFullYear(), date.getMonth() - 1);
+  const end = startsCurrentCycle ? closingDateForMonth(closingDay, date.getFullYear(), date.getMonth() + 1) : currentClosing;
+  const labelDate = startsCurrentCycle ? new Date(date.getFullYear(), date.getMonth() + 1, 1) : new Date(date.getFullYear(), date.getMonth(), 1);
+
+  return {
+    start: start.getTime(),
+    end: end.getTime(),
+    labelDate,
+    usesClosingDay: true,
+  };
 }
 
 function currentMonthPurchases() {
-  const { start, end } = monthBounds();
+  const { start, end } = billingPeriodBounds();
   return state.purchases.filter((purchase) => purchase.date >= start && purchase.date < end);
 }
 
@@ -566,6 +611,13 @@ function formatDate(timestamp) {
     day: "2-digit",
     month: "2-digit",
   }).format(new Date(timestamp));
+}
+
+function formatLongMonth(date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+    year: "numeric",
+  }).format(date);
 }
 
 function formatDateInput(timestamp = Date.now()) {
@@ -598,6 +650,18 @@ function itemCategoryId(item) {
   return item.categoryId || UNCATEGORIZED_ID;
 }
 
+function normalizeItemName(name) {
+  return String(name || "").trim().toLowerCase();
+}
+
+function mergeQuantity(currentQuantity = "", nextQuantity = "") {
+  const current = String(currentQuantity || "").trim();
+  const next = String(nextQuantity || "").trim();
+  if (!current) return next;
+  if (!next || current.toLowerCase() === next.toLowerCase()) return current;
+  return `${current} + ${next}`;
+}
+
 function median(values) {
   if (!values.length) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -628,7 +692,7 @@ function closingDateForMonth(day, year, month) {
 function nextClosingDate(day, date = new Date()) {
   const today = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const candidate = closingDateForMonth(day, date.getFullYear(), date.getMonth());
-  if (candidate < today) {
+  if (candidate <= today) {
     return closingDateForMonth(day, date.getFullYear(), date.getMonth() + 1);
   }
   return candidate;
@@ -644,6 +708,7 @@ function weeksUntilClosing(day) {
 
 function renderDashboard() {
   const monthPurchases = currentMonthPurchases();
+  const period = billingPeriodBounds();
   const spent = monthPurchases.reduce((sum, purchase) => sum + purchase.total, 0);
   const budget = state.settings.monthlyBudget;
   const remaining = budget - spent;
@@ -657,6 +722,7 @@ function renderDashboard() {
   if (el.purchaseCountLabel) {
     el.purchaseCountLabel.textContent = `${monthPurchases.length} ${monthPurchases.length === 1 ? "compra" : "compras"}`;
   }
+  renderPurchasePeriod(period);
   el.budgetInput.value = budget ? String(budget).replace(".", ",") : "";
   el.cardClosingDayInput.value = state.settings.cardClosingDay || "";
   el.userNameInput.value = state.settings.userName || "";
@@ -670,7 +736,7 @@ function renderDashboard() {
       el.purchaseInlineEditorMount.append(createPurchaseInlineEditor());
     }
   }
-  state.purchases.forEach((purchase, index) => {
+  monthPurchases.forEach((purchase, index) => {
     if (state.inlinePurchaseEditor?.id === purchase.id) {
       el.purchaseList.append(createPurchaseInlineEditor(purchase));
       return;
@@ -678,15 +744,27 @@ function renderDashboard() {
     el.purchaseList.append(createPurchaseRow(purchase, index));
   });
 
-  el.emptyPurchases.classList.toggle("is-visible", state.purchases.length === 0 && !state.inlinePurchaseEditor);
+  el.emptyPurchases.classList.toggle("is-visible", monthPurchases.length === 0 && !state.inlinePurchaseEditor);
   renderPurchaseSummary();
-  renderPurchaseChart();
+  renderPurchaseChart(monthPurchases);
 }
 
-function renderPurchaseChart() {
+function renderPurchasePeriod(period) {
+  if (!el.purchasePeriodTitle || !el.purchasePeriodRange || !el.purchasePeriodRule) return;
+
+  const endInclusive = period.end - 1;
+  const cycleName = formatLongMonth(period.labelDate);
+  el.purchasePeriodTitle.textContent = period.usesClosingDay ? `Ciclo de ${cycleName}` : `Mês de ${cycleName}`;
+  el.purchasePeriodRange.textContent = `${formatDate(period.start)} a ${formatDate(endInclusive)}`;
+  el.purchasePeriodRule.textContent = period.usesClosingDay
+    ? `Fechamento dia ${state.settings.cardClosingDay}: compras a partir desse dia entram no ciclo seguinte.`
+    : "Sem dia de fechamento: o app usa o mês do calendário.";
+}
+
+function renderPurchaseChart(periodPurchases = currentMonthPurchases()) {
   if (!el.purchaseChart || !el.purchaseMedianLabel || !el.emptyPurchaseChart) return;
 
-  const purchases = state.purchases.slice(0, 8).reverse();
+  const purchases = periodPurchases.slice(0, 8).reverse();
   const totals = purchases.map((purchase) => purchase.total);
   const max = Math.max(...totals, 0);
   const medianValue = median(totals);
@@ -845,6 +923,46 @@ function renderItems() {
   }
 }
 
+function renderMeals() {
+  if (!el.mealList || !el.emptyMeals) return;
+
+  el.mealList.innerHTML = "";
+  state.meals.forEach((meal) => {
+    el.mealList.append(createMealRow(meal));
+  });
+
+  el.emptyMeals.classList.toggle("is-visible", state.meals.length === 0);
+  if (el.mealCountLabel) {
+    el.mealCountLabel.textContent = `${state.meals.length} ${state.meals.length === 1 ? "refeição" : "refeições"}`;
+  }
+}
+
+function createMealRow(meal) {
+  const row = document.createElement("article");
+  row.className = "meal-row";
+  const itemCount = Array.isArray(meal.items) ? meal.items.length : 0;
+  const preview = (meal.items || [])
+    .slice(0, 3)
+    .map((item) => item.quantity ? `${item.name} (${item.quantity})` : item.name)
+    .join(", ");
+  row.innerHTML = `
+    <button class="meal-main" type="button" aria-label="Editar ${escapeHtml(meal.name)}">
+      <strong>${escapeHtml(meal.name)}</strong>
+      <span>${itemCount} ${itemCount === 1 ? "item" : "itens"}${preview ? ` - ${escapeHtml(preview)}` : ""}</span>
+    </button>
+    <div class="meal-actions">
+      <button class="secondary-button meal-copy-button" type="button">
+        <i data-lucide="list-plus" aria-hidden="true"></i>
+        Adicionar à lista de compras atual
+      </button>
+    </div>
+  `;
+
+  row.querySelector(".meal-main").addEventListener("click", () => openMealEditor(meal.id));
+  row.querySelector(".meal-copy-button").addEventListener("click", () => addMealToCurrentList(meal.id));
+  return row;
+}
+
 function renderCategorySections() {
   const categories = [{ id: UNCATEGORIZED_ID, name: "Sem seção", locked: true }, ...state.categories];
   categories.forEach((category) => {
@@ -946,6 +1064,7 @@ function renderIcons() {
 function render() {
   renderDashboard();
   renderItems();
+  renderMeals();
   renderNavigation();
   renderSettings();
   renderSpaces();
@@ -1497,6 +1616,33 @@ function createPurchaseInlineEditor(purchase = null) {
   return row;
 }
 
+function createMealItemEditorRow(item = {}) {
+  const row = document.createElement("div");
+  row.className = "meal-item-editor-row";
+  row.dataset.itemId = item.id || createId();
+  row.dataset.createdAt = item.createdAt || Date.now();
+  row.innerHTML = `
+    <input name="mealItemName" autocomplete="off" placeholder="Item" value="${escapeHtml(item.name || "")}" />
+    <input name="mealItemQuantity" autocomplete="off" placeholder="Quantidade" value="${escapeHtml(item.quantity || "")}" />
+    <button class="icon-button meal-item-remove-button" type="button" aria-label="Remover item">
+      <i data-lucide="trash-2" aria-hidden="true"></i>
+    </button>
+  `;
+  row.querySelector(".meal-item-remove-button").addEventListener("click", () => {
+    row.remove();
+    if (!el.mealItemsEditor.querySelector(".meal-item-editor-row")) {
+      addMealItemEditorRow();
+    }
+  });
+  return row;
+}
+
+function addMealItemEditorRow(item = {}) {
+  if (!el.mealItemsEditor) return;
+  el.mealItemsEditor.append(createMealItemEditorRow(item));
+  renderIcons();
+}
+
 function focusDialogInput(input) {
   //return;
   if (!input) return;
@@ -1658,6 +1804,150 @@ async function saveCategory(event) {
   closeCategoryDialog();
   await reloadAndRender();
   showToast(categories.length === 1 ? "Seção adicionada." : "Seções adicionadas.");
+}
+
+function openMealEditor(id = null) {
+  closeFabMenu();
+  closeListMenu();
+  state.editingMealId = id;
+  const meal = state.meals.find((current) => current.id === id);
+
+  el.mealForm.reset();
+  el.mealItemsEditor.innerHTML = "";
+  el.mealDialogTitle.textContent = meal ? "Editar refeição" : "Nova refeição";
+  el.saveMealButton.textContent = meal ? "Salvar" : "Adicionar";
+  el.deleteMealButton.hidden = !meal;
+  el.mealName.value = meal?.name || "";
+
+  const mealItems = Array.isArray(meal?.items) ? meal.items : [];
+  if (mealItems.length) {
+    mealItems.forEach((item) => addMealItemEditorRow(item));
+  } else {
+    addMealItemEditorRow();
+  }
+
+  if (typeof el.mealDialog.showModal === "function") {
+    el.mealDialog.showModal();
+  } else {
+    el.mealDialog.setAttribute("open", "");
+  }
+  focusDialogInput(el.mealName);
+}
+
+function closeMealDialog() {
+  state.editingMealId = null;
+  el.deleteMealButton.hidden = true;
+  if (typeof el.mealDialog.close === "function") {
+    el.mealDialog.close();
+  } else {
+    el.mealDialog.removeAttribute("open");
+  }
+}
+
+function mealItemsFromForm() {
+  return [...el.mealItemsEditor.querySelectorAll(".meal-item-editor-row")]
+    .map((row) => ({
+      id: row.dataset.itemId || createId(),
+      name: row.querySelector("[name='mealItemName']").value.trim(),
+      quantity: row.querySelector("[name='mealItemQuantity']").value.trim(),
+      createdAt: Number(row.dataset.createdAt) || Date.now(),
+    }))
+    .filter((item) => item.name);
+}
+
+async function saveMeal(event) {
+  event.preventDefault();
+  const name = el.mealName.value.trim();
+  const items = mealItemsFromForm();
+  if (!name) {
+    showToast("Informe o nome da refeição.");
+    return;
+  }
+  if (!items.length) {
+    showToast("Adicione pelo menos um item.");
+    return;
+  }
+
+  const meal = state.meals.find((current) => current.id === state.editingMealId);
+  const now = Date.now();
+  if (meal) {
+    await saveRecord("meals", { ...meal, name, items, updatedAt: now });
+  } else {
+    await saveRecord("meals", {
+      id: createId(),
+      name,
+      items,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  closeMealDialog();
+  await reloadAndRender();
+  showToast(meal ? "Refeição atualizada." : "Refeição adicionada.");
+}
+
+async function removeMeal(id) {
+  if (!id) return;
+  const confirmed = window.confirm("Excluir esta refeição?");
+  if (!confirmed) return;
+
+  await deleteRecord("meals", id);
+  if (state.editingMealId === id) {
+    state.editingMealId = null;
+  }
+  if (el.mealDialog.open) {
+    closeMealDialog();
+  }
+  await reloadAndRender();
+  showToast("Refeição removida.");
+}
+
+async function addMealToCurrentList(id) {
+  const meal = state.meals.find((current) => current.id === id);
+  const mealItems = (meal?.items || []).filter((item) => item.name?.trim());
+  if (!mealItems.length) {
+    showToast("Esta refeição não tem itens.");
+    return;
+  }
+
+  const itemsByName = new Map(state.items.map((item) => [normalizeItemName(item.name), item]));
+  let addedCount = 0;
+  let updatedCount = 0;
+
+  for (const mealItem of mealItems) {
+    const key = normalizeItemName(mealItem.name);
+    const existing = itemsByName.get(key);
+    if (existing) {
+      const updatedItem = {
+        ...existing,
+        quantity: mergeQuantity(existing.quantity, mealItem.quantity),
+        checked: false,
+      };
+      await saveRecord("items", updatedItem);
+      itemsByName.set(key, updatedItem);
+      updatedCount += 1;
+      continue;
+    }
+
+    const newItem = {
+      id: createId(),
+      name: mealItem.name.trim(),
+      quantity: mealItem.quantity || "",
+      categoryId: "",
+      checked: false,
+      createdAt: Date.now() + addedCount,
+    };
+    await saveRecord("items", newItem);
+    itemsByName.set(key, newItem);
+    addedCount += 1;
+  }
+
+  await reloadAndRender();
+  const parts = [];
+  if (addedCount) parts.push(`${addedCount} ${addedCount === 1 ? "item adicionado" : "itens adicionados"}`);
+  if (updatedCount) parts.push(`${updatedCount} ${updatedCount === 1 ? "item atualizado" : "itens atualizados"}`);
+  showToast(`${parts.join(" e ")} na lista.`);
 }
 
 function openCategoryDialog() {
@@ -1823,11 +2113,13 @@ async function resetDatabase() {
     ...state.items.map((item) => deleteRecord("items", item.id)),
     ...state.categories.map((category) => deleteRecord("categories", category.id)),
     ...state.purchases.map((purchase) => deleteRecord("purchases", purchase.id)),
+    ...state.meals.map((meal) => deleteRecord("meals", meal.id)),
   ]);
   await saveRecord("settings", normalizeSettings({ ...state.settings, monthlyBudget: DEFAULT_SETTINGS.monthlyBudget, cardClosingDay: "" }));
 
   state.editingItemId = null;
   state.editingPurchaseId = null;
+  state.editingMealId = null;
   state.inlineItemEditor = null;
   state.inlinePurchaseEditor = null;
   state.pendingItemCategoryId = "";
@@ -1854,6 +2146,10 @@ function handleFabButton() {
   }
   if (state.activeView === "purchaseView") {
     openPurchaseEditor();
+    return;
+  }
+  if (state.activeView === "mealsView") {
+    openMealEditor();
     return;
   }
   if (state.activeView === "dashboardView") {
@@ -2117,6 +2413,12 @@ function bindEvents() {
   el.closeCheckoutButton.addEventListener("click", closeCheckout);
   el.cancelCheckoutButton.addEventListener("click", closeCheckout);
   el.refreshButton.addEventListener("click", () => openPurchaseEditor());
+  el.createFirstMealButton?.addEventListener("click", () => openMealEditor());
+  el.mealForm?.addEventListener("submit", saveMeal);
+  el.addMealItemButton?.addEventListener("click", () => addMealItemEditorRow());
+  el.deleteMealButton?.addEventListener("click", () => removeMeal(state.editingMealId));
+  el.closeMealDialogButton?.addEventListener("click", closeMealDialog);
+  el.cancelMealDialogButton?.addEventListener("click", closeMealDialog);
 }
 
 async function registerServiceWorker() {

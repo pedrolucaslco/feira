@@ -563,6 +563,50 @@ label {
   border: 1px solid transparent;
 }
 
+.meal-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.meal-editor-head label {
+  margin: 0;
+}
+
+.meal-editor-head button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+}
+
+.meal-editor-head svg,
+.meal-editor-head [data-lucide] {
+  width: 17px;
+  height: 17px;
+}
+
+.meal-items-editor {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.meal-item-editor-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(90px, 0.72fr) 46px;
+  gap: 8px;
+  align-items: center;
+}
+
+.meal-item-remove-button svg,
+.meal-item-remove-button [data-lucide] {
+  width: 18px;
+  height: 18px;
+}
+
 .list-menu-wrap {
   position: relative;
   flex: 0 0 auto;
@@ -722,6 +766,41 @@ label {
 
 :root[data-theme="dark"] .metric {
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+}
+
+.period-card {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+}
+
+.period-card span,
+.period-card small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+.period-card strong,
+.period-card b {
+  display: block;
+  margin-top: 3px;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 850;
+  line-height: 1.18;
+}
+
+.period-card small {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
 }
 
 .metric strong {
@@ -1007,12 +1086,66 @@ select:focus {
 }
 
 .purchase-list,
-.item-list {
+.item-list,
+.meal-list {
   display: grid;
   gap: 9px;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.meal-row {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+}
+
+.meal-main {
+  display: grid;
+  gap: 4px;
+  min-height: 42px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+
+.meal-main strong {
+  overflow-wrap: anywhere;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.meal-main span {
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.meal-actions {
+  display: grid;
+}
+
+.meal-copy-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  white-space: normal;
+}
+
+.meal-copy-button svg,
+.meal-copy-button [data-lucide] {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
 }
 
 .purchase-row,
@@ -1383,7 +1516,7 @@ select:focus {
   bottom: 0;
   left: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 4px;
   max-width: none;
   margin: 0 auto;
@@ -1424,7 +1557,7 @@ select:focus {
 }
 
 .nav-button b {
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 800;
 }
 
@@ -1527,6 +1660,7 @@ select:focus {
   margin: 0;
   padding: max(1em, env(safe-area-inset-top)) max(18px, calc((100vw - 980px) / 2 + 18px)) 1em;
   transform-origin: top center;
+  overflow-y: auto;
 }
 
 .checkout-dialog::backdrop,
@@ -1779,9 +1913,17 @@ select:focus {
     flex-direction: column;
   }
 
+  .period-card {
+    grid-template-columns: 1fr;
+  }
+
   .conflict-versions,
   .conflict-actions {
     grid-template-columns: 1fr;
+  }
+
+  .meal-item-editor-row {
+    grid-template-columns: 1fr 1fr 46px;
   }
 
   .accent-select {
@@ -1831,6 +1973,14 @@ select:focus {
   }
 
   .budget-form button {
+    width: 100%;
+  }
+
+  .meal-item-editor-row {
+    grid-template-columns: 1fr;
+  }
+
+  .meal-item-remove-button {
     width: 100%;
   }
 }

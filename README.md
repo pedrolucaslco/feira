@@ -29,7 +29,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Botão flutuante contextual: dropdown no resumo, novo item na lista e nova compra em compras.
 - Tela de lista completa com adição inline e botão flutuante de atalho.
 - Modal compartilhado para adicionar e editar itens.
-- Tela de compras com histórico, gasto/budget, gráfico de variação e planejamento semanal.
+- Tela de compras com histórico, período financeiro, gasto/budget, gráfico de variação e planejamento semanal.
 - Preferência para criar e editar itens/compras em modal ou inline.
 - Controle de budget mensal.
 - Aba de ajustes.
@@ -47,12 +47,14 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Gráfico simples de variação das compras com linha de mediana.
 - Edição de compras registradas, incluindo nome, data e valor.
 - Remoção de compras apenas pelo modal de edição.
-- Cálculo de saldo restante.
-- Total gasto no mês.
+- Cálculo de saldo restante pelo período financeiro atual.
+- Total gasto no período financeiro atual.
 - Número de compras realizadas no cabeçalho do histórico.
 - Lista de mercado offline na tela inicial.
 - Seções personalizadas na lista, com modal de criação, sugestões rápidas e acordeon.
 - Arrastar itens entre seções na tela de lista.
+- Aba de refeições com listas isoladas de itens.
+- Cópia de itens de uma refeição para a lista de compras atual, mesclando quantidades por nome.
 - Adição de itens com quantidade opcional.
 - Edição de nome e quantidade dos itens.
 - Remoção de itens apenas pelo modal de edição.
@@ -115,6 +117,7 @@ O app usa IndexedDB local com coleções por espaço:
 items
 categories
 purchases
+meals
 settings
 spaces
 syncOutbox
@@ -148,6 +151,20 @@ purchases: {
   name: string,
   total: number,
   date: number
+}
+
+meals: {
+  id: string,
+  spaceId: string,
+  name: string,
+  items: Array<{
+    id: string,
+    name: string,
+    quantity: string,
+    createdAt: number
+  }>,
+  createdAt: number,
+  updatedAt: number
 }
 
 settings: {
