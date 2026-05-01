@@ -685,10 +685,10 @@ label {
 .category-list {
   display: grid;
   gap: 0;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
-  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
 }
 
 .category-section {
@@ -1186,7 +1186,7 @@ select:focus {
   padding: 8px 12px;
   border: 0;
   border-radius: 8px;
-  background: var(--surface-strong);
+  background: transparent;
 }
 
 .drag-handle {
