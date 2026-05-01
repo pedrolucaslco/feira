@@ -189,6 +189,8 @@ profile: {
 
 O compartilhamento é opcional. Sem configuração, o app continua funcionando com o `Espaço local`.
 
+Espaços compartilhados sincronizam itens, seções, compras, refeições e ajustes financeiros.
+
 Para ativar:
 
 1. Crie um projeto Supabase.

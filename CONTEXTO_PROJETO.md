@@ -445,6 +445,7 @@ Direção visual atual:
 - Textos da interface não ficam selecionáveis durante o uso.
 - Topbar exibe o seletor de Espaço atual, mantendo o saldo e o indicador semanal.
 - Espaços compartilhados usam código de convite e continuam com escrita local instantânea.
+- Itens, seções, compras, refeições e ajustes financeiros são sincronizáveis no espaço compartilhado.
 
 O app evita uma landing page e abre direto na experiência funcional.
 

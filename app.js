@@ -425,6 +425,35 @@ function normalizeSettings(settings, spaceId = state.activeSpaceId) {
   };
 }
 
+function normalizeMeal(meal, spaceId = state.activeSpaceId) {
+  const now = Date.now();
+  const items = Array.isArray(meal?.items)
+    ? meal.items
+      .map((item) => ({
+        id: item.id || createId(),
+        name: String(item.name || "").trim(),
+        quantity: String(item.quantity || "").trim(),
+        createdAt: Number(item.createdAt) || now,
+      }))
+      .filter((item) => item.name)
+    : [];
+
+  return {
+    ...(meal || {}),
+    id: meal?.id || createId(),
+    spaceId,
+    name: String(meal?.name || "Refeição").trim() || "Refeição",
+    items,
+    createdAt: Number(meal?.createdAt) || now,
+    updatedAt: Number(meal?.updatedAt) || Number(meal?.createdAt) || now,
+  };
+}
+
+function normalizeStoreRecord(storeName, value, spaceId = state.activeSpaceId) {
+  if (storeName === "meals") return normalizeMeal(value, spaceId);
+  return value;
+}
+
 function syncMetaId(spaceId, entityType, entityId) {
   return `${spaceId}:${entityType}:${entityId}`;
 }
@@ -540,7 +569,10 @@ async function loadState() {
   state.items = items.filter((item) => (item.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => b.createdAt - a.createdAt);
   state.categories = categories.filter((category) => (category.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => a.createdAt - b.createdAt);
   state.purchases = purchases.filter((purchase) => (purchase.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => b.date - a.date);
-  state.meals = meals.filter((meal) => (meal.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => b.updatedAt - a.updatedAt);
+  state.meals = meals
+    .filter((meal) => (meal.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId)
+    .map((meal) => normalizeMeal(meal, state.activeSpaceId))
+    .sort((a, b) => b.updatedAt - a.updatedAt);
   state.settings = normalizeSettings(settings, state.activeSpaceId);
   state.syncOutbox = syncOutbox.filter((operation) => operation.spaceId === state.activeSpaceId);
   state.syncConflicts = syncConflicts.filter((conflict) => conflict.spaceId === state.activeSpaceId);
@@ -1246,13 +1278,14 @@ function fromRemoteRecord(record) {
   const storeName = ENTITY_TO_STORE[record.entity_type];
   if (!storeName) return null;
   const id = entityRecordId(record.entity_type, record.entity_id, record.space_id);
+  const value = {
+    ...(record.data || {}),
+    id,
+    spaceId: record.space_id,
+  };
   return {
     storeName,
-    value: {
-      ...(record.data || {}),
-      id,
-      spaceId: record.space_id,
-    },
+    value: normalizeStoreRecord(storeName, value, record.space_id),
   };
 }
 
@@ -1291,7 +1324,7 @@ async function applyRemoteRecord(record) {
       const currentSettings = await getOne("settings", mapped.value.id);
       await putOne("settings", normalizeSettings({ ...(currentSettings || {}), ...mapped.value }, record.space_id));
     } else {
-      await putOne(mapped.storeName, mapped.value);
+      await putOne(mapped.storeName, normalizeStoreRecord(mapped.storeName, mapped.value, record.space_id));
     }
   }
   await putOne("syncMeta", {
@@ -1471,7 +1504,7 @@ async function resolveConflict(conflictId, resolution) {
         const currentSettings = await getOne("settings", conflict.remote.id);
         await putOne("settings", normalizeSettings({ ...(currentSettings || {}), ...conflict.remote }, conflict.spaceId));
       } else {
-        await putOne(storeName, conflict.remote);
+        await putOne(storeName, normalizeStoreRecord(storeName, conflict.remote, conflict.spaceId));
       }
     } else {
       await deleteOne(storeName, entityRecordId(conflict.entityType, conflict.entityId, conflict.spaceId));
@@ -1871,15 +1904,15 @@ async function saveMeal(event) {
   const meal = state.meals.find((current) => current.id === state.editingMealId);
   const now = Date.now();
   if (meal) {
-    await saveRecord("meals", { ...meal, name, items, updatedAt: now });
+    await saveRecord("meals", normalizeMeal({ ...meal, name, items, updatedAt: now }));
   } else {
-    await saveRecord("meals", {
+    await saveRecord("meals", normalizeMeal({
       id: createId(),
       name,
       items,
       createdAt: now,
       updatedAt: now,
-    });
+    }));
   }
 
   closeMealDialog();
