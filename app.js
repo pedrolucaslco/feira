@@ -206,8 +206,8 @@ const el = {
   purchasePeriodRule: document.querySelector("#purchasePeriodRule"),
   topbarWeeklyBudget: document.querySelector("#topbarWeeklyBudget"),
   topbarWeeklyLabel: document.querySelector("#topbarWeeklyLabel"),
+  topbarRefreshButton: document.querySelector("#topbarRefreshButton"),
   itemCountLabel: document.querySelector("#itemCountLabel"),
-  welcomeTitle: document.querySelector("#welcomeTitle"),
   activeSpaceName: document.querySelector("#activeSpaceName"),
   spaceSwitcherButton: document.querySelector("#spaceSwitcherButton"),
   spaceMenu: document.querySelector("#spaceMenu"),
@@ -836,8 +836,6 @@ function renderWeeklyBudget(remaining, weeksLeft) {
 }
 
 function renderProfile() {
-  const name = (state.settings.userName || "").trim();
-  el.welcomeTitle.textContent = name ? `Olá, ${name}` : "Boas-vindas";
   if (el.activeSpaceName) {
     el.activeSpaceName.textContent = activeSpace().name;
   }
@@ -1031,7 +1029,9 @@ function renderCategorySections() {
     list.addEventListener("drop", (event) => {
       event.preventDefault();
       list.classList.remove("is-drop-target");
-      moveItemToCategory(event.dataTransfer.getData("text/plain"), category.id);
+      const draggedItemId = event.dataTransfer.getData("text/plain");
+      const targetRow = event.target.closest(".item-row[data-item-id]");
+      moveItemWithOrdering(draggedItemId, category.id, targetRow?.dataset.itemId || null);
     });
 
     if (state.inlineItemEditor && !state.inlineItemEditor.id && itemCategoryId({ categoryId: state.inlineItemEditor.categoryId }) === category.id) {
@@ -2053,7 +2053,7 @@ function beginItemPointerDrag(event, itemId, row) {
     const categoryId = target?.dataset.categoryId;
     state.draggingItemId = null;
     if (categoryId) {
-      await moveItemToCategory(itemId, categoryId);
+      await moveItemWithOrdering(itemId, categoryId);
     }
   };
 
@@ -2061,16 +2061,27 @@ function beginItemPointerDrag(event, itemId, row) {
   document.addEventListener("pointerup", finish, { once: true });
 }
 
-async function moveItemToCategory(itemId, categoryId) {
-  const item = state.items.find((current) => current.id === itemId);
-  if (!item) return;
-
+async function moveItemWithOrdering(itemId, categoryId, targetItemId = null) {
   const normalizedCategoryId = categoryId === UNCATEGORIZED_ID ? "" : categoryId;
-  if ((item.categoryId || "") === normalizedCategoryId) return;
+  const movedItem = state.items.find((current) => current.id === itemId);
+  if (!movedItem) return;
 
-  await saveRecord("items", { ...item, categoryId: normalizedCategoryId });
+  const categoryItems = state.items.filter((current) => itemCategoryId(current) === categoryId);
+  const withoutMoved = categoryItems.filter((current) => current.id !== itemId);
+  const targetIndex = targetItemId ? withoutMoved.findIndex((current) => current.id === targetItemId) : -1;
+  const insertIndex = targetIndex >= 0 ? targetIndex : withoutMoved.length;
+  const reordered = [...withoutMoved];
+  reordered.splice(insertIndex, 0, { ...movedItem, categoryId: normalizedCategoryId });
+
+  const now = Date.now();
+  const updates = reordered.map((current, index) => saveRecord("items", {
+    ...current,
+    categoryId: normalizedCategoryId,
+    createdAt: now - index,
+  }));
+  await Promise.all(updates);
   await reloadAndRender();
-  showToast("Item movido.");
+  showToast("Ordem atualizada.");
 }
 
 async function toggleItem(id) {
@@ -2413,6 +2424,7 @@ function bindEvents() {
   el.profileForm.addEventListener("submit", saveProfile);
   el.resetDatabaseButton.addEventListener("click", resetDatabase);
   el.manualRefreshButton?.addEventListener("click", refreshApp);
+  el.topbarRefreshButton?.addEventListener("click", refreshApp);
   el.themeToggle.addEventListener("change", toggleTheme);
   el.accentColorInput?.addEventListener("change", changeAccent);
   el.editorModeInput?.addEventListener("change", changeEditorMode);

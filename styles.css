@@ -387,6 +387,8 @@ h3 {
 }
 
 .topbar-metrics {
+  display: flex;
+  align-items: center;
   flex: 0 1 auto;
   gap: 8px;
   min-width: 0;
@@ -420,6 +422,29 @@ label {
   font-size: 1.05rem;
   font-weight: 850;
   white-space: nowrap;
+}
+
+.topbar-refresh-button {
+  width: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  margin-left: 2px;
+  border-color: var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.topbar-refresh-button svg,
+.topbar-refresh-button [data-lucide] {
+  width: 17px;
+  height: 17px;
+}
+
+.topbar-refresh-button:hover,
+.topbar-refresh-button:focus-visible {
+  color: var(--ink);
+  background: var(--surface-strong);
 }
 
 .view {
@@ -659,18 +684,21 @@ label {
 
 .category-list {
   display: grid;
-  gap: 10px;
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
 }
 
 .category-section {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.64);
+  border-bottom: 1px solid var(--line);
+  background: transparent;
   overflow: visible;
 }
 
-:root[data-theme="dark"] .category-section {
-  background: rgba(10, 10, 10, 0.58);
+.category-section:last-child {
+  border-bottom: 0;
 }
 
 .category-head {
@@ -679,7 +707,7 @@ label {
   justify-content: space-between;
   gap: 8px;
   min-height: 48px;
-  padding: 6px 8px;
+  padding: 8px 10px;
 }
 
 .category-toggle {
@@ -729,7 +757,7 @@ label {
 .category-items {
   overflow: hidden;
   height: auto;
-  padding: 0 8px 8px;
+  padding: 0 10px 10px;
   opacity: 1;
   transition: height 240ms ease, opacity 180ms ease, padding 200ms ease;
 }
@@ -1880,6 +1908,12 @@ select:focus {
 
   .topbar-metric strong {
     font-size: 0.9rem;
+  }
+
+  .topbar-refresh-button {
+    width: 34px;
+    min-width: 34px;
+    min-height: 34px;
   }
 
   .metrics-grid {
