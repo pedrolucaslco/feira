@@ -879,7 +879,7 @@ function renderWeeklyBudget(remaining, weeksLeft) {
   }
 
   el.topbarWeeklyBudget.textContent = formatCurrency(remaining / weeksLeft);
-  el.topbarWeeklyLabel.textContent = "por semana";
+  el.topbarWeeklyLabel.textContent = "Semana";
 }
 
 function renderProfile() {
@@ -953,7 +953,7 @@ function createItemRow(item, { removable, draggable = false } = {}) {
 
   const quantity = item.quantity ? `<span class="item-quantity">${escapeHtml(item.quantity)}</span>` : "";
   row.innerHTML = `
-    <button class="check-button" type="button" aria-label="Marcar ${escapeHtml(item.name)}">✓</button>
+    <input class="checkbox checkbox-primary checkbox-md check-button" type="checkbox" aria-label="Marcar ${escapeHtml(item.name)}" ${item.checked ? "checked" : ""} />
     <div class="item-main">
       <strong>${escapeHtml(item.name)}</strong>
       ${quantity}
@@ -976,8 +976,11 @@ function createItemRow(item, { removable, draggable = false } = {}) {
     }
   });
 
-  row.querySelector(".check-button").addEventListener("click", (event) => {
+  const checkInput = row.querySelector(".check-button");
+  checkInput.addEventListener("click", (event) => {
     event.stopPropagation();
+  });
+  checkInput.addEventListener("change", () => {
     toggleItem(item.id);
   });
   return row;
@@ -1022,7 +1025,7 @@ function createMealRow(meal) {
       <span>${itemCount} ${itemCount === 1 ? "item" : "itens"}${preview ? ` - ${escapeHtml(preview)}` : ""}</span>
     </button>
     <div class="meal-actions">
-      <button class="secondary-button meal-copy-button" type="button">
+      <button class="btn btn-soft meal-copy-button" type="button">
         <i data-lucide="list-plus" aria-hidden="true"></i>
         Adicionar à lista de compras atual
       </button>
@@ -1054,7 +1057,7 @@ function renderCategorySections() {
           <span>${escapeHtml(category.name)}</span>
           <small>${items.length}</small>
         </button>
-        <button class="category-add-button" type="button" aria-label="Adicionar item em ${escapeHtml(category.name)}">
+        <button class="btn btn-ghost btn-square btn-sm category-add-button" type="button" aria-label="Adicionar item em ${escapeHtml(category.name)}">
           <i data-lucide="plus" aria-hidden="true"></i>
         </button>
       </div>
@@ -1524,8 +1527,8 @@ function renderConflicts() {
         </div>
       </div>
       <div class="conflict-actions">
-        <button class="secondary-button" type="button" data-resolution="cloud">Usar nuvem</button>
-        <button class="primary-dialog-button" type="button" data-resolution="local">Usar local</button>
+        <button class="btn btn-soft" type="button" data-resolution="cloud">Usar nuvem</button>
+        <button class="btn btn-primary" type="button" data-resolution="local">Usar local</button>
       </div>
     `;
     card.querySelector("[data-resolution='cloud']").addEventListener("click", () => resolveConflict(conflict.id, "cloud"));
@@ -1824,7 +1827,12 @@ function editorMode() {
 function createInlineActionButton(label, variant = "secondary") {
   const button = document.createElement("button");
   button.type = "button";
-  button.className = variant === "primary" ? "primary-dialog-button" : "secondary-button";
+  const classes = {
+    primary: "btn btn-primary",
+    secondary: "btn btn-soft",
+    danger: "btn btn-error btn-ghost",
+  };
+  button.className = classes[variant] || classes.secondary;
   button.textContent = label;
   return button;
 }
@@ -1835,8 +1843,8 @@ function createItemInlineEditor(item = null, categoryId = "") {
   const form = document.createElement("form");
   form.className = "inline-editor-form";
   form.innerHTML = `
-    <input name="name" autocomplete="off" placeholder="Item" required value="${escapeHtml(item?.name || "")}" />
-    <input name="quantity" autocomplete="off" placeholder="Quantidade" value="${escapeHtml(item?.quantity || "")}" />
+    <input class="input input-sm" name="name" autocomplete="off" placeholder="Item" required value="${escapeHtml(item?.name || "")}" />
+    <input class="input input-sm" name="quantity" autocomplete="off" placeholder="Quantidade" value="${escapeHtml(item?.quantity || "")}" />
     <div class="inline-editor-actions"></div>
   `;
 
@@ -1844,12 +1852,12 @@ function createItemInlineEditor(item = null, categoryId = "") {
   const cancelButton = createInlineActionButton("Cancelar");
   const saveButton = document.createElement("button");
   saveButton.type = "submit";
-  saveButton.className = "primary-dialog-button";
+  saveButton.className = "btn btn-primary";
   saveButton.textContent = item ? "Salvar" : "Adicionar";
   actions.append(cancelButton);
   if (item) {
     const deleteButton = createInlineActionButton("Excluir", "danger");
-    deleteButton.className = "danger-text-button inline-delete-button";
+    deleteButton.classList.add("inline-delete-button");
     deleteButton.addEventListener("click", () => removeItem(item.id));
     actions.append(deleteButton);
   }
@@ -1868,9 +1876,9 @@ function createPurchaseInlineEditor(purchase = null) {
   const form = document.createElement("form");
   form.className = "inline-editor-form purchase-inline-form";
   form.innerHTML = `
-    <input name="name" autocomplete="off" placeholder="Nome da compra" value="${escapeHtml(purchase?.name || "")}" />
-    <input name="date" type="date" required value="${formatDateInput(purchase?.date || Date.now())}" />
-    <input name="total" inputmode="decimal" autocomplete="off" placeholder="Valor pago" required value="${purchase ? escapeHtml(String(purchase.total).replace(".", ",")) : ""}" />
+    <input class="input input-sm" name="name" autocomplete="off" placeholder="Nome da compra" value="${escapeHtml(purchase?.name || "")}" />
+    <input class="input input-sm" name="date" type="date" required value="${formatDateInput(purchase?.date || Date.now())}" />
+    <input class="input input-sm" name="total" inputmode="decimal" autocomplete="off" placeholder="Valor pago" required value="${purchase ? escapeHtml(String(purchase.total).replace(".", ",")) : ""}" />
     <div class="inline-editor-actions"></div>
   `;
 
@@ -1878,12 +1886,12 @@ function createPurchaseInlineEditor(purchase = null) {
   const cancelButton = createInlineActionButton("Cancelar");
   const saveButton = document.createElement("button");
   saveButton.type = "submit";
-  saveButton.className = "primary-dialog-button";
+  saveButton.className = "btn btn-primary";
   saveButton.textContent = purchase ? "Salvar" : "Registrar";
   actions.append(cancelButton);
   if (purchase) {
     const deleteButton = createInlineActionButton("Excluir", "danger");
-    deleteButton.className = "danger-text-button inline-delete-button";
+    deleteButton.classList.add("inline-delete-button");
     deleteButton.addEventListener("click", () => removePurchase(purchase.id));
     actions.append(deleteButton);
   }
@@ -1902,9 +1910,9 @@ function createMealItemEditorRow(item = {}) {
   row.dataset.itemId = item.id || createId();
   row.dataset.createdAt = item.createdAt || Date.now();
   row.innerHTML = `
-    <input name="mealItemName" autocomplete="off" placeholder="Item" value="${escapeHtml(item.name || "")}" />
-    <input name="mealItemQuantity" autocomplete="off" placeholder="Quantidade" value="${escapeHtml(item.quantity || "")}" />
-    <button class="icon-button meal-item-remove-button" type="button" aria-label="Remover item">
+    <input class="input input-sm" name="mealItemName" autocomplete="off" placeholder="Item" value="${escapeHtml(item.name || "")}" />
+    <input class="input input-sm" name="mealItemQuantity" autocomplete="off" placeholder="Quantidade" value="${escapeHtml(item.quantity || "")}" />
+    <button class="btn btn-ghost btn-square meal-item-remove-button" type="button" aria-label="Remover item">
       <i data-lucide="trash-2" aria-hidden="true"></i>
     </button>
   `;

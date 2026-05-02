@@ -19,13 +19,13 @@
         document.documentElement.dataset.accent = localStorage.getItem("feira:accent") || "emerald";
       })();
     </script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/base/reset.css,npm/daisyui@5/base/properties.css,npm/daisyui@5/base/svg.css,npm/daisyui@5/components/dock.css,npm/daisyui@5/theme/light.css,npm/daisyui@5/theme/dark.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/base/reset.css,npm/daisyui@5/base/properties.css,npm/daisyui@5/base/svg.css,npm/daisyui@5/components/button.css,npm/daisyui@5/components/checkbox.css,npm/daisyui@5/components/dock.css,npm/daisyui@5/components/fieldset.css,npm/daisyui@5/components/input.css,npm/daisyui@5/components/label.css,npm/daisyui@5/components/navbar.css,npm/daisyui@5/components/select.css,npm/daisyui@5/theme/light.css,npm/daisyui@5/theme/dark.css" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
+      <header class="navbar topbar">
+        <div class="navbar-start brand">
           <div class="brand-copy">
             <div class="space-switcher-wrap">
               <button class="space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="true" aria-expanded="false">
@@ -39,7 +39,7 @@
             <span class="sync-status" id="syncStatusLabel">Local</span>
           </div>
         </div>
-        <div class="topbar-metrics" aria-label="Resumo financeiro">
+        <div class="navbar-end topbar-metrics" aria-label="Resumo financeiro">
           <div class="topbar-metric">
             <span>Saldo</span>
             <strong id="remainingBalance">R$ 0,00</strong>
@@ -48,7 +48,7 @@
             <span id="topbarWeeklyLabel">Semana</span>
             <strong id="topbarWeeklyBudget">--</strong>
           </div>
-          <button class="icon-button topbar-refresh-button" id="topbarRefreshButton" type="button" aria-label="Atualizar app" title="Atualizar app">
+          <button class="btn btn-ghost btn-square btn-sm topbar-refresh-button" id="topbarRefreshButton" type="button" aria-label="Atualizar app" title="Atualizar app">
             <i data-lucide="refresh-cw" aria-hidden="true"></i>
           </button>
         </div>
@@ -60,7 +60,7 @@
             <strong>Conflitos de sincronização</strong>
             <span>Escolha qual versão manter para continuar sincronizando.</span>
           </div>
-          <button class="secondary-button" id="openConflictsButton" type="button">Resolver</button>
+          <button class="btn btn-soft" id="openConflictsButton" type="button">Resolver</button>
         </section>
 
         <section id="listView" class="view is-active" aria-labelledby="fullListTitle">
@@ -70,11 +70,11 @@
               <span id="itemCountLabel" class="soft-label">0 itens</span>
             </div>
             <div class="list-menu-wrap">
-              <button class="icon-button" id="listMenuButton" type="button" aria-label="Abrir opções da lista" aria-expanded="false">
+              <button class="btn btn-ghost btn-square" id="listMenuButton" type="button" aria-label="Abrir opções da lista" aria-expanded="false">
                 <i data-lucide="ellipsis" aria-hidden="true"></i>
               </button>
               <div class="list-menu" id="listMenu" hidden>
-                <button type="button" id="openCategoryDialogButton">
+                <button class="btn btn-ghost" type="button" id="openCategoryDialogButton">
                   <i data-lucide="plus" aria-hidden="true"></i>
                   Adicionar seção
                 </button>
@@ -92,7 +92,7 @@
               <p class="eyebrow">Compras</p>
               <h2 id="purchaseTitle">Histórico</h2>
             </div>
-            <button class="icon-button" id="refreshButton" type="button" title="Registrar compra" aria-label="Registrar compra">
+            <button class="btn btn-ghost btn-square" id="refreshButton" type="button" title="Registrar compra" aria-label="Registrar compra">
               <i data-lucide="plus" aria-hidden="true"></i>
             </button>
           </div>
@@ -145,7 +145,7 @@
               <h2 id="mealsTitle">Refeições</h2>
               <span id="mealCountLabel" class="soft-label">0 refeições</span>
             </div>
-            <button class="icon-button" id="createFirstMealButton" type="button" aria-label="Nova refeição">
+            <button class="btn btn-ghost btn-square" id="createFirstMealButton" type="button" aria-label="Nova refeição">
               <i data-lucide="plus" aria-hidden="true"></i>
             </button>
           </div>
@@ -164,8 +164,8 @@
           <p class="settings-group-label">Usuário</p>
           <form class="profile-form" id="profileForm">
             <label for="userNameInput">Nome</label>
-            <input id="userNameInput" name="name" autocomplete="name" placeholder="Seu nome" />
-            <button type="submit">Salvar perfil</button>
+            <input class="input" id="userNameInput" name="name" autocomplete="name" placeholder="Seu nome" />
+            <button class="btn btn-primary" type="submit">Salvar perfil</button>
           </form>
 
           <p class="settings-group-label">Orçamento</p>
@@ -173,13 +173,13 @@
             <div class="settings-fields">
               <label for="budgetInput">
                 Orçamento mensal
-                <input id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
+                <input class="input" id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
               </label>
               <label for="cardClosingDayInput">
                 Fechamento do cartão
-                <input id="cardClosingDayInput" name="cardClosingDay" type="number" min="1" max="31" inputmode="numeric" autocomplete="off" placeholder="Dia" />
+                <input class="input" id="cardClosingDayInput" name="cardClosingDay" type="number" min="1" max="31" inputmode="numeric" autocomplete="off" placeholder="Dia" />
               </label>
-              <button type="submit">Salvar</button>
+              <button class="btn btn-primary" type="submit">Salvar</button>
             </div>
           </form>
 
@@ -200,7 +200,7 @@
               <h3 id="accentTitle">Cor de destaque</h3>
               <p>Botões e indicadores.</p>
             </div>
-            <select class="accent-select" id="accentColorInput" name="accentColor" aria-label="Cor de destaque">
+            <select class="select accent-select" id="accentColorInput" name="accentColor" aria-label="Cor de destaque">
               <option value="emerald">Emerald</option>
               <option value="green">Green</option>
               <option value="sky">Sky</option>
@@ -219,7 +219,7 @@
               <h3 id="editorModeTitle">Edição</h3>
               <p>Itens e compras.</p>
             </div>
-            <select class="accent-select" id="editorModeInput" name="editorMode" aria-label="Modo de edição">
+            <select class="select accent-select" id="editorModeInput" name="editorMode" aria-label="Modo de edição">
               <option value="modal">Modal</option>
               <option value="inline">Inline</option>
             </select>
@@ -234,15 +234,15 @@
             <form class="compact-form" id="createSpaceForm">
               <label for="createSpaceNameInput">Novo espaço</label>
               <div class="input-row">
-                <input id="createSpaceNameInput" name="name" autocomplete="off" placeholder="Ex.: Casa" />
-                <button class="secondary-button" type="submit">Criar</button>
+                <input class="input input-sm" id="createSpaceNameInput" name="name" autocomplete="off" placeholder="Ex.: Casa" />
+                <button class="btn btn-soft" type="submit">Criar</button>
               </div>
             </form>
             <form class="compact-form" id="joinSpaceForm">
               <label for="joinSpaceCodeInput">Entrar por código</label>
               <div class="input-row">
-                <input id="joinSpaceCodeInput" name="code" autocomplete="off" autocapitalize="characters" placeholder="ABC123" />
-                <button class="secondary-button" type="submit">Entrar</button>
+                <input class="input input-sm" id="joinSpaceCodeInput" name="code" autocomplete="off" autocapitalize="characters" placeholder="ABC123" />
+                <button class="btn btn-soft" type="submit">Entrar</button>
               </div>
             </form>
           </section>
@@ -254,13 +254,13 @@
             </div>
             <label for="currentSpaceNameInput">Nome do espaço</label>
             <div class="input-row">
-              <input id="currentSpaceNameInput" name="spaceName" autocomplete="off" />
-              <button class="secondary-button" id="renameSpaceButton" type="button">Salvar</button>
+              <input class="input input-sm" id="currentSpaceNameInput" name="spaceName" autocomplete="off" />
+              <button class="btn btn-soft" id="renameSpaceButton" type="button">Salvar</button>
             </div>
             <label for="inviteCodeInput">Código de convite</label>
             <div class="input-row">
-              <input id="inviteCodeInput" name="inviteCode" readonly />
-              <button class="secondary-button" id="copyInviteButton" type="button">Copiar</button>
+              <input class="input input-sm" id="inviteCodeInput" name="inviteCode" readonly />
+              <button class="btn btn-soft" id="copyInviteButton" type="button">Copiar</button>
             </div>
           </section>
 
@@ -270,7 +270,7 @@
               <h3 id="refreshAppTitle">Atualizar app</h3>
               <p>Busca a versão recente.</p>
             </div>
-            <button class="secondary-button" id="manualRefreshButton" type="button">Atualizar</button>
+            <button class="btn btn-soft" id="manualRefreshButton" type="button">Atualizar</button>
           </section>
 
           <p class="settings-group-label">Diagnóstico</p>
@@ -279,7 +279,7 @@
               <h3 id="syncTestTitle">Testes de sincronização</h3>
               <p>Valida conflitos e status sem alterar seus dados.</p>
             </div>
-            <button class="secondary-button" id="runSyncTestsButton" type="button">Rodar testes</button>
+            <button class="btn btn-soft" id="runSyncTestsButton" type="button">Rodar testes</button>
             <div class="sync-test-summary" id="syncTestSummary">Aguardando execução.</div>
             <div class="sync-test-list" id="syncTestList" aria-live="polite"></div>
           </section>
@@ -289,7 +289,7 @@
               <h3 id="resetTitle">Resetar dados</h3>
               <p>Apaga dados locais.</p>
             </div>
-            <button class="danger-button" id="resetDatabaseButton" type="button">Resetar</button>
+            <button class="btn btn-error" id="resetDatabaseButton" type="button">Resetar</button>
           </section>
         </section>
       </main>
@@ -312,7 +312,7 @@
           <span class="dock-label">Ajustes</span>
         </button>
       </nav>
-      <button class="fab-button" id="quickAddButton" type="button" aria-label="Adicionar">
+      <button class="btn btn-primary btn-circle btn-lg fab-button" id="quickAddButton" type="button" aria-label="Adicionar">
         <i data-lucide="plus" aria-hidden="true"></i>
       </button>
     </div>
@@ -324,18 +324,18 @@
             <p class="eyebrow">Compras</p>
             <h2 id="checkoutDialogTitle">Registrar compra</h2>
           </div>
-          <button class="icon-button" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">×</button>
+          <button class="btn btn-ghost btn-square" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">×</button>
         </div>
         <label for="purchaseName">Nome da compra</label>
-        <input id="purchaseName" name="name" autocomplete="off" placeholder="Compra do mercado" />
+        <input class="input" id="purchaseName" name="name" autocomplete="off" placeholder="Compra do mercado" />
         <label for="purchaseDate">Data da compra</label>
-        <input id="purchaseDate" name="date" type="date" required />
+        <input class="input" id="purchaseDate" name="date" type="date" required />
         <label for="purchaseTotal">Valor pago</label>
-        <input id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
-        <button class="danger-text-button" id="deletePurchaseButton" type="button" hidden>Excluir compra</button>
+        <input class="input" id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
+        <button class="btn btn-error btn-ghost" id="deletePurchaseButton" type="button" hidden>Excluir compra</button>
         <div class="dialog-actions">
-          <button class="secondary-button" id="cancelCheckoutButton" value="cancel" type="button">Cancelar</button>
-          <button class="primary-dialog-button" id="savePurchaseButton" value="confirm" type="submit">Salvar</button>
+          <button class="btn btn-soft" id="cancelCheckoutButton" value="cancel" type="button">Cancelar</button>
+          <button class="btn btn-primary" id="savePurchaseButton" value="confirm" type="submit">Salvar</button>
         </div>
       </form>
     </dialog>
@@ -347,16 +347,16 @@
             <p class="eyebrow">Lista</p>
             <h2 id="itemDialogTitle">Novo item</h2>
           </div>
-          <button class="icon-button" id="closeItemDialogButton" type="button" aria-label="Fechar">×</button>
+          <button class="btn btn-ghost btn-square" id="closeItemDialogButton" type="button" aria-label="Fechar">×</button>
         </div>
         <label for="itemName">Item</label>
-        <input id="itemName" name="name" autocomplete="off" placeholder="Arroz" required />
+        <input class="input" id="itemName" name="name" autocomplete="off" placeholder="Arroz" required />
         <label for="itemQuantity">Quantidade</label>
-        <input id="itemQuantity" name="quantity" autocomplete="off" placeholder="2 kg" />
-        <button class="danger-text-button" id="deleteItemButton" type="button" hidden>Excluir item</button>
+        <input class="input" id="itemQuantity" name="quantity" autocomplete="off" placeholder="2 kg" />
+        <button class="btn btn-error btn-ghost" id="deleteItemButton" type="button" hidden>Excluir item</button>
         <div class="dialog-actions">
-          <button class="secondary-button" id="cancelItemDialogButton" type="button">Cancelar</button>
-          <button class="primary-dialog-button" id="saveItemButton" type="submit">Adicionar</button>
+          <button class="btn btn-soft" id="cancelItemDialogButton" type="button">Cancelar</button>
+          <button class="btn btn-primary" id="saveItemButton" type="submit">Adicionar</button>
         </div>
       </form>
     </dialog>
@@ -368,24 +368,24 @@
             <p class="eyebrow">Lista</p>
             <h2>Adicionar seção</h2>
           </div>
-          <button class="icon-button" id="closeCategoryDialogButton" type="button" aria-label="Fechar">×</button>
+          <button class="btn btn-ghost btn-square" id="closeCategoryDialogButton" type="button" aria-label="Fechar">×</button>
         </div>
         <label for="categoryNameInput">Seção personalizada</label>
-        <input id="categoryNameInput" name="category" autocomplete="off" placeholder="Ex.: Congelados" />
-        <fieldset class="preset-grid">
-          <legend>Sugestões rápidas</legend>
-          <label><input type="checkbox" name="categoryPreset" value="Frutas" /> Frutas</label>
-          <label><input type="checkbox" name="categoryPreset" value="Verduras" /> Verduras</label>
-          <label><input type="checkbox" name="categoryPreset" value="Frios" /> Frios</label>
-          <label><input type="checkbox" name="categoryPreset" value="Carnes" /> Carnes</label>
-          <label><input type="checkbox" name="categoryPreset" value="Padaria" /> Padaria</label>
-          <label><input type="checkbox" name="categoryPreset" value="Bebidas" /> Bebidas</label>
-          <label><input type="checkbox" name="categoryPreset" value="Limpeza" /> Limpeza</label>
-          <label><input type="checkbox" name="categoryPreset" value="Mercearia" /> Mercearia</label>
+        <input class="input" id="categoryNameInput" name="category" autocomplete="off" placeholder="Ex.: Congelados" />
+        <fieldset class="fieldset preset-grid">
+          <legend class="fieldset-legend">Sugestões rápidas</legend>
+          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Frutas" /> Frutas</label>
+          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Verduras" /> Verduras</label>
+          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Frios" /> Frios</label>
+          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Carnes" /> Carnes</label>
+          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Padaria" /> Padaria</label>
+          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Bebidas" /> Bebidas</label>
+          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Limpeza" /> Limpeza</label>
+          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Mercearia" /> Mercearia</label>
         </fieldset>
         <div class="dialog-actions">
-          <button class="secondary-button" id="cancelCategoryDialogButton" type="button">Cancelar</button>
-          <button class="primary-dialog-button" type="submit">Adicionar</button>
+          <button class="btn btn-soft" id="cancelCategoryDialogButton" type="button">Cancelar</button>
+          <button class="btn btn-primary" type="submit">Adicionar</button>
         </div>
       </form>
     </dialog>
@@ -397,22 +397,22 @@
             <p class="eyebrow">Refeições</p>
             <h2 id="mealDialogTitle">Nova refeição</h2>
           </div>
-          <button class="icon-button" id="closeMealDialogButton" type="button" aria-label="Fechar">×</button>
+          <button class="btn btn-ghost btn-square" id="closeMealDialogButton" type="button" aria-label="Fechar">×</button>
         </div>
         <label for="mealName">Nome da refeição</label>
-        <input id="mealName" name="name" autocomplete="off" placeholder="Ex.: Strogonoff" required />
+        <input class="input" id="mealName" name="name" autocomplete="off" placeholder="Ex.: Strogonoff" required />
         <div class="meal-editor-head">
           <label>Itens da refeição</label>
-          <button class="secondary-button" id="addMealItemButton" type="button">
+          <button class="btn btn-soft btn-sm" id="addMealItemButton" type="button">
             <i data-lucide="plus" aria-hidden="true"></i>
             Item
           </button>
         </div>
         <div class="meal-items-editor" id="mealItemsEditor"></div>
-        <button class="danger-text-button" id="deleteMealButton" type="button" hidden>Excluir refeição</button>
+        <button class="btn btn-error btn-ghost" id="deleteMealButton" type="button" hidden>Excluir refeição</button>
         <div class="dialog-actions">
-          <button class="secondary-button" id="cancelMealDialogButton" type="button">Cancelar</button>
-          <button class="primary-dialog-button" id="saveMealButton" type="submit">Adicionar</button>
+          <button class="btn btn-soft" id="cancelMealDialogButton" type="button">Cancelar</button>
+          <button class="btn btn-primary" id="saveMealButton" type="submit">Adicionar</button>
         </div>
       </form>
     </dialog>
@@ -424,7 +424,7 @@
             <p class="eyebrow">Sincronização</p>
             <h2>Resolver conflitos</h2>
           </div>
-          <button class="icon-button" id="closeConflictDialogButton" type="button" aria-label="Fechar">×</button>
+          <button class="btn btn-ghost btn-square" id="closeConflictDialogButton" type="button" aria-label="Fechar">×</button>
         </div>
         <div class="conflict-list" id="conflictList"></div>
       </div>
