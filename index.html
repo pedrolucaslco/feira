@@ -19,6 +19,7 @@
         document.documentElement.dataset.accent = localStorage.getItem("feira:accent") || "emerald";
       })();
     </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/base/reset.css,npm/daisyui@5/base/properties.css,npm/daisyui@5/base/svg.css,npm/daisyui@5/components/dock.css,npm/daisyui@5/theme/light.css,npm/daisyui@5/theme/dark.css" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -282,22 +283,22 @@
         </section>
       </main>
 
-      <nav class="bottom-nav" aria-label="Navegação principal">
-        <button class="nav-button is-active" type="button" data-view="listView" aria-label="Lista">
+      <nav class="dock dock-lg" aria-label="Navegação principal">
+        <button class="dock-active" type="button" data-nav-button data-view="listView" aria-label="Lista">
           <i data-lucide="list-checks" aria-hidden="true"></i>
-          <b>Lista</b>
+          <span class="dock-label">Lista</span>
         </button>
-        <button class="nav-button" type="button" data-view="mealsView" aria-label="Refeições">
+        <button type="button" data-nav-button data-view="mealsView" aria-label="Refeições">
           <i data-lucide="utensils" aria-hidden="true"></i>
-          <b>Refeições</b>
+          <span class="dock-label">Refeições</span>
         </button>
-        <button class="nav-button" type="button" data-view="purchaseView" aria-label="Compras">
+        <button type="button" data-nav-button data-view="purchaseView" aria-label="Compras">
           <i data-lucide="shopping-basket" aria-hidden="true"></i>
-          <b>Compras</b>
+          <span class="dock-label">Compras</span>
         </button>
-        <button class="nav-button" type="button" data-view="settingsView" aria-label="Ajustes">
+        <button type="button" data-nav-button data-view="settingsView" aria-label="Ajustes">
           <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
-          <b>Ajustes</b>
+          <span class="dock-label">Ajustes</span>
         </button>
       </nav>
       <button class="fab-button" id="quickAddButton" type="button" aria-label="Adicionar">

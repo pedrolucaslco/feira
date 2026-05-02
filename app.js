@@ -195,7 +195,7 @@ function animateCategoryList(list, shouldExpand) {
 
 const el = {
   views: [...document.querySelectorAll(".view")],
-  navButtons: [...document.querySelectorAll(".nav-button")],
+  navButtons: [...document.querySelectorAll("[data-nav-button]")],
   remainingBalance: document.querySelector("#remainingBalance"),
   spentBudgetRatio: document.querySelector("#spentBudgetRatio"),
   spentBudgetSpent: document.querySelector("#spentBudgetSpent"),
@@ -1058,7 +1058,10 @@ function renderCategorySections() {
 
 function renderNavigation() {
   el.views.forEach((view) => view.classList.toggle("is-active", view.id === state.activeView));
-  el.navButtons.forEach((button) => button.classList.toggle("is-active", button.dataset.view === state.activeView));
+  el.navButtons.forEach((button) => {
+    const isActive = button.dataset.view === state.activeView;
+    button.classList.toggle("dock-active", isActive);
+  });
   if (el.quickAddButton) {
     el.quickAddButton.hidden = state.activeView === "settingsView";
   }

@@ -204,7 +204,6 @@ button:active {
 button,
 input,
 select,
-.nav-button,
 .item-row {
   touch-action: manipulation;
 }
@@ -1484,67 +1483,6 @@ select:focus {
   margin-top: 18px;
 }
 
-.bottom-nav {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-  max-width: none;
-  margin: 0 auto;
-  padding: 8px 10px max(8px, env(safe-area-inset-bottom));
-  border: 0;
-  border-top: 1px solid rgba(226, 232, 240, 0.95);
-  border-radius: 0;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(16px);
-}
-
-:root[data-theme="dark"] .bottom-nav {
-  border-top-color: rgba(38, 38, 38, 0.95);
-  background: rgba(0, 0, 0, 0.92);
-}
-
-.nav-button {
-  display: grid;
-  min-height: 56px;
-  place-items: center;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--muted);
-  transition: color 180ms ease, transform 180ms ease;
-}
-
-.nav-button svg,
-.nav-button [data-lucide] {
-  width: 21px;
-  height: 21px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.nav-button b {
-  font-size: 0.62rem;
-  font-weight: 800;
-}
-
-.nav-button.is-active {
-  color: var(--teal);
-  transform: translateY(-1px);
-}
-
-.nav-button.is-active svg,
-.nav-button.is-active [data-lucide] {
-  stroke-width: 2.4;
-}
-
 .fab-button {
   position: fixed;
   right: 18px;
@@ -1932,10 +1870,6 @@ select:focus {
   .checkout-dialog[open]::backdrop,
   .item-dialog[open]::backdrop {
     animation: none;
-  }
-
-  .nav-button {
-    transition: none;
   }
 
   button {

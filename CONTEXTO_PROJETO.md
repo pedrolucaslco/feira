@@ -425,7 +425,7 @@ Direção visual atual:
 
 - Interface mobile-first.
 - Topbar fixa com saudação e saldo sempre visíveis.
-- Navegação inferior fixa.
+- Navegação inferior fixa usando DaisyUI `dock` padrão via CDN, com tema claro/escuro acompanhando o app.
 - Transição animada ao trocar de aba, respeitando `prefers-reduced-motion`.
 - Modais em estilo bottom sheet com animação de subida.
 - Botões com feedback sutil ao toque.
@@ -486,7 +486,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Lista inicial direta, seções discretas e sincronização explícita do estado marcado/desmarcado dos itens em espaços compartilhados.
+Migração parcial da navegação inferior para DaisyUI `dock`, mantendo o restante da UI intacta.
 ```
 
 Arquivos alterados nesse marco:
@@ -495,8 +495,5 @@ Arquivos alterados nesse marco:
 - `app.js`
 - `styles.css`
 - `sw.js`
-- `supabase-config.js`
-- `supabase.sql`
 - `README.md`
 - `CONTEXTO_PROJETO.md`
-- `CONTEXTO_CODEX.md`

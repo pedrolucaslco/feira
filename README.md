@@ -83,6 +83,7 @@ Por enquanto, o app segue sem build e usa dependências via CDN quando necessár
 - JavaScript
 - IndexedDB
 - Service Worker
+- DaisyUI via CDN para a dock inferior
 - Supabase opcional para compartilhamento
 - Vercel
 
