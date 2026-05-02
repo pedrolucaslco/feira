@@ -19,7 +19,7 @@
         document.documentElement.dataset.accent = localStorage.getItem("feira:accent") || "emerald";
       })();
     </script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/base/reset.css,npm/daisyui@5/base/properties.css,npm/daisyui@5/base/svg.css,npm/daisyui@5/components/button.css,npm/daisyui@5/components/checkbox.css,npm/daisyui@5/components/dock.css,npm/daisyui@5/components/fieldset.css,npm/daisyui@5/components/input.css,npm/daisyui@5/components/label.css,npm/daisyui@5/components/navbar.css,npm/daisyui@5/components/select.css,npm/daisyui@5/theme/light.css,npm/daisyui@5/theme/dark.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/base/reset.css,npm/daisyui@5/base/properties.css,npm/daisyui@5/base/svg.css,npm/daisyui@5/components/badge.css,npm/daisyui@5/components/button.css,npm/daisyui@5/components/card.css,npm/daisyui@5/components/checkbox.css,npm/daisyui@5/components/dock.css,npm/daisyui@5/components/fieldset.css,npm/daisyui@5/components/input.css,npm/daisyui@5/components/label.css,npm/daisyui@5/components/navbar.css,npm/daisyui@5/components/select.css,npm/daisyui@5/theme/light.css,npm/daisyui@5/theme/dark.css" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -67,7 +67,7 @@
           <div class="section-head">
             <div>
               <h2 id="fullListTitle">Lista de compras</h2>
-              <span id="itemCountLabel" class="soft-label">0 itens</span>
+              <span id="itemCountLabel" class="badge badge-soft soft-label">0 itens</span>
             </div>
             <div class="list-menu-wrap">
               <button class="btn btn-ghost btn-square" id="listMenuButton" type="button" aria-label="Abrir opções da lista" aria-expanded="false">
@@ -97,45 +97,53 @@
             </button>
           </div>
 
-          <section class="period-card" aria-labelledby="purchasePeriodTitle">
-            <div>
-              <span>Período atual</span>
-              <strong id="purchasePeriodTitle">Mês atual</strong>
-            </div>
-            <div>
-              <b id="purchasePeriodRange">--</b>
-              <small id="purchasePeriodRule">Configure o fechamento do cartão para usar ciclos.</small>
+          <section class="card bg-base-100 shadow-sm period-card" aria-labelledby="purchasePeriodTitle">
+            <div class="card-body period-card-body">
+              <div>
+                <span>Período atual</span>
+                <strong id="purchasePeriodTitle">Mês atual</strong>
+              </div>
+              <div>
+                <b id="purchasePeriodRange">--</b>
+                <small id="purchasePeriodRule">Configure o fechamento do cartão para usar ciclos.</small>
+              </div>
             </div>
           </section>
 
           <div class="metrics-grid report-grid">
-            <article class="metric">
-              <span>Gasto / Orçamento</span>
-              <strong class="spent-budget-ratio" id="spentBudgetRatio">
-                <b id="spentBudgetSpent">R$ 0,00</b>
-                <small>/</small>
-                <small id="spentBudgetTotal">R$ 0,00</small>
-              </strong>
+            <article class="card bg-base-100 shadow-sm metric">
+              <div class="card-body">
+                <span>Gasto / Orçamento</span>
+                <strong class="spent-budget-ratio" id="spentBudgetRatio">
+                  <b id="spentBudgetSpent">R$ 0,00</b>
+                  <small>/</small>
+                  <small id="spentBudgetTotal">R$ 0,00</small>
+                </strong>
+              </div>
             </article>
           </div>
 
-          <section class="content-block chart-block" aria-labelledby="purchaseChartTitle">
-            <div class="block-title-row">
-              <h3 id="purchaseChartTitle">Variação das compras</h3>
-              <span id="purchaseMedianLabel" class="soft-label">Mediana R$ 0,00</span>
+          <section class="card bg-base-100 shadow-sm content-block chart-block" aria-labelledby="purchaseChartTitle">
+            <div class="card-body">
+              <div class="block-title-row">
+                <h3 id="purchaseChartTitle" class="card-title">Variação das compras</h3>
+                <span id="purchaseMedianLabel" class="badge badge-soft soft-label">Mediana R$ 0,00</span>
+              </div>
+              <div class="purchase-chart" id="purchaseChart" aria-label="Gráfico de barras das compras"></div>
+              <p class="empty-state" id="emptyPurchaseChart">Registre compras para ver a variação.</p>
             </div>
-            <div class="purchase-chart" id="purchaseChart" aria-label="Gráfico de barras das compras"></div>
-            <p class="empty-state" id="emptyPurchaseChart">Registre compras para ver a variação.</p>
           </section>
 
-          <section class="content-block" aria-labelledby="latestTitle">
-            <div class="block-title-row">
-              <h3 id="latestTitle">Compras realizadas</h3>
-              <span id="purchaseCountLabel" class="soft-label">0 compras</span>
+          <section class="card bg-base-100 shadow-sm content-block" aria-labelledby="latestTitle">
+            <div class="card-body">
+              <div class="block-title-row">
+                <h3 id="latestTitle" class="card-title">Compras realizadas</h3>
+                <span id="purchaseCountLabel" class="badge badge-soft soft-label">0 compras</span>
+              </div>
+              <ul class="purchase-list inline-editor-list" id="purchaseInlineEditorMount"></ul>
+              <ul class="purchase-list" id="purchaseList"></ul>
+              <p class="empty-state" id="emptyPurchases">Nenhuma compra registrada.</p>
             </div>
-            <ul class="purchase-list inline-editor-list" id="purchaseInlineEditorMount"></ul>
-            <ul class="purchase-list" id="purchaseList"></ul>
-            <p class="empty-state" id="emptyPurchases">Nenhuma compra registrada.</p>
           </section>
         </section>
 
@@ -143,7 +151,7 @@
           <div class="section-head">
             <div>
               <h2 id="mealsTitle">Refeições</h2>
-              <span id="mealCountLabel" class="soft-label">0 refeições</span>
+              <span id="mealCountLabel" class="badge badge-soft soft-label">0 refeições</span>
             </div>
             <button class="btn btn-ghost btn-square" id="createFirstMealButton" type="button" aria-label="Nova refeição">
               <i data-lucide="plus" aria-hidden="true"></i>
@@ -162,134 +170,154 @@
           </div>
 
           <p class="settings-group-label">Usuário</p>
-          <form class="profile-form" id="profileForm">
-            <label for="userNameInput">Nome</label>
-            <input class="input" id="userNameInput" name="name" autocomplete="name" placeholder="Seu nome" />
-            <button class="btn btn-primary" type="submit">Salvar perfil</button>
+          <form class="card bg-base-100 shadow-sm profile-form" id="profileForm">
+            <div class="card-body">
+              <label class="label" for="userNameInput">Nome</label>
+              <input class="input" id="userNameInput" name="name" autocomplete="name" placeholder="Seu nome" />
+              <button class="btn btn-primary" type="submit">Salvar perfil</button>
+            </div>
           </form>
 
           <p class="settings-group-label">Orçamento</p>
-          <form class="budget-form" id="budgetForm">
-            <div class="settings-fields">
-              <label for="budgetInput">
-                Orçamento mensal
-                <input class="input" id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
-              </label>
-              <label for="cardClosingDayInput">
-                Fechamento do cartão
-                <input class="input" id="cardClosingDayInput" name="cardClosingDay" type="number" min="1" max="31" inputmode="numeric" autocomplete="off" placeholder="Dia" />
-              </label>
-              <button class="btn btn-primary" type="submit">Salvar</button>
+          <form class="card bg-base-100 shadow-sm budget-form" id="budgetForm">
+            <div class="card-body">
+              <div class="settings-fields">
+                <div class="settings-field">
+                  <label class="label" for="budgetInput">Orçamento mensal</label>
+                  <input class="input" id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
+                </div>
+                <div class="settings-field">
+                  <label class="label" for="cardClosingDayInput">Fechamento do cartão</label>
+                  <input class="input" id="cardClosingDayInput" name="cardClosingDay" type="number" min="1" max="31" inputmode="numeric" autocomplete="off" placeholder="Dia" />
+                </div>
+                <button class="btn btn-primary" type="submit">Salvar</button>
+              </div>
             </div>
           </form>
 
           <p class="settings-group-label">Interface</p>
-          <section class="settings-card" aria-labelledby="themeTitle">
-            <div>
-              <h3 id="themeTitle">Modo escuro</h3>
-              <p>Cores neste dispositivo.</p>
+          <section class="card bg-base-100 shadow-sm settings-card" aria-labelledby="themeTitle">
+            <div class="card-body settings-card-body">
+              <div>
+                <h3 id="themeTitle" class="card-title">Modo escuro</h3>
+                <p>Cores neste dispositivo.</p>
+              </div>
+              <label class="theme-switch" for="themeToggle">
+                <input id="themeToggle" type="checkbox" role="switch" aria-label="Ativar modo escuro" />
+                <span aria-hidden="true"></span>
+              </label>
             </div>
-            <label class="theme-switch" for="themeToggle">
-              <input id="themeToggle" type="checkbox" role="switch" aria-label="Ativar modo escuro" />
-              <span aria-hidden="true"></span>
-            </label>
           </section>
 
-          <section class="settings-card" aria-labelledby="accentTitle">
-            <div>
-              <h3 id="accentTitle">Cor de destaque</h3>
-              <p>Botões e indicadores.</p>
+          <section class="card bg-base-100 shadow-sm settings-card" aria-labelledby="accentTitle">
+            <div class="card-body settings-card-body">
+              <div>
+                <h3 id="accentTitle" class="card-title">Cor de destaque</h3>
+                <p>Botões e indicadores.</p>
+              </div>
+              <select class="select accent-select" id="accentColorInput" name="accentColor" aria-label="Cor de destaque">
+                <option value="emerald">Emerald</option>
+                <option value="green">Green</option>
+                <option value="sky">Sky</option>
+                <option value="blue">Blue</option>
+                <option value="purple">Purple</option>
+                <option value="fuchsia">Fuchsia</option>
+                <option value="rose">Rose</option>
+                <option value="amber">Amber</option>
+                <option value="teal">Teal</option>
+                <option value="cyan">Cyan</option>
+              </select>
             </div>
-            <select class="select accent-select" id="accentColorInput" name="accentColor" aria-label="Cor de destaque">
-              <option value="emerald">Emerald</option>
-              <option value="green">Green</option>
-              <option value="sky">Sky</option>
-              <option value="blue">Blue</option>
-              <option value="purple">Purple</option>
-              <option value="fuchsia">Fuchsia</option>
-              <option value="rose">Rose</option>
-              <option value="amber">Amber</option>
-              <option value="teal">Teal</option>
-              <option value="cyan">Cyan</option>
-            </select>
           </section>
 
-          <section class="settings-card" aria-labelledby="editorModeTitle">
-            <div>
-              <h3 id="editorModeTitle">Edição</h3>
-              <p>Itens e compras.</p>
+          <section class="card bg-base-100 shadow-sm settings-card" aria-labelledby="editorModeTitle">
+            <div class="card-body settings-card-body">
+              <div>
+                <h3 id="editorModeTitle" class="card-title">Edição</h3>
+                <p>Itens e compras.</p>
+              </div>
+              <select class="select accent-select" id="editorModeInput" name="editorMode" aria-label="Modo de edição">
+                <option value="modal">Modal</option>
+                <option value="inline">Inline</option>
+              </select>
             </div>
-            <select class="select accent-select" id="editorModeInput" name="editorMode" aria-label="Modo de edição">
-              <option value="modal">Modal</option>
-              <option value="inline">Inline</option>
-            </select>
           </section>
 
           <p class="settings-group-label">Espaço</p>
-          <section class="settings-card share-settings" aria-labelledby="spacesTitle">
-            <div>
-              <h3 id="spacesTitle">Espaços</h3>
-              <p>Compartilhe por código.</p>
+          <section class="card bg-base-100 shadow-sm settings-card share-settings" aria-labelledby="spacesTitle">
+            <div class="card-body share-settings-body">
+              <div>
+                <h3 id="spacesTitle" class="card-title">Espaços</h3>
+                <p>Compartilhe por código.</p>
+              </div>
+              <form class="compact-form" id="createSpaceForm">
+                <label class="label" for="createSpaceNameInput">Novo espaço</label>
+                <div class="input-row">
+                  <input class="input input-sm" id="createSpaceNameInput" name="name" autocomplete="off" placeholder="Ex.: Casa" />
+                  <button class="btn btn-soft" type="submit">Criar</button>
+                </div>
+              </form>
+              <form class="compact-form" id="joinSpaceForm">
+                <label class="label" for="joinSpaceCodeInput">Entrar por código</label>
+                <div class="input-row">
+                  <input class="input input-sm" id="joinSpaceCodeInput" name="code" autocomplete="off" autocapitalize="characters" placeholder="ABC123" />
+                  <button class="btn btn-soft" type="submit">Entrar</button>
+                </div>
+              </form>
             </div>
-            <form class="compact-form" id="createSpaceForm">
-              <label for="createSpaceNameInput">Novo espaço</label>
-              <div class="input-row">
-                <input class="input input-sm" id="createSpaceNameInput" name="name" autocomplete="off" placeholder="Ex.: Casa" />
-                <button class="btn btn-soft" type="submit">Criar</button>
-              </div>
-            </form>
-            <form class="compact-form" id="joinSpaceForm">
-              <label for="joinSpaceCodeInput">Entrar por código</label>
-              <div class="input-row">
-                <input class="input input-sm" id="joinSpaceCodeInput" name="code" autocomplete="off" autocapitalize="characters" placeholder="ABC123" />
-                <button class="btn btn-soft" type="submit">Entrar</button>
-              </div>
-            </form>
           </section>
 
-          <section class="settings-card share-settings" id="shareSpaceCard" aria-labelledby="currentSpaceTitle" hidden>
-            <div>
-              <h3 id="currentSpaceTitle">Espaço atual</h3>
-              <p>Código de convite.</p>
-            </div>
-            <label for="currentSpaceNameInput">Nome do espaço</label>
-            <div class="input-row">
-              <input class="input input-sm" id="currentSpaceNameInput" name="spaceName" autocomplete="off" />
-              <button class="btn btn-soft" id="renameSpaceButton" type="button">Salvar</button>
-            </div>
-            <label for="inviteCodeInput">Código de convite</label>
-            <div class="input-row">
-              <input class="input input-sm" id="inviteCodeInput" name="inviteCode" readonly />
-              <button class="btn btn-soft" id="copyInviteButton" type="button">Copiar</button>
+          <section class="card bg-base-100 shadow-sm settings-card share-settings" id="shareSpaceCard" aria-labelledby="currentSpaceTitle" hidden>
+            <div class="card-body share-settings-body">
+              <div>
+                <h3 id="currentSpaceTitle" class="card-title">Espaço atual</h3>
+                <p>Código de convite.</p>
+              </div>
+              <label class="label" for="currentSpaceNameInput">Nome do espaço</label>
+              <div class="input-row">
+                <input class="input input-sm" id="currentSpaceNameInput" name="spaceName" autocomplete="off" />
+                <button class="btn btn-soft" id="renameSpaceButton" type="button">Salvar</button>
+              </div>
+              <label class="label" for="inviteCodeInput">Código de convite</label>
+              <div class="input-row">
+                <input class="input input-sm" id="inviteCodeInput" name="inviteCode" readonly />
+                <button class="btn btn-soft" id="copyInviteButton" type="button">Copiar</button>
+              </div>
             </div>
           </section>
 
           <p class="settings-group-label">App</p>
-          <section class="settings-card" aria-labelledby="refreshAppTitle">
-            <div>
-              <h3 id="refreshAppTitle">Atualizar app</h3>
-              <p>Busca a versão recente.</p>
+          <section class="card bg-base-100 shadow-sm settings-card" aria-labelledby="refreshAppTitle">
+            <div class="card-body settings-card-body">
+              <div>
+                <h3 id="refreshAppTitle" class="card-title">Atualizar app</h3>
+                <p>Busca a versão recente.</p>
+              </div>
+              <button class="btn btn-soft" id="manualRefreshButton" type="button">Atualizar</button>
             </div>
-            <button class="btn btn-soft" id="manualRefreshButton" type="button">Atualizar</button>
           </section>
 
           <p class="settings-group-label">Diagnóstico</p>
-          <section class="settings-card sync-test-card" aria-labelledby="syncTestTitle">
-            <div>
-              <h3 id="syncTestTitle">Testes de sincronização</h3>
-              <p>Valida conflitos e status sem alterar seus dados.</p>
+          <section class="card bg-base-100 shadow-sm settings-card sync-test-card" aria-labelledby="syncTestTitle">
+            <div class="card-body sync-test-card-body">
+              <div>
+                <h3 id="syncTestTitle" class="card-title">Testes de sincronização</h3>
+                <p>Valida conflitos e status sem alterar seus dados.</p>
+              </div>
+              <button class="btn btn-soft" id="runSyncTestsButton" type="button">Rodar testes</button>
+              <div class="sync-test-summary" id="syncTestSummary">Aguardando execução.</div>
+              <div class="sync-test-list" id="syncTestList" aria-live="polite"></div>
             </div>
-            <button class="btn btn-soft" id="runSyncTestsButton" type="button">Rodar testes</button>
-            <div class="sync-test-summary" id="syncTestSummary">Aguardando execução.</div>
-            <div class="sync-test-list" id="syncTestList" aria-live="polite"></div>
           </section>
 
-          <section class="danger-zone" aria-labelledby="resetTitle">
-            <div>
-              <h3 id="resetTitle">Resetar dados</h3>
-              <p>Apaga dados locais.</p>
+          <section class="card bg-base-100 shadow-sm danger-zone" aria-labelledby="resetTitle">
+            <div class="card-body danger-zone-body">
+              <div>
+                <h3 id="resetTitle" class="card-title">Resetar dados</h3>
+                <p>Apaga dados locais.</p>
+              </div>
+              <button class="btn btn-error" id="resetDatabaseButton" type="button">Resetar</button>
             </div>
-            <button class="btn btn-error" id="resetDatabaseButton" type="button">Resetar</button>
           </section>
         </section>
       </main>
@@ -326,11 +354,11 @@
           </div>
           <button class="btn btn-ghost btn-square" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">×</button>
         </div>
-        <label for="purchaseName">Nome da compra</label>
+        <label class="label" for="purchaseName">Nome da compra</label>
         <input class="input" id="purchaseName" name="name" autocomplete="off" placeholder="Compra do mercado" />
-        <label for="purchaseDate">Data da compra</label>
+        <label class="label" for="purchaseDate">Data da compra</label>
         <input class="input" id="purchaseDate" name="date" type="date" required />
-        <label for="purchaseTotal">Valor pago</label>
+        <label class="label" for="purchaseTotal">Valor pago</label>
         <input class="input" id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
         <button class="btn btn-error btn-ghost" id="deletePurchaseButton" type="button" hidden>Excluir compra</button>
         <div class="dialog-actions">
@@ -349,9 +377,9 @@
           </div>
           <button class="btn btn-ghost btn-square" id="closeItemDialogButton" type="button" aria-label="Fechar">×</button>
         </div>
-        <label for="itemName">Item</label>
+        <label class="label" for="itemName">Item</label>
         <input class="input" id="itemName" name="name" autocomplete="off" placeholder="Arroz" required />
-        <label for="itemQuantity">Quantidade</label>
+        <label class="label" for="itemQuantity">Quantidade</label>
         <input class="input" id="itemQuantity" name="quantity" autocomplete="off" placeholder="2 kg" />
         <button class="btn btn-error btn-ghost" id="deleteItemButton" type="button" hidden>Excluir item</button>
         <div class="dialog-actions">
@@ -370,7 +398,7 @@
           </div>
           <button class="btn btn-ghost btn-square" id="closeCategoryDialogButton" type="button" aria-label="Fechar">×</button>
         </div>
-        <label for="categoryNameInput">Seção personalizada</label>
+        <label class="label" for="categoryNameInput">Seção personalizada</label>
         <input class="input" id="categoryNameInput" name="category" autocomplete="off" placeholder="Ex.: Congelados" />
         <fieldset class="fieldset preset-grid">
           <legend class="fieldset-legend">Sugestões rápidas</legend>
@@ -399,10 +427,10 @@
           </div>
           <button class="btn btn-ghost btn-square" id="closeMealDialogButton" type="button" aria-label="Fechar">×</button>
         </div>
-        <label for="mealName">Nome da refeição</label>
+        <label class="label" for="mealName">Nome da refeição</label>
         <input class="input" id="mealName" name="name" autocomplete="off" placeholder="Ex.: Strogonoff" required />
         <div class="meal-editor-head">
-          <label>Itens da refeição</label>
+          <label class="label">Itens da refeição</label>
           <button class="btn btn-soft btn-sm" id="addMealItemButton" type="button">
             <i data-lucide="plus" aria-hidden="true"></i>
             Item

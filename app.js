@@ -1013,22 +1013,24 @@ function renderMeals() {
 
 function createMealRow(meal) {
   const row = document.createElement("article");
-  row.className = "meal-row";
+  row.className = "card bg-base-100 shadow-sm meal-row";
   const itemCount = Array.isArray(meal.items) ? meal.items.length : 0;
   const preview = (meal.items || [])
     .slice(0, 3)
     .map((item) => item.quantity ? `${item.name} (${item.quantity})` : item.name)
     .join(", ");
   row.innerHTML = `
-    <button class="meal-main" type="button" aria-label="Editar ${escapeHtml(meal.name)}">
-      <strong>${escapeHtml(meal.name)}</strong>
-      <span>${itemCount} ${itemCount === 1 ? "item" : "itens"}${preview ? ` - ${escapeHtml(preview)}` : ""}</span>
-    </button>
-    <div class="meal-actions">
-      <button class="btn btn-soft meal-copy-button" type="button">
-        <i data-lucide="list-plus" aria-hidden="true"></i>
-        Adicionar à lista de compras atual
+    <div class="card-body">
+      <button class="meal-main" type="button" aria-label="Editar ${escapeHtml(meal.name)}">
+        <strong class="card-title">${escapeHtml(meal.name)}</strong>
+        <span>${itemCount} ${itemCount === 1 ? "item" : "itens"}${preview ? ` - ${escapeHtml(preview)}` : ""}</span>
       </button>
+      <div class="meal-actions">
+        <button class="btn btn-soft meal-copy-button" type="button">
+          <i data-lucide="list-plus" aria-hidden="true"></i>
+          Adicionar à lista de compras atual
+        </button>
+      </div>
     </div>
   `;
 
