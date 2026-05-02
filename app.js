@@ -289,6 +289,9 @@ const el = {
   conflictDialog: document.querySelector("#conflictDialog"),
   conflictList: document.querySelector("#conflictList"),
   closeConflictDialogButton: document.querySelector("#closeConflictDialogButton"),
+  runSyncTestsButton: document.querySelector("#runSyncTestsButton"),
+  syncTestSummary: document.querySelector("#syncTestSummary"),
+  syncTestList: document.querySelector("#syncTestList"),
   toast: document.querySelector("#toast"),
 };
 
@@ -475,6 +478,47 @@ function publicRecordData(storeName, value) {
     };
   }
   return data;
+}
+
+function sortObjectKeys(value) {
+  if (Array.isArray(value)) return value.map(sortObjectKeys);
+  if (!value || typeof value !== "object") return value;
+  return Object.keys(value)
+    .sort()
+    .reduce((result, key) => {
+      result[key] = sortObjectKeys(value[key]);
+      return result;
+    }, {});
+}
+
+function canonicalSyncData(storeName, value, spaceId = state.activeSpaceId) {
+  if (!value) return null;
+  const normalized = normalizeStoreRecord(storeName, { ...value, spaceId }, spaceId);
+  return sortObjectKeys(publicRecordData(storeName, normalized));
+}
+
+function syncRecordsEquivalent(storeName, localValue, remoteValue, spaceId = state.activeSpaceId) {
+  return JSON.stringify(canonicalSyncData(storeName, localValue, spaceId)) === JSON.stringify(canonicalSyncData(storeName, remoteValue, spaceId));
+}
+
+function syncPayloadEquivalent(storeName, payload, value, spaceId = state.activeSpaceId) {
+  return JSON.stringify(sortObjectKeys(payload || null)) === JSON.stringify(canonicalSyncData(storeName, value, spaceId));
+}
+
+function shouldCreateSyncConflict(storeName, localValue, remoteValue, pendingOperations = [], spaceId = state.activeSpaceId) {
+  if (!pendingOperations.length) return false;
+  if (syncRecordsEquivalent(storeName, localValue, remoteValue, spaceId)) return false;
+  const sortedOperations = pendingOperations.slice().sort((a, b) => a.createdAt - b.createdAt);
+  const latestOperation = sortedOperations[sortedOperations.length - 1];
+  return !(latestOperation?.action !== "delete" && syncPayloadEquivalent(storeName, latestOperation.data, remoteValue, spaceId));
+}
+
+function deriveSyncStatus({ isShared = true, isRunning = false, outbox = [], conflicts = [], failed = false } = {}) {
+  if (!isShared) return "local";
+  if (conflicts.length) return "conflict";
+  if (isRunning || outbox.length) return "syncing";
+  if (failed) return "offline";
+  return "synced";
 }
 
 async function enqueueSync(storeName, value, action = "upsert") {
@@ -1309,18 +1353,23 @@ async function applyRemoteRecord(record) {
   const mapped = fromRemoteRecord(record);
   if (!mapped) return;
   const metaId = syncMetaId(record.space_id, record.entity_type, record.entity_id);
-  const pending = (await getAll("syncOutbox")).some((operation) => operation.spaceId === record.space_id && operation.entityType === record.entity_type && operation.entityId === record.entity_id);
-  if (pending) {
+  const pendingOperations = (await getAll("syncOutbox")).filter((operation) => operation.spaceId === record.space_id && operation.entityType === record.entity_type && operation.entityId === record.entity_id);
+  const current = await getOne(mapped.storeName, mapped.value.id);
+  if (shouldCreateSyncConflict(mapped.storeName, current, mapped.value, pendingOperations, record.space_id)) {
     await createConflict(record, mapped.value);
     return;
   }
+  await Promise.all(
+    pendingOperations
+      .filter((operation) => operation.action !== "delete" && syncPayloadEquivalent(mapped.storeName, operation.data, mapped.value, record.space_id))
+      .map((operation) => deleteOne("syncOutbox", operation.id)),
+  );
 
   if (record.deleted_at) {
     await deleteOne(mapped.storeName, mapped.value.id);
   } else {
     if (mapped.storeName === "settings") {
-      const currentSettings = await getOne("settings", mapped.value.id);
-      await putOne("settings", normalizeSettings({ ...(currentSettings || {}), ...mapped.value }, record.space_id));
+      await putOne("settings", normalizeSettings({ ...(current || {}), ...mapped.value }, record.space_id));
     } else {
       await putOne(mapped.storeName, normalizeStoreRecord(mapped.storeName, mapped.value, record.space_id));
     }
@@ -1385,7 +1434,19 @@ async function syncNow() {
         const remoteRecord = result.remote_record || result.record;
         if (remoteRecord) {
           const mapped = fromRemoteRecord(remoteRecord);
-          await createConflict(remoteRecord, mapped?.value || null);
+          const current = mapped ? await getOne(mapped.storeName, mapped.value.id) : null;
+          if (mapped && !shouldCreateSyncConflict(mapped.storeName, current, mapped.value, [operation], operation.spaceId)) {
+            await putOne("syncMeta", {
+              id: syncMetaId(operation.spaceId, operation.entityType, operation.entityId),
+              spaceId: operation.spaceId,
+              entityType: operation.entityType,
+              entityId: operation.entityId,
+              version: remoteRecord.version || operation.baseVersion,
+              updatedAt: Date.now(),
+            });
+          } else {
+            await createConflict(remoteRecord, mapped?.value || null);
+          }
         }
         await deleteOne("syncOutbox", operation.id);
         continue;
@@ -1532,6 +1593,202 @@ async function resolveConflict(conflictId, resolution) {
   renderConflicts();
   syncNow();
   showToast("Conflito resolvido.");
+}
+
+function cloneTestValue(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function assertSyncTest(condition, message) {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
+function applySandboxConflictResolution(sandbox, conflictId, resolution) {
+  const next = cloneTestValue(sandbox);
+  const conflict = next.conflicts.find((current) => current.id === conflictId);
+  if (!conflict) throw new Error("Conflito de teste não encontrado.");
+  const storeName = ENTITY_TO_STORE[conflict.entityType];
+  if (!storeName) throw new Error("Tipo de entidade inválido.");
+  const storeRecords = next.stores[storeName] || {};
+  const recordId = conflict.remote?.id || conflict.local?.id || entityRecordId(conflict.entityType, conflict.entityId, conflict.spaceId);
+
+  if (resolution === "cloud") {
+    if (conflict.remote) {
+      storeRecords[recordId] = normalizeStoreRecord(storeName, conflict.remote, conflict.spaceId);
+    } else {
+      delete storeRecords[recordId];
+    }
+    next.outbox = next.outbox.filter((operation) => !(operation.spaceId === conflict.spaceId && operation.entityType === conflict.entityType && operation.entityId === conflict.entityId));
+  } else if (resolution === "local" && conflict.local) {
+    const localRecord = normalizeStoreRecord(storeName, conflict.local, conflict.spaceId);
+    storeRecords[recordId] = localRecord;
+    next.outbox.push({
+      id: `test:${conflict.id}`,
+      spaceId: conflict.spaceId,
+      entityType: conflict.entityType,
+      entityId: conflict.entityId,
+      action: "upsert",
+      data: publicRecordData(storeName, localRecord),
+      baseVersion: conflict.remoteVersion,
+      createdAt: Date.now(),
+    });
+  }
+
+  next.stores[storeName] = storeRecords;
+  next.meta[conflict.id] = {
+    id: conflict.id,
+    spaceId: conflict.spaceId,
+    entityType: conflict.entityType,
+    entityId: conflict.entityId,
+    version: conflict.remoteVersion,
+  };
+  next.conflicts = next.conflicts.filter((current) => current.id !== conflictId);
+  return next;
+}
+
+const syncDiagnosticTests = [
+  {
+    name: "Ignora falso conflito com dados equivalentes",
+    run() {
+      const local = { id: "item-1", spaceId: "space-1", name: "Arroz", quantity: "1 kg", checked: true, createdAt: 10 };
+      const remote = { ...local, spaceId: "space-1" };
+      const pending = [{ action: "upsert", data: publicRecordData("items", local), createdAt: 1 }];
+      assertSyncTest(!shouldCreateSyncConflict("items", local, remote, pending, "space-1"), "Dados equivalentes foram tratados como conflito.");
+    },
+  },
+  {
+    name: "Detecta conflito quando dados divergem",
+    run() {
+      const local = { id: "item-1", spaceId: "space-1", name: "Arroz", quantity: "1 kg", checked: true, createdAt: 10 };
+      const remote = { ...local, checked: false };
+      const pending = [{ action: "upsert", data: publicRecordData("items", local), createdAt: 1 }];
+      assertSyncTest(shouldCreateSyncConflict("items", local, remote, pending, "space-1"), "Divergência real não gerou conflito.");
+    },
+  },
+  {
+    name: "Resolver usando nuvem limpa conflito e outbox",
+    run() {
+      const conflict = {
+        id: "space-1:item:item-1",
+        spaceId: "space-1",
+        entityType: "item",
+        entityId: "item-1",
+        local: { id: "item-1", spaceId: "space-1", name: "Arroz", quantity: "1 kg", checked: true, createdAt: 10 },
+        remote: { id: "item-1", spaceId: "space-1", name: "Arroz", quantity: "1 kg", checked: false, createdAt: 10 },
+        remoteVersion: 4,
+      };
+      const sandbox = {
+        stores: { items: { "item-1": conflict.local } },
+        outbox: [{ id: "op-1", spaceId: "space-1", entityType: "item", entityId: "item-1", action: "upsert", data: publicRecordData("items", conflict.local), createdAt: 1 }],
+        conflicts: [conflict],
+        meta: {},
+      };
+      const result = applySandboxConflictResolution(sandbox, conflict.id, "cloud");
+      assertSyncTest(result.conflicts.length === 0, "Conflito não foi removido.");
+      assertSyncTest(result.outbox.length === 0, "Outbox equivalente não foi limpa.");
+      assertSyncTest(result.stores.items["item-1"].checked === false, "Valor da nuvem não foi aplicado.");
+      assertSyncTest(result.meta[conflict.id].version === 4, "Meta não recebeu versão remota.");
+    },
+  },
+  {
+    name: "Resolver usando local cria envio coerente",
+    run() {
+      const conflict = {
+        id: "space-1:item:item-1",
+        spaceId: "space-1",
+        entityType: "item",
+        entityId: "item-1",
+        local: { id: "item-1", spaceId: "space-1", name: "Arroz", quantity: "1 kg", checked: true, createdAt: 10 },
+        remote: { id: "item-1", spaceId: "space-1", name: "Arroz", quantity: "1 kg", checked: false, createdAt: 10 },
+        remoteVersion: 7,
+      };
+      const result = applySandboxConflictResolution({ stores: { items: {} }, outbox: [], conflicts: [conflict], meta: {} }, conflict.id, "local");
+      assertSyncTest(result.conflicts.length === 0, "Conflito local não foi removido.");
+      assertSyncTest(result.outbox.length === 1, "Resolução local não criou envio.");
+      assertSyncTest(result.outbox[0].baseVersion === 7, "Envio local não usa a versão remota como base.");
+      assertSyncTest(result.outbox[0].data.checked === true, "Payload local perdeu o checked.");
+    },
+  },
+  {
+    name: "Status não fica sincronizando sem pendências",
+    run() {
+      const status = deriveSyncStatus({ isShared: true, isRunning: false, outbox: [], conflicts: [], failed: false });
+      assertSyncTest(status === "synced", `Status esperado sincronizado, recebido ${status}.`);
+    },
+  },
+  {
+    name: "checked participa do payload sincronizado",
+    run() {
+      const checkedPayload = publicRecordData("items", normalizeStoreRecord("items", { id: "item-1", spaceId: "space-1", name: "Arroz", checked: true, createdAt: 1 }, "space-1"));
+      const uncheckedPayload = publicRecordData("items", normalizeStoreRecord("items", { id: "item-1", spaceId: "space-1", name: "Arroz", checked: false, createdAt: 1 }, "space-1"));
+      assertSyncTest(checkedPayload.checked === true, "Payload não inclui checked=true.");
+      assertSyncTest(JSON.stringify(sortObjectKeys(checkedPayload)) !== JSON.stringify(sortObjectKeys(uncheckedPayload)), "checked não altera a assinatura sincronizável.");
+    },
+  },
+  {
+    name: "Campos internos não geram divergência",
+    run() {
+      const local = { id: "local-id", spaceId: "space-1", name: "Café", quantity: "", checked: false, createdAt: 5 };
+      const remote = { id: "remote-id", spaceId: "space-2", name: "Café", quantity: "", checked: false, createdAt: 5 };
+      assertSyncTest(syncRecordsEquivalent("items", local, remote, "space-1"), "id ou spaceId interferiram na comparação pública.");
+    },
+  },
+];
+
+function renderSyncTestRows(results = []) {
+  if (!el.syncTestList) return;
+  el.syncTestList.innerHTML = "";
+  results.forEach((result) => {
+    const row = document.createElement("div");
+    row.className = `sync-test-row is-${result.status}`;
+    row.innerHTML = `
+      <span>${escapeHtml(result.name)}</span>
+      <strong>${escapeHtml(result.label)}</strong>
+      ${result.error ? `<small>${escapeHtml(result.error)}</small>` : ""}
+    `;
+    el.syncTestList.append(row);
+  });
+}
+
+function renderSyncTestSummary(results = []) {
+  if (!el.syncTestSummary) return;
+  const passed = results.filter((result) => result.status === "passed").length;
+  const failed = results.filter((result) => result.status === "failed").length;
+  const running = results.filter((result) => result.status === "running").length;
+  el.syncTestSummary.textContent = `${passed}/${results.length} passaram${failed ? `, ${failed} falharam` : ""}${running ? ", rodando..." : ""}.`;
+}
+
+function waitForNextFrame() {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+}
+
+async function runSyncDiagnostics() {
+  if (!el.syncTestList || !el.syncTestSummary || !el.runSyncTestsButton) return;
+  el.runSyncTestsButton.disabled = true;
+  const results = syncDiagnosticTests.map((test) => ({ name: test.name, status: "pending", label: "Aguardando" }));
+  renderSyncTestRows(results);
+  renderSyncTestSummary(results);
+
+  for (let index = 0; index < syncDiagnosticTests.length; index += 1) {
+    results[index] = { ...results[index], status: "running", label: "Rodando" };
+    renderSyncTestRows(results);
+    renderSyncTestSummary(results);
+    await waitForNextFrame();
+    try {
+      await syncDiagnosticTests[index].run();
+      results[index] = { ...results[index], status: "passed", label: "Passou" };
+    } catch (error) {
+      results[index] = { ...results[index], status: "failed", label: "Falhou", error: error?.message || "Erro inesperado." };
+    }
+    renderSyncTestRows(results);
+    renderSyncTestSummary(results);
+    await waitForNextFrame();
+  }
+
+  el.runSyncTestsButton.disabled = false;
+  showToast(results.some((result) => result.status === "failed") ? "Testes de sincronização falharam." : "Testes de sincronização passaram.");
 }
 
 function createPurchaseRow(purchase, index) {
@@ -2385,6 +2642,7 @@ function bindEvents() {
   el.profileForm.addEventListener("submit", saveProfile);
   el.resetDatabaseButton.addEventListener("click", resetDatabase);
   el.manualRefreshButton?.addEventListener("click", refreshApp);
+  el.runSyncTestsButton?.addEventListener("click", runSyncDiagnostics);
   el.topbarRefreshButton?.addEventListener("click", refreshApp);
   el.themeToggle.addEventListener("change", toggleTheme);
   el.accentColorInput?.addEventListener("change", changeAccent);

@@ -884,6 +884,70 @@ label {
   display: none;
 }
 
+.settings-card.sync-test-card {
+  align-items: stretch;
+  display: grid;
+  gap: 12px;
+}
+
+.settings-card.sync-test-card > button {
+  justify-self: start;
+}
+
+.sync-test-summary {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.sync-test-list {
+  display: grid;
+  gap: 8px;
+}
+
+.sync-test-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-strong);
+}
+
+.sync-test-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sync-test-row strong {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.sync-test-row small {
+  grid-column: 1 / -1;
+  color: var(--rose);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.sync-test-row.is-running strong {
+  color: var(--teal);
+}
+
+.sync-test-row.is-passed strong {
+  color: #16a34a;
+}
+
+.sync-test-row.is-failed strong {
+  color: var(--rose);
+}
+
 .compact-form {
   display: grid;
   gap: 7px;

@@ -441,6 +441,7 @@ Direção visual atual:
 - Espaços compartilhados usam código de convite e continuam com escrita local instantânea.
 - Itens, seções, compras, refeições e ajustes financeiros são sincronizáveis no espaço compartilhado.
 - O estado marcado/desmarcado de cada item (`checked`) é normalizado e sincronizado no registro do item para refletir entre usuários do mesmo espaço.
+- Ajustes inclui diagnóstico de sincronização com testes unitários em sandbox isolado, sem alterar IndexedDB ou chamar Supabase.
 
 O app evita uma landing page e abre direto na experiência funcional.
 
@@ -486,7 +487,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Migração parcial da navegação inferior para DaisyUI `dock`, mantendo o restante da UI intacta.
+Diagnóstico de sincronização em Ajustes com testes sandboxados e correção para evitar conflitos falsos em dados equivalentes.
 ```
 
 Arquivos alterados nesse marco:

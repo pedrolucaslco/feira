@@ -273,6 +273,17 @@
             <button class="secondary-button" id="manualRefreshButton" type="button">Atualizar</button>
           </section>
 
+          <p class="settings-group-label">Diagnóstico</p>
+          <section class="settings-card sync-test-card" aria-labelledby="syncTestTitle">
+            <div>
+              <h3 id="syncTestTitle">Testes de sincronização</h3>
+              <p>Valida conflitos e status sem alterar seus dados.</p>
+            </div>
+            <button class="secondary-button" id="runSyncTestsButton" type="button">Rodar testes</button>
+            <div class="sync-test-summary" id="syncTestSummary">Aguardando execução.</div>
+            <div class="sync-test-list" id="syncTestList" aria-live="polite"></div>
+          </section>
+
           <section class="danger-zone" aria-labelledby="resetTitle">
             <div>
               <h3 id="resetTitle">Resetar dados</h3>

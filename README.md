@@ -36,6 +36,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Seletor de Espaços na topbar, com `Espaço local` e espaços compartilhados.
 - Criação de espaço compartilhado vazio e entrada por código.
 - Base offline-first para sincronização com Supabase, outbox local, Realtime e resolução inicial de conflitos.
+- Diagnóstico de sincronização na tela de ajustes com testes unitários em sandbox isolado.
 - Estado marcado/desmarcado dos itens sincronizado entre usuários do mesmo espaço compartilhado.
 - Modo escuro com preferência salva no dispositivo.
 - Modo escuro AMOLED com accent emerald.
