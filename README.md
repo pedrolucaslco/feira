@@ -22,11 +22,10 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 
 ## Funcionalidades atuais
 
-- Dashboard com resumo do mês.
-- Tela inicial com saldo total e saldo semanal no topo, além de resumos rápidos.
+- App inicia direto na lista de mercado.
+- Saldo total e saldo semanal sempre visíveis no topo.
 - Campo de fechamento do cartão para calcular semanas restantes e saldo sugerido por semana.
-- Atalhos para adicionar item e compra direto pelos resumos da tela inicial.
-- Botão flutuante contextual: dropdown no resumo, novo item na lista e nova compra em compras.
+- Botão flutuante contextual: novo item na lista, nova refeição em refeições e nova compra em compras.
 - Tela de lista completa com adição inline e botão flutuante de atalho.
 - Modal compartilhado para adicionar e editar itens.
 - Tela de compras com histórico, período financeiro, gasto/budget, gráfico de variação e planejamento semanal.
@@ -37,6 +36,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Seletor de Espaços na topbar, com `Espaço local` e espaços compartilhados.
 - Criação de espaço compartilhado vazio e entrada por código.
 - Base offline-first para sincronização com Supabase, outbox local, Realtime e resolução inicial de conflitos.
+- Estado marcado/desmarcado dos itens sincronizado entre usuários do mesmo espaço compartilhado.
 - Modo escuro com preferência salva no dispositivo.
 - Modo escuro AMOLED com accent emerald.
 - Cor de destaque configurável com opções inspiradas no Tailwind.
@@ -50,7 +50,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Cálculo de saldo restante pelo período financeiro atual.
 - Total gasto no período financeiro atual.
 - Número de compras realizadas no cabeçalho do histórico.
-- Lista de mercado offline na tela inicial.
+- Lista de mercado offline como tela inicial.
 - Seções personalizadas na lista, com modal de criação, sugestões rápidas e acordeon.
 - Arrastar itens entre seções na tela de lista.
 - Aba de refeições com listas isoladas de itens.
@@ -58,8 +58,8 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Adição de itens com quantidade opcional.
 - Edição de nome e quantidade dos itens.
 - Remoção de itens apenas pelo modal de edição.
-- Checklist para marcar itens já comprados, inclusive no resumo da tela inicial.
-- Registro de compra pelo menu flutuante.
+- Checklist para marcar itens já comprados.
+- Registro de compra pelo botão flutuante na tela Compras.
 - Modal de compra com valor total.
 - Histórico simples das compras do mês.
 - Reset dos dados locais para começar do zero.

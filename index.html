@@ -62,35 +62,7 @@
           <button class="secondary-button" id="openConflictsButton" type="button">Resolver</button>
         </section>
 
-        <section id="dashboardView" class="view is-active" aria-label="Resumo">
-          <div class="home-panel">
-            <section class="home-list" aria-labelledby="listTitle">
-              <div class="block-title-row">
-                <h3 id="listTitle">Lista de mercado</h3>
-                <button class="link-button icon-link-button" id="addSummaryItemButton" type="button" aria-label="Adicionar item">
-                  <i data-lucide="plus" aria-hidden="true"></i>
-                </button>
-              </div>
-              <ul class="item-list summary-list" id="summaryItemList"></ul>
-              <p class="empty-state" id="emptySummaryItems">Sua lista ainda está vazia.</p>
-              <button class="ghost-list-button" id="viewFullListButton" type="button">Ver mais</button>
-            </section>
-
-            <section class="home-list" aria-labelledby="summaryPurchasesTitle">
-              <div class="block-title-row">
-                <h3 id="summaryPurchasesTitle">Últimas compras</h3>
-                <button class="link-button icon-link-button" id="addSummaryPurchaseButton" type="button" aria-label="Registrar compra">
-                  <i data-lucide="plus" aria-hidden="true"></i>
-                </button>
-              </div>
-              <ul class="purchase-list summary-list" id="summaryPurchaseList"></ul>
-              <p class="empty-state" id="emptySummaryPurchases">Nenhuma compra registrada.</p>
-              <button class="ghost-list-button" id="viewPurchasesButton" type="button">Ver mais</button>
-            </section>
-          </div>
-        </section>
-
-        <section id="listView" class="view" aria-labelledby="fullListTitle">
+        <section id="listView" class="view is-active" aria-labelledby="fullListTitle">
           <div class="section-head">
             <div>
               <h2 id="fullListTitle">Lista de compras</h2>
@@ -311,11 +283,7 @@
       </main>
 
       <nav class="bottom-nav" aria-label="Navegação principal">
-        <button class="nav-button is-active" type="button" data-view="dashboardView" aria-label="Resumo">
-          <i data-lucide="house" aria-hidden="true"></i>
-          <b>Resumo</b>
-        </button>
-        <button class="nav-button" type="button" data-view="listView" aria-label="Lista">
+        <button class="nav-button is-active" type="button" data-view="listView" aria-label="Lista">
           <i data-lucide="list-checks" aria-hidden="true"></i>
           <b>Lista</b>
         </button>
@@ -332,19 +300,9 @@
           <b>Ajustes</b>
         </button>
       </nav>
-      <button class="fab-button" id="quickAddButton" type="button" aria-label="Abrir ações rápidas" aria-expanded="false">
+      <button class="fab-button" id="quickAddButton" type="button" aria-label="Adicionar">
         <i data-lucide="plus" aria-hidden="true"></i>
       </button>
-      <div class="fab-menu" id="fabMenu" hidden>
-        <button type="button" id="quickAddItemButton">
-          <i data-lucide="list-plus" aria-hidden="true"></i>
-          Novo item
-        </button>
-        <button type="button" id="quickAddPurchaseButton">
-          <i data-lucide="receipt" aria-hidden="true"></i>
-          Registrar compra
-        </button>
-      </div>
     </div>
 
     <dialog class="checkout-dialog" id="checkoutDialog">

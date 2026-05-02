@@ -28,11 +28,10 @@ Funcionalidades do MVP:
 - Aba de ajustes.
 - Modo escuro com preferência local.
 - Navegação inferior com Lucide Icons via CDN.
-- Tela inicial minimalista.
+- Tela inicial na lista de mercado.
 - Indicador de planejamento semanal baseado no fechamento do cartão.
 - Tela Compras para histórico e métricas.
 - Perfil local com nome, avatar e saudação.
-- Resumo da lista de mercado na tela inicial.
 - Tela de lista completa.
 - Modal compartilhado para adicionar e editar itens.
 - Saldo restante no topo ao lado da saudação.
@@ -41,7 +40,7 @@ Funcionalidades do MVP:
 - Saldo restante.
 - Número de compras feitas.
 - Lista de mercado com nome, quantidade e marcado/desmarcado.
-- Registro de compra pelo menu flutuante.
+- Registro de compra pelo botão flutuante na tela Compras.
 - Modal de compra com valor total.
 - Histórico simples das compras do mês.
 - Reset dos dados locais.
@@ -116,7 +115,7 @@ items: {
   name: string,
   quantity: string,
   categoryId: string,
-  checked: boolean,
+  checked: boolean, // sincronizado em espaços compartilhados
   createdAt: number
 }
 
@@ -189,16 +188,12 @@ Café
 
 ## Funcionalidades Implementadas
 
-### Dashboard
+### Topbar financeira
 
-Mostra:
+A topbar fixa mostra:
 
 - Saldo restante.
 - Planejamento semanal.
-- Resumo com os 3 últimos itens da lista de mercado.
-- Resumo com as 3 últimas compras.
-- Botões **Adicionar** nos resumos para abrir os modais de item e compra.
-- Botões **Ver mais** no final de cada resumo para ir para Lista e Compras.
 
 O planejamento semanal usa o dia de fechamento do cartão configurado em **Ajustes**:
 
@@ -258,7 +253,7 @@ A aba também tem a função de resetar os dados locais. O reset:
 2. Apaga as compras.
 3. Restaura o budget padrão e limpa o dia de fechamento do cartão.
 4. Deixa a lista vazia.
-5. Volta para a tela de resumo.
+5. Volta para a tela de lista.
 
 Também existe um switch de modo escuro. A preferência é salva em `localStorage`, com a chave:
 
@@ -321,7 +316,7 @@ O usuário pode:
 - Adicionar item diretamente em uma seção.
 - Arrastar itens entre seções.
 
-A tela inicial mostra um resumo com os 3 últimos itens e permite marcar e editar por ali. A tela **Lista** mostra todos os itens e inclui a adição inline no topo. Cada item tem:
+A tela inicial é a **Lista**, que mostra todos os itens e inclui a adição inline no topo. Cada item tem:
 
 - Botão circular de check.
 - Nome e quantidade na mesma linha quando houver quantidade.
@@ -331,7 +326,7 @@ O clique no fundo ou no texto de qualquer item abre o modal de edição. O botã
 
 O botão flutuante abre um novo item diretamente quando o usuário está na tela **Lista**. A linha inline acima da lista também inicia a criação de item. No modo `modal`, o modal de item é reutilizado; no modo `inline`, o formulário aparece dentro da seção correspondente.
 
-A tela **Lista** organiza itens por seções criadas pelo usuário. Há uma seção automática **Sem seção** para itens antigos ou itens adicionados sem categoria. As seções ficam somente na tela de lista completa; os resumos continuam mostrando os últimos itens adicionados. A criação de seções fica em um modal aberto pelo menu de três pontos, mantendo a tela principal mais minimalista.
+A tela **Lista** organiza itens por seções criadas pelo usuário. Há uma seção automática **Sem seção** para itens antigos ou itens adicionados sem categoria. A criação de seções fica em um modal aberto pelo menu de três pontos, mantendo a tela principal mais minimalista.
 
 - Campo de nome.
 - Campo de quantidade.
@@ -355,13 +350,12 @@ Nessa tela:
 
 Ao registrar:
 
-1. O usuário abre o dropdown na tela inicial ou usa o botão de adicionar na tela Compras.
-2. Escolhe **Registrar compra** quando estiver no resumo.
-3. O app abre um modal ou formulário inline pedindo nome opcional, data e total da compra, conforme a preferência de edição.
-4. Salva uma entrada em `purchases`.
-5. Desmarca todos os itens da lista.
-6. Atualiza dashboard, compras e saldo.
-7. Leva o usuário para a tela Compras.
+1. O usuário usa o botão de adicionar na tela Compras.
+2. O app abre um modal ou formulário inline pedindo nome opcional, data e total da compra, conforme a preferência de edição.
+3. Salva uma entrada em `purchases`.
+4. Desmarca todos os itens da lista.
+5. Atualiza compras e saldo.
+6. Leva o usuário para a tela Compras.
 
 Os itens permanecem na lista após a compra. Apenas os checks são resetados.
 
@@ -439,13 +433,14 @@ Direção visual atual:
 - Modo escuro AMOLED com base neutral e accent emerald.
 - Tema claro com fundo branco suave e accent configurável para modo claro e escuro.
 - Saldo sempre visível no topo.
-- Resumo inicial com indicadores e atalhos para telas completas.
-- FAB contextual: abre dropdown no resumo, novo item na lista e nova compra em compras.
+- Lista de mercado como tela inicial, com saldo e planejamento semanal sempre visíveis no topo.
+- FAB contextual: novo item na lista, nova refeição em refeições e nova compra em compras.
 - Preferência para criar e editar itens/compras em modal ou inline.
 - Textos da interface não ficam selecionáveis durante o uso.
 - Topbar exibe o seletor de Espaço atual, mantendo o saldo e o indicador semanal.
 - Espaços compartilhados usam código de convite e continuam com escrita local instantânea.
 - Itens, seções, compras, refeições e ajustes financeiros são sincronizáveis no espaço compartilhado.
+- O estado marcado/desmarcado de cada item (`checked`) é normalizado e sincronizado no registro do item para refletir entre usuários do mesmo espaço.
 
 O app evita uma landing page e abre direto na experiência funcional.
 
@@ -491,7 +486,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Espaços compartilháveis com base local multi-espaço, Supabase opcional, outbox offline-first e resolução inicial de conflitos.
+Lista inicial direta, seções discretas e sincronização explícita do estado marcado/desmarcado dos itens em espaços compartilhados.
 ```
 
 Arquivos alterados nesse marco:

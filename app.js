@@ -17,7 +17,7 @@ const STORE_TO_ENTITY = {
 };
 const ENTITY_TO_STORE = Object.fromEntries(Object.entries(STORE_TO_ENTITY).map(([storeName, entityType]) => [entityType, storeName]));
 const VALID_ACCENTS = ["emerald", "green", "sky", "blue", "purple", "fuchsia", "rose", "amber", "teal", "cyan"];
-const VIEW_ORDER = ["dashboardView", "listView", "mealsView", "purchaseView", "settingsView"];
+const VIEW_ORDER = ["listView", "mealsView", "purchaseView", "settingsView"];
 const DEFAULT_ITEMS = [
   { name: "Arroz", quantity: "1 pacote" },
   { name: "Feijão", quantity: "1 kg" },
@@ -113,7 +113,7 @@ const state = {
   settings: { ...DEFAULT_SETTINGS },
   activeSpaceId: localStorage.getItem(ACTIVE_SPACE_STORAGE_KEY) || LOCAL_SPACE_ID,
   syncStatus: "local",
-  activeView: "dashboardView",
+  activeView: "listView",
   editingItemId: null,
   editingPurchaseId: null,
   editingMealId: null,
@@ -215,10 +215,6 @@ const el = {
   syncStatusLabel: document.querySelector("#syncStatusLabel"),
   conflictBanner: document.querySelector("#conflictBanner"),
   openConflictsButton: document.querySelector("#openConflictsButton"),
-  summaryItemList: document.querySelector("#summaryItemList"),
-  emptySummaryItems: document.querySelector("#emptySummaryItems"),
-  summaryPurchaseList: document.querySelector("#summaryPurchaseList"),
-  emptySummaryPurchases: document.querySelector("#emptySummaryPurchases"),
   purchaseList: document.querySelector("#purchaseList"),
   emptyPurchases: document.querySelector("#emptyPurchases"),
   purchaseChart: document.querySelector("#purchaseChart"),
@@ -265,16 +261,9 @@ const el = {
   inviteCodeInput: document.querySelector("#inviteCodeInput"),
   copyInviteButton: document.querySelector("#copyInviteButton"),
   quickAddButton: document.querySelector("#quickAddButton"),
-  fabMenu: document.querySelector("#fabMenu"),
-  quickAddItemButton: document.querySelector("#quickAddItemButton"),
-  quickAddPurchaseButton: document.querySelector("#quickAddPurchaseButton"),
   listMenuButton: document.querySelector("#listMenuButton"),
   listMenu: document.querySelector("#listMenu"),
   openCategoryDialogButton: document.querySelector("#openCategoryDialogButton"),
-  addSummaryItemButton: document.querySelector("#addSummaryItemButton"),
-  addSummaryPurchaseButton: document.querySelector("#addSummaryPurchaseButton"),
-  viewFullListButton: document.querySelector("#viewFullListButton"),
-  viewPurchasesButton: document.querySelector("#viewPurchasesButton"),
   refreshButton: document.querySelector("#refreshButton"),
   purchaseInlineEditorMount: document.querySelector("#purchaseInlineEditorMount"),
   checkoutDialog: document.querySelector("#checkoutDialog"),
@@ -449,7 +438,22 @@ function normalizeMeal(meal, spaceId = state.activeSpaceId) {
   };
 }
 
+function normalizeItem(item, spaceId = state.activeSpaceId) {
+  const now = Date.now();
+  return {
+    ...(item || {}),
+    id: item?.id || createId(),
+    spaceId,
+    name: String(item?.name || "").trim(),
+    quantity: String(item?.quantity || "").trim(),
+    categoryId: String(item?.categoryId || "").trim(),
+    checked: item?.checked === true,
+    createdAt: Number(item?.createdAt) || now,
+  };
+}
+
 function normalizeStoreRecord(storeName, value, spaceId = state.activeSpaceId) {
+  if (storeName === "items") return normalizeItem(value, spaceId);
   if (storeName === "meals") return normalizeMeal(value, spaceId);
   return value;
 }
@@ -493,7 +497,7 @@ async function enqueueSync(storeName, value, action = "upsert") {
 }
 
 async function saveRecord(storeName, value, { sync = true } = {}) {
-  const record = withSpace(value);
+  const record = normalizeStoreRecord(storeName, withSpace(value));
   await putOne(storeName, record);
   if (sync) {
     await enqueueSync(storeName, record);
@@ -738,7 +742,7 @@ function weeksUntilClosing(day) {
   return Math.max(1, Math.ceil((closing - now) / msPerWeek));
 }
 
-function renderDashboard() {
+function renderFinancialState() {
   const monthPurchases = currentMonthPurchases();
   const period = billingPeriodBounds();
   const spent = monthPurchases.reduce((sum, purchase) => sum + purchase.total, 0);
@@ -777,7 +781,6 @@ function renderDashboard() {
   });
 
   el.emptyPurchases.classList.toggle("is-visible", monthPurchases.length === 0 && !state.inlinePurchaseEditor);
-  renderPurchaseSummary();
   renderPurchaseChart(monthPurchases);
 }
 
@@ -938,16 +941,10 @@ function createItemRow(item, { removable, draggable = false } = {}) {
 
 function renderItems() {
   el.itemList.innerHTML = "";
-  el.summaryItemList.innerHTML = "";
 
   renderCategorySections();
 
-  state.items.slice(0, 3).forEach((item) => {
-    el.summaryItemList.append(createItemRow(item, { removable: true }));
-  });
-
   el.emptyItems.classList.toggle("is-visible", state.items.length === 0 && !state.inlineItemEditor);
-  el.emptySummaryItems.classList.toggle("is-visible", state.items.length === 0);
   if (el.itemCountLabel) {
     el.itemCountLabel.textContent = `${state.items.length} ${state.items.length === 1 ? "item" : "itens"}`;
   }
@@ -1094,7 +1091,7 @@ function renderIcons() {
 }
 
 function render() {
-  renderDashboard();
+  renderFinancialState();
   renderItems();
   renderMeals();
   renderNavigation();
@@ -1105,7 +1102,6 @@ function render() {
 
 function setView(viewId) {
   if (state.activeView === viewId) {
-    closeFabMenu();
     closeListMenu();
     return;
   }
@@ -1115,7 +1111,6 @@ function setView(viewId) {
   document.documentElement.dataset.navDirection = nextIndex > currentIndex ? "forward" : "back";
   state.activeView = viewId;
   renderNavigation();
-  closeFabMenu();
   closeListMenu();
 }
 
@@ -1536,17 +1531,9 @@ async function resolveConflict(conflictId, resolution) {
   showToast("Conflito resolvido.");
 }
 
-function renderPurchaseSummary() {
-  el.summaryPurchaseList.innerHTML = "";
-  state.purchases.slice(0, 3).forEach((purchase, index) => {
-    el.summaryPurchaseList.append(createPurchaseRow(purchase, index, { summary: true }));
-  });
-  el.emptySummaryPurchases.classList.toggle("is-visible", state.purchases.length === 0);
-}
-
-function createPurchaseRow(purchase, index, { summary = false } = {}) {
+function createPurchaseRow(purchase, index) {
   const row = document.createElement("li");
-  row.className = `purchase-row${summary ? " summary-row" : ""}`;
+  row.className = "purchase-row";
   row.setAttribute("role", "button");
   row.setAttribute("tabindex", "0");
   row.setAttribute("aria-label", `Editar compra de ${formatCurrency(purchase.total)}`);
@@ -1718,7 +1705,6 @@ async function saveItem(event) {
 }
 
 function openItemEditor(id = null, categoryId = "") {
-  closeFabMenu();
   closeListMenu();
   const normalizedCategoryId = categoryId === UNCATEGORIZED_ID ? "" : categoryId;
   if (editorMode() !== "inline") {
@@ -1840,7 +1826,6 @@ async function saveCategory(event) {
 }
 
 function openMealEditor(id = null) {
-  closeFabMenu();
   closeListMenu();
   state.editingMealId = id;
   const meal = state.meals.find((current) => current.id === id);
@@ -2170,7 +2155,7 @@ async function resetDatabase() {
   state.collapsedCategoryIds.clear();
 
   await reloadAndRender();
-  setView("dashboardView");
+  setView("listView");
   showToast("Espaço resetado.");
 }
 
@@ -2196,22 +2181,6 @@ function handleFabButton() {
     openMealEditor();
     return;
   }
-  if (state.activeView === "dashboardView") {
-    toggleFabMenu();
-  }
-}
-
-function toggleFabMenu() {
-  if (!el.fabMenu) return;
-  const isOpen = !el.fabMenu.hidden;
-  el.fabMenu.hidden = isOpen;
-  el.quickAddButton.setAttribute("aria-expanded", String(!isOpen));
-}
-
-function closeFabMenu() {
-  if (!el.fabMenu) return;
-  el.fabMenu.hidden = true;
-  el.quickAddButton.setAttribute("aria-expanded", "false");
 }
 
 function toggleListMenu() {
@@ -2227,18 +2196,7 @@ function closeListMenu() {
   el.listMenuButton.setAttribute("aria-expanded", "false");
 }
 
-function openQuickItem() {
-  closeFabMenu();
-  openItemEditor();
-}
-
-function openQuickPurchase() {
-  closeFabMenu();
-  openPurchaseEditor();
-}
-
 function openPurchaseEditor(id = null) {
-  closeFabMenu();
   if (editorMode() !== "inline") {
     openCheckout(id);
     return;
@@ -2249,14 +2207,14 @@ function openPurchaseEditor(id = null) {
   }
   state.inlineItemEditor = null;
   state.inlinePurchaseEditor = { id };
-  renderDashboard();
+  renderFinancialState();
   renderIcons();
   focusInlineEditor();
 }
 
 function closeInlinePurchaseEditor() {
   state.inlinePurchaseEditor = null;
-  renderDashboard();
+  renderFinancialState();
   renderIcons();
 }
 
@@ -2437,8 +2395,6 @@ function bindEvents() {
   el.closeConflictDialogButton?.addEventListener("click", closeConflictDialog);
   window.addEventListener("online", () => syncNow());
   el.quickAddButton.addEventListener("click", handleFabButton);
-  el.quickAddItemButton?.addEventListener("click", openQuickItem);
-  el.quickAddPurchaseButton?.addEventListener("click", openQuickPurchase);
   el.listMenuButton?.addEventListener("click", toggleListMenu);
   el.openCategoryDialogButton?.addEventListener("click", openCategoryDialog);
   document.addEventListener("click", (event) => {
@@ -2449,10 +2405,6 @@ function bindEvents() {
     if (event.target.closest(".list-menu-wrap")) return;
     closeListMenu();
   });
-  el.addSummaryItemButton?.addEventListener("click", openQuickItem);
-  el.addSummaryPurchaseButton?.addEventListener("click", openQuickPurchase);
-  el.viewFullListButton?.addEventListener("click", () => setView("listView"));
-  el.viewPurchasesButton?.addEventListener("click", () => setView("purchaseView"));
   el.checkoutForm.addEventListener("submit", finishPurchase);
   el.deletePurchaseButton?.addEventListener("click", () => removePurchase(state.editingPurchaseId));
   el.closeCheckoutButton.addEventListener("click", closeCheckout);
