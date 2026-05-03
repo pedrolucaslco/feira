@@ -228,6 +228,7 @@ const el = {
   itemForm: document.querySelector("#itemForm"),
   itemName: document.querySelector("#itemName"),
   itemQuantity: document.querySelector("#itemQuantity"),
+  itemCategory: document.querySelector("#itemCategory"),
   categoryForm: document.querySelector("#categoryForm"),
   categoryNameInput: document.querySelector("#categoryNameInput"),
   categoryPresetInputs: [...document.querySelectorAll("input[name='categoryPreset']")],
@@ -941,27 +942,12 @@ function renderSpaces() {
   }
 }
 
-function createItemRow(item, { removable, draggable = false } = {}) {
+function createItemRow(item, { removable } = {}) {
   const row = document.createElement("li");
   row.className = `item-row${item.checked ? " is-checked" : ""}`;
   row.setAttribute("role", "button");
   row.setAttribute("tabindex", "0");
   row.setAttribute("aria-label", `Editar ${item.name}`);
-  if (draggable) {
-    row.draggable = true;
-    row.dataset.itemId = item.id;
-    row.addEventListener("dragstart", (event) => {
-      if (!event.target.closest(".drag-handle")) {
-        event.preventDefault();
-        return;
-      }
-      event.stopPropagation();
-      event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", item.id);
-      row.classList.add("is-dragging");
-    });
-    row.addEventListener("dragend", () => row.classList.remove("is-dragging"));
-  }
 
   const quantity = item.quantity ? `<span class="item-quantity">${escapeHtml(item.quantity)}</span>` : "";
   row.innerHTML = `
@@ -970,14 +956,7 @@ function createItemRow(item, { removable, draggable = false } = {}) {
       <strong>${escapeHtml(item.name)}</strong>
       ${quantity}
     </div>
-    ${draggable ? `<button class="drag-handle" type="button" aria-label="Mover item"><i data-lucide="grip-vertical" aria-hidden="true"></i></button>` : ""}
   `;
-
-  const dragHandle = row.querySelector(".drag-handle");
-  if (dragHandle) {
-    dragHandle.addEventListener("click", (event) => event.stopPropagation());
-    dragHandle.addEventListener("pointerdown", (event) => beginItemPointerDrag(event, item.id, row));
-  }
 
   row.addEventListener("click", () => openItemEditor(item.id, itemCategoryId(item)));
   row.addEventListener("keydown", (event) => {
@@ -1065,32 +1044,24 @@ function renderCategorySections() {
     const isCollapsed = state.collapsedCategoryIds.has(category.id);
     const listId = `category-list-${category.id}`;
     section.innerHTML = `
-      <div class="category-head">
-        <button class="category-toggle" type="button" aria-expanded="${!isCollapsed}" aria-controls="${listId}">
-          <i data-lucide="${isCollapsed ? "chevron-right" : "chevron-down"}" aria-hidden="true"></i>
-          <span>${escapeHtml(category.name)}</span>
-          <small>${items.length}</small>
-        </button>
-        <button class="btn btn-ghost btn-square btn-sm category-add-button" type="button" aria-label="Adicionar item em ${escapeHtml(category.name)}">
-          <i data-lucide="plus" aria-hidden="true"></i>
-        </button>
+      <div class="collapse collapse-arrow bg-base-100 category-collapse border border-base-300">
+        <input type="checkbox" ${isCollapsed ? "" : "checked"} />
+        <div class="collapse-title category-head">
+          <div class="category-head-main">
+            <span>${escapeHtml(category.name)}</span>
+            <small>${items.length} ${items.length === 1 ? "item" : "itens"}</small>
+          </div>
+          <button class="btn btn-ghost btn-square btn-sm category-add-button" type="button" aria-label="Adicionar item em ${escapeHtml(category.name)}">
+            <i data-lucide="plus" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="collapse-content">
+          <ul class="list category-items" id="${listId}"></ul>
+        </div>
       </div>
-      <ul class="item-list category-items" id="${listId}" data-collapsed="${isCollapsed}" aria-hidden="${isCollapsed}" style="${isCollapsed ? "height: 0px;" : ""}"></ul>
     `;
 
     const list = section.querySelector(".category-items");
-    list.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      list.classList.add("is-drop-target");
-    });
-    list.addEventListener("dragleave", () => list.classList.remove("is-drop-target"));
-    list.addEventListener("drop", (event) => {
-      event.preventDefault();
-      list.classList.remove("is-drop-target");
-      const draggedItemId = event.dataTransfer.getData("text/plain");
-      const targetRow = event.target.closest(".item-row[data-item-id]");
-      moveItemWithOrdering(draggedItemId, category.id, targetRow?.dataset.itemId || null);
-    });
 
     if (state.inlineItemEditor && !state.inlineItemEditor.id && itemCategoryId({ categoryId: state.inlineItemEditor.categoryId }) === category.id) {
       list.append(createItemInlineEditor(null, category.id));
@@ -1101,17 +1072,18 @@ function renderCategorySections() {
         list.append(createItemInlineEditor(item, category.id));
         return;
       }
-      list.append(createItemRow(item, { removable: true, draggable: true }));
+      list.append(createItemRow(item, { removable: true }));
     });
 
     if (!items.length && !hasInlineNewItem) {
       const empty = document.createElement("li");
       empty.className = "category-empty";
-      empty.textContent = "Arraste itens para esta seção.";
+      empty.textContent = "Use o botão + para adicionar itens nesta seção.";
       list.append(empty);
     }
 
-    section.querySelector(".category-toggle").addEventListener("click", () => toggleCategory(category.id));
+    const collapseToggle = section.querySelector(".category-collapse input");
+    collapseToggle?.addEventListener("change", () => toggleCategory(category.id));
     section.querySelector(".category-add-button").addEventListener("click", () => openItemEditor(null, category.id));
     el.itemList.append(section);
   });
@@ -1860,8 +1832,10 @@ function createItemInlineEditor(item = null, categoryId = "") {
   form.innerHTML = `
     <input class="input input-sm" name="name" autocomplete="off" placeholder="Item" required value="${escapeHtml(item?.name || "")}" />
     <input class="input input-sm" name="quantity" autocomplete="off" placeholder="Quantidade" value="${escapeHtml(item?.quantity || "")}" />
+    <select class="select select-sm" name="categoryId"></select>
     <div class="inline-editor-actions"></div>
   `;
+  populateCategorySelect(form.elements.categoryId, item?.categoryId || categoryId || "");
 
   const actions = form.querySelector(".inline-editor-actions");
   const cancelButton = createInlineActionButton("Cancelar");
@@ -1959,10 +1933,19 @@ function focusInlineEditor() {
   });
 }
 
+function populateCategorySelect(select, selectedCategoryId = "") {
+  if (!select) return;
+  const normalized = selectedCategoryId === UNCATEGORIZED_ID ? "" : selectedCategoryId;
+  const options = [{ id: "", name: "Sem seção" }, ...state.categories];
+  select.innerHTML = options.map((category) => `<option value="${escapeHtml(category.id)}">${escapeHtml(category.name)}</option>`).join("");
+  select.value = normalized;
+}
+
 async function saveItem(event) {
   event.preventDefault();
   const name = el.itemName.value.trim();
   const quantity = el.itemQuantity.value.trim();
+  const categoryId = el.itemCategory.value.trim();
   if (!name) {
     showToast("Informe o nome do item.");
     return;
@@ -1970,13 +1953,13 @@ async function saveItem(event) {
 
   const item = state.items.find((current) => current.id === state.editingItemId);
   if (item) {
-    await saveRecord("items", { ...item, name, quantity });
+    await saveRecord("items", { ...item, name, quantity, categoryId: categoryId === UNCATEGORIZED_ID ? "" : categoryId });
   } else {
     await saveRecord("items", {
       id: createId(),
       name,
       quantity,
-      categoryId: state.pendingItemCategoryId === UNCATEGORIZED_ID ? "" : state.pendingItemCategoryId,
+      categoryId: categoryId === UNCATEGORIZED_ID ? "" : categoryId || (state.pendingItemCategoryId === UNCATEGORIZED_ID ? "" : state.pendingItemCategoryId),
       checked: false,
       createdAt: Date.now(),
     });
@@ -2022,14 +2005,15 @@ async function saveInlineItem(event, id = null, categoryId = "") {
   }
 
   const item = state.items.find((current) => current.id === id);
+  const selectedCategoryId = form.elements.categoryId.value.trim();
   if (item) {
-    await saveRecord("items", { ...item, name, quantity });
+    await saveRecord("items", { ...item, name, quantity, categoryId: selectedCategoryId === UNCATEGORIZED_ID ? "" : selectedCategoryId });
   } else {
     await saveRecord("items", {
       id: createId(),
       name,
       quantity,
-      categoryId: categoryId === UNCATEGORIZED_ID ? "" : categoryId,
+      categoryId: selectedCategoryId === UNCATEGORIZED_ID ? "" : selectedCategoryId || (categoryId === UNCATEGORIZED_ID ? "" : categoryId),
       checked: false,
       createdAt: Date.now(),
     });
@@ -2054,6 +2038,7 @@ function openItemDialog(id = null, categoryId = "") {
     el.itemName.value = item.name;
     el.itemQuantity.value = item.quantity || "";
   }
+  populateCategorySelect(el.itemCategory, item?.categoryId || state.pendingItemCategoryId || "");
 
   if (typeof el.itemDialog.showModal === "function") {
     el.itemDialog.showModal();
@@ -2271,175 +2256,12 @@ function closeCategoryDialog() {
 }
 
 function toggleCategory(id) {
-  const shouldExpand = state.collapsedCategoryIds.has(id);
-  if (shouldExpand) {
+  const isCollapsed = state.collapsedCategoryIds.has(id);
+  if (isCollapsed) {
     state.collapsedCategoryIds.delete(id);
   } else {
     state.collapsedCategoryIds.add(id);
   }
-
-  const section = el.itemList.querySelector(`.category-section[data-category-id="${cssEscape(id)}"]`);
-  const toggle = section?.querySelector(".category-toggle");
-  const icon = toggle?.querySelector("i");
-  const list = section?.querySelector(".category-items");
-  if (!section || !toggle || !icon || !list) {
-    renderItems();
-    renderIcons();
-    return;
-  }
-
-  toggle.setAttribute("aria-expanded", String(shouldExpand));
-  icon.setAttribute("data-lucide", shouldExpand ? "chevron-down" : "chevron-right");
-  animateCategoryList(list, shouldExpand);
-  renderIcons();
-}
-
-function beginItemPointerDrag(event, itemId, row) {
-  event.preventDefault();
-  event.stopPropagation();
-  state.draggingItemId = itemId;
-  row.classList.add("is-dragging");
-  event.currentTarget.setPointerCapture?.(event.pointerId);
-
-  const move = (moveEvent) => {
-    document.querySelectorAll(".category-items.is-drop-target").forEach((target) => {
-      target.classList.remove("is-drop-target");
-    });
-    const target = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY)?.closest(".category-section");
-    target?.querySelector(".category-items:not([data-collapsed='true'])")?.classList.add("is-drop-target");
-  };
-
-  const finish = async (finishEvent) => {
-    document.removeEventListener("pointermove", move);
-    document.removeEventListener("pointerup", finish);
-    document.querySelectorAll(".category-items.is-drop-target").forEach((target) => {
-      target.classList.remove("is-drop-target");
-    });
-    row.classList.remove("is-dragging");
-
-    const target = document.elementFromPoint(finishEvent.clientX, finishEvent.clientY)?.closest(".category-section");
-    const categoryId = target?.dataset.categoryId;
-    state.draggingItemId = null;
-    if (categoryId) {
-      await moveItemWithOrdering(itemId, categoryId);
-    }
-  };
-
-  document.addEventListener("pointermove", move);
-  document.addEventListener("pointerup", finish, { once: true });
-}
-
-async function moveItemWithOrdering(itemId, categoryId, targetItemId = null) {
-  const normalizedCategoryId = categoryId === UNCATEGORIZED_ID ? "" : categoryId;
-  const movedItem = state.items.find((current) => current.id === itemId);
-  if (!movedItem) return;
-
-  const categoryItems = state.items.filter((current) => itemCategoryId(current) === categoryId);
-  const withoutMoved = categoryItems.filter((current) => current.id !== itemId);
-  const targetIndex = targetItemId ? withoutMoved.findIndex((current) => current.id === targetItemId) : -1;
-  const insertIndex = targetIndex >= 0 ? targetIndex : withoutMoved.length;
-  const reordered = [...withoutMoved];
-  reordered.splice(insertIndex, 0, { ...movedItem, categoryId: normalizedCategoryId });
-
-  const now = Date.now();
-  const updates = reordered.map((current, index) => saveRecord("items", {
-    ...current,
-    categoryId: normalizedCategoryId,
-    createdAt: now - index,
-  }));
-  await Promise.all(updates);
-  await reloadAndRender();
-  showToast("Ordem atualizada.");
-}
-
-async function toggleItem(id) {
-  const item = state.items.find((current) => current.id === id);
-  if (!item) return;
-
-  await saveRecord("items", { ...item, checked: !item.checked });
-  await reloadAndRender();
-}
-
-async function removeItem(id) {
-  if (!id) return;
-  const confirmed = window.confirm("Excluir este item?");
-  if (!confirmed) return;
-
-  if (state.editingItemId === id) {
-    state.editingItemId = null;
-  }
-  if (state.inlineItemEditor?.id === id) {
-    state.inlineItemEditor = null;
-  }
-  await deleteRecord("items", id);
-  if (el.itemDialog.open) {
-    closeItemDialog();
-  }
-  await reloadAndRender();
-  showToast("Item removido.");
-}
-
-async function saveBudget(event) {
-  event.preventDefault();
-  const value = parseCurrency(el.budgetInput.value);
-  const cardClosingDay = el.cardClosingDayInput.value ? Number(el.cardClosingDayInput.value) : "";
-  if (!Number.isFinite(value) || value < 0) {
-    showToast("Informe um budget válido.");
-    return;
-  }
-  if (cardClosingDay && (cardClosingDay < 1 || cardClosingDay > 31)) {
-    showToast("Informe um dia de fechamento entre 1 e 31.");
-    return;
-  }
-
-  await saveRecord("settings", normalizeSettings({ ...state.settings, monthlyBudget: value, cardClosingDay }));
-  await reloadAndRender();
-  showToast("Budget atualizado.");
-}
-
-async function saveProfile(event) {
-  event.preventDefault();
-  const userName = el.userNameInput.value.trim();
-
-  saveLocalProfile(userName, "neutral");
-  await putOne("settings", normalizeSettings({ ...state.settings, userName, userGender: "neutral" }));
-  await reloadAndRender();
-  showToast("Perfil atualizado.");
-}
-
-async function changeEditorMode(event) {
-  const editorModeValue = event.currentTarget.value === "inline" ? "inline" : "modal";
-  state.inlineItemEditor = null;
-  state.inlinePurchaseEditor = null;
-  localStorage.setItem(EDITOR_MODE_STORAGE_KEY, editorModeValue);
-  await putOne("settings", normalizeSettings({ ...state.settings, editorMode: editorModeValue }));
-  await reloadAndRender();
-  showToast(editorModeValue === "inline" ? "Editor inline ativado." : "Editor em modal ativado.");
-}
-
-async function resetDatabase() {
-  const confirmed = window.confirm("Tem certeza que deseja apagar os dados deste espaço e começar do zero?");
-  if (!confirmed) return;
-
-  await Promise.all([
-    ...state.items.map((item) => deleteRecord("items", item.id)),
-    ...state.categories.map((category) => deleteRecord("categories", category.id)),
-    ...state.purchases.map((purchase) => deleteRecord("purchases", purchase.id)),
-    ...state.meals.map((meal) => deleteRecord("meals", meal.id)),
-  ]);
-  await saveRecord("settings", normalizeSettings({ ...state.settings, monthlyBudget: DEFAULT_SETTINGS.monthlyBudget, cardClosingDay: "" }));
-
-  state.editingItemId = null;
-  state.editingPurchaseId = null;
-  state.editingMealId = null;
-  state.inlineItemEditor = null;
-  state.inlinePurchaseEditor = null;
-  state.pendingItemCategoryId = "";
-  state.collapsedCategoryIds.clear();
-
-  await reloadAndRender();
-  setView("listView");
-  showToast("Espaço resetado.");
 }
 
 function toggleTheme(event) {
