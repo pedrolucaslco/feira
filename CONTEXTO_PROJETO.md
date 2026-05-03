@@ -373,10 +373,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v48.10
+feira-v48.11
 ```
 
-O cache foi atualizado para `feira-v48.10` para garantir que o último ajuste de versão seja entregue também para quem já está com o PWA em cache.
+O cache foi atualizado para `feira-v48.11` para garantir que o último ajuste de versão seja entregue também para quem já está com o PWA em cache.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
