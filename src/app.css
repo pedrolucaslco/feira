@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@source "../index.html";
+@source "../app.js";
+
+@source inline("active alert alert-info alert-warning badge badge-soft bg-base-100 bg-base-200 border border-base-300 btn btn-circle btn-error btn-ghost btn-lg btn-primary btn-sm btn-soft btn-square card card-actions card-body card-title checkbox checkbox-md checkbox-primary checkbox-sm collapse collapse-arrow collapse-content collapse-title dock dock-active dock-label dock-lg dropdown dropdown-content dropdown-end fieldset fieldset-legend font-bold input input-sm label list list-row max-w-[calc(100vw-2rem)] menu modal modal-action modal-box modal-top p-2 p-3 rounded-box select select-sm shadow text-base-content/60 text-sm toast toast-center toast-top toggle toggle-primary toggle-sm w-52 w-72 z-10 z-20");
+
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, emerald, corporate, garden, cupcake, bumblebee, lofi, pastel, fantasy, wireframe, aqua;
+}

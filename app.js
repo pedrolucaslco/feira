@@ -16,7 +16,7 @@ const STORE_TO_ENTITY = {
   settings: "settings",
 };
 const ENTITY_TO_STORE = Object.fromEntries(Object.entries(STORE_TO_ENTITY).map(([storeName, entityType]) => [entityType, storeName]));
-const VALID_ACCENTS = ["emerald", "green", "sky", "blue", "purple", "fuchsia", "rose", "amber", "teal", "cyan"];
+const DAISY_THEMES = ["light", "emerald", "corporate", "garden", "cupcake", "bumblebee", "lofi", "pastel", "fantasy", "wireframe", "aqua"];
 const VIEW_ORDER = ["listView", "mealsView", "purchaseView", "settingsView"];
 const DEFAULT_ITEMS = [
   { name: "Arroz", quantity: "1 pacote" },
@@ -55,26 +55,36 @@ function getInitialTheme() {
 }
 
 function applyTheme(theme) {
-  document.documentElement.dataset.theme = theme;
-  localStorage.setItem(THEME_STORAGE_KEY, theme);
-  updateThemeColor();
+  const mode = theme === "dark" ? "dark" : "light";
+  localStorage.setItem(THEME_STORAGE_KEY, mode);
+  applyDaisyTheme(mode, getInitialAccent());
 }
 
 function getInitialAccent() {
   const storedAccent = localStorage.getItem(ACCENT_STORAGE_KEY);
-  return VALID_ACCENTS.includes(storedAccent) ? storedAccent : "emerald";
+  return DAISY_THEMES.includes(storedAccent) ? storedAccent : "emerald";
 }
 
 function applyAccent(accent) {
-  const safeAccent = VALID_ACCENTS.includes(accent) ? accent : "emerald";
-  document.documentElement.dataset.accent = safeAccent;
-  localStorage.setItem(ACCENT_STORAGE_KEY, safeAccent);
+  const safeTheme = DAISY_THEMES.includes(accent) ? accent : "emerald";
+  localStorage.setItem(ACCENT_STORAGE_KEY, safeTheme);
+  applyDaisyTheme(getStoredThemeMode(), safeTheme);
+}
+
+function getStoredThemeMode() {
+  return localStorage.getItem(THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
+}
+
+function applyDaisyTheme(mode = getStoredThemeMode(), daisyTheme = getInitialAccent()) {
+  const safeTheme = DAISY_THEMES.includes(daisyTheme) ? daisyTheme : "emerald";
+  document.documentElement.dataset.accent = safeTheme;
+  document.documentElement.dataset.theme = mode === "dark" ? "dark" : safeTheme;
   updateThemeColor();
 }
 
 function updateThemeColor() {
   const theme = document.documentElement.dataset.theme;
-  const accent = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+  const accent = getComputedStyle(document.documentElement).getPropertyValue("--color-primary").trim();
   document.querySelector("#themeColorMeta")?.setAttribute("content", theme === "dark" ? "#000000" : accent || "#059669");
 }
 
@@ -96,8 +106,7 @@ function saveLocalProfile(userName, userGender) {
   localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ userName, userGender }));
 }
 
-applyTheme(getInitialTheme());
-applyAccent(getInitialAccent());
+applyDaisyTheme(getInitialTheme(), getInitialAccent());
 
 const state = {
   db: null,
@@ -911,15 +920,19 @@ function renderSpaces() {
   if (el.spaceMenuList) {
     el.spaceMenuList.innerHTML = "";
     state.spaces.forEach((current) => {
+      const item = document.createElement("li");
       const button = document.createElement("button");
       button.type = "button";
-      button.className = current.id === state.activeSpaceId ? "is-active" : "";
+      button.className = current.id === state.activeSpaceId ? "active" : "";
       button.innerHTML = `
-        <span>${escapeHtml(current.name)}</span>
-        <small>${current.type === "shared" ? "Compartilhado" : "Local"}</small>
+        <span class="space-menu-label">
+          <strong>${escapeHtml(current.name)}</strong>
+          <small>${current.type === "shared" ? "Compartilhado" : "Local"}</small>
+        </span>
       `;
       button.addEventListener("click", () => switchSpace(current.id));
-      el.spaceMenuList.append(button);
+      item.append(button);
+      el.spaceMenuList.append(item);
     });
   }
   if (el.syncStatusLabel) {
@@ -944,7 +957,7 @@ function renderSpaces() {
 
 function createItemRow(item, { removable } = {}) {
   const row = document.createElement("li");
-  row.className = `item-row${item.checked ? " is-checked" : ""}`;
+  row.className = `list-row item-row${item.checked ? " is-checked" : ""}`;
   row.setAttribute("role", "button");
   row.setAttribute("tabindex", "0");
   row.setAttribute("aria-label", `Editar ${item.name}`);
@@ -1004,7 +1017,7 @@ function renderMeals() {
 
 function createMealRow(meal) {
   const row = document.createElement("article");
-  row.className = "card bg-base-100 shadow-sm meal-row";
+  row.className = "card bg-base-100 border border-base-300 shadow-sm meal-row";
   const itemCount = Array.isArray(meal.items) ? meal.items.length : 0;
   const preview = (meal.items || [])
     .slice(0, 3)
@@ -1500,22 +1513,24 @@ function renderConflicts() {
 
   state.syncConflicts.forEach((conflict) => {
     const card = document.createElement("article");
-    card.className = "conflict-card";
+    card.className = "card bg-base-100 border border-base-300 conflict-card";
     card.innerHTML = `
-      <h3>${escapeHtml(conflict.entityType)} ${escapeHtml(conflict.entityId)}</h3>
-      <div class="conflict-versions">
-        <div class="conflict-version">
-          <span>Local</span>
-          <pre>${escapeHtml(JSON.stringify(conflict.local, null, 2))}</pre>
+      <div class="card-body">
+        <h3 class="card-title">${escapeHtml(conflict.entityType)} ${escapeHtml(conflict.entityId)}</h3>
+        <div class="conflict-versions">
+          <div class="bg-base-200 rounded-box border border-base-300 p-3">
+            <span class="text-base-content/60 text-sm font-bold">Local</span>
+            <pre>${escapeHtml(JSON.stringify(conflict.local, null, 2))}</pre>
+          </div>
+          <div class="bg-base-200 rounded-box border border-base-300 p-3">
+            <span class="text-base-content/60 text-sm font-bold">Nuvem</span>
+            <pre>${escapeHtml(JSON.stringify(conflict.remote, null, 2))}</pre>
+          </div>
         </div>
-        <div class="conflict-version">
-          <span>Nuvem</span>
-          <pre>${escapeHtml(JSON.stringify(conflict.remote, null, 2))}</pre>
+        <div class="card-actions conflict-actions">
+          <button class="btn btn-soft" type="button" data-resolution="cloud">Usar nuvem</button>
+          <button class="btn btn-primary" type="button" data-resolution="local">Usar local</button>
         </div>
-      </div>
-      <div class="conflict-actions">
-        <button class="btn btn-soft" type="button" data-resolution="cloud">Usar nuvem</button>
-        <button class="btn btn-primary" type="button" data-resolution="local">Usar local</button>
       </div>
     `;
     card.querySelector("[data-resolution='cloud']").addEventListener("click", () => resolveConflict(conflict.id, "cloud"));
@@ -1732,7 +1747,7 @@ function renderSyncTestRows(results = []) {
   el.syncTestList.innerHTML = "";
   results.forEach((result) => {
     const row = document.createElement("div");
-    row.className = `sync-test-row is-${result.status}`;
+    row.className = `alert sync-test-row is-${result.status}`;
     row.innerHTML = `
       <span>${escapeHtml(result.name)}</span>
       <strong>${escapeHtml(result.label)}</strong>
@@ -1783,7 +1798,7 @@ async function runSyncDiagnostics() {
 
 function createPurchaseRow(purchase, index) {
   const row = document.createElement("li");
-  row.className = "purchase-row";
+  row.className = "list-row purchase-row";
   row.setAttribute("role", "button");
   row.setAttribute("tabindex", "0");
   row.setAttribute("aria-label", `Editar compra de ${formatCurrency(purchase.total)}`);
@@ -1826,7 +1841,7 @@ function createInlineActionButton(label, variant = "secondary") {
 
 function createItemInlineEditor(item = null, categoryId = "") {
   const row = document.createElement("li");
-  row.className = "inline-editor-row item-inline-editor";
+  row.className = "list-row bg-base-200 rounded-box inline-editor-row item-inline-editor";
   const form = document.createElement("form");
   form.className = "inline-editor-form";
   form.innerHTML = `
@@ -1861,7 +1876,7 @@ function createItemInlineEditor(item = null, categoryId = "") {
 
 function createPurchaseInlineEditor(purchase = null) {
   const row = document.createElement("li");
-  row.className = "inline-editor-row purchase-inline-editor";
+  row.className = "list-row bg-base-200 rounded-box inline-editor-row purchase-inline-editor";
   const form = document.createElement("form");
   form.className = "inline-editor-form purchase-inline-form";
   form.innerHTML = `
@@ -2525,20 +2540,80 @@ async function reloadAndRender() {
   render();
 }
 
+function waitForControllerChange(timeout = 2500) {
+  if (!("serviceWorker" in navigator)) return Promise.resolve(false);
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (changed) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
+      resolve(changed);
+    };
+    const onControllerChange = () => finish(true);
+    const timer = window.setTimeout(() => finish(false), timeout);
+
+    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
+  });
+}
+
+function waitForWorkerState(worker, expectedStates = ["activated"], timeout = 2500) {
+  if (!worker) return Promise.resolve(false);
+  if (expectedStates.includes(worker.state)) return Promise.resolve(true);
+
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (matched) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timer);
+      worker.removeEventListener("statechange", onStateChange);
+      resolve(matched);
+    };
+    const onStateChange = () => {
+      if (expectedStates.includes(worker.state)) finish(true);
+    };
+    const timer = window.setTimeout(() => finish(false), timeout);
+
+    worker.addEventListener("statechange", onStateChange);
+  });
+}
+
+async function updateServiceWorkers() {
+  if (!("serviceWorker" in navigator)) return;
+
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  await Promise.all(
+    registrations.map(async (registration) => {
+      const controllerChange = waitForControllerChange();
+      await registration.update();
+
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: "SKIP_WAITING" });
+        await controllerChange;
+        return;
+      }
+
+      if (registration.installing) {
+        await Promise.race([waitForWorkerState(registration.installing), controllerChange]);
+      }
+    }),
+  );
+}
+
 async function refreshApp() {
   showToast("Atualizando app...");
   await reloadAndRender();
 
   try {
-    if ("serviceWorker" in navigator) {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(registrations.map((registration) => registration.update()));
-    }
+    await updateServiceWorkers();
   } catch (error) {
     console.info("Não foi possível atualizar o service worker antes do reload.", error);
   }
 
-  window.setTimeout(() => window.location.reload(), 250);
+  window.setTimeout(() => window.location.reload(), 100);
 }
 
 function bindEvents() {

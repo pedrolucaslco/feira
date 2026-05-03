@@ -57,7 +57,7 @@ Fora do escopo neste momento:
 
 ## Decisões Técnicas
 
-A ideia inicial mencionava **Vite + React + Dexie**, mas o ambiente local não tinha `node` nem `npm` disponíveis no momento da implementação.
+A ideia inicial mencionava **Vite + React + Dexie**, mas o ambiente local não tinha `node` nem `npm` disponíveis no momento da implementação do POC.
 
 Por isso, a primeira versão foi implementada como app estático:
 
@@ -67,14 +67,16 @@ Por isso, a primeira versão foi implementada como app estático:
 - IndexedDB nativo no lugar de Dexie.
 - PWA básico com `manifest.webmanifest` e `sw.js`.
 
-Essa decisão foi tomada para não bloquear o desenvolvimento. A migração para React/Dexie continua possível quando Node estiver disponível.
+Essa decisão foi tomada para não bloquear o desenvolvimento. Atualmente existe um fluxo npm com Vite para desenvolvimento/build e CSS estático do Tailwind/DaisyUI, exigindo Node 20 ou superior. A migração para React/Dexie continua possível no futuro.
 
 ## Estrutura Atual
 
 Arquivos principais:
 
 - `index.html`: estrutura da interface.
-- `styles.css`: estilos responsivos do app.
+- `assets/app.css`: CSS estático gerado por Tailwind/DaisyUI e cacheado offline.
+- `src/app.css`: entrada do build CSS, com temas DaisyUI habilitados e safelist de classes dinâmicas.
+- `styles.css`: camada residual de layout responsivo, estados e gráficos.
 - `app.js`: lógica de estado, IndexedDB, renderização e eventos.
 - `manifest.webmanifest`: configuração PWA.
 - `sw.js`: service worker e cache offline.
@@ -83,6 +85,28 @@ Arquivos principais:
 - `icon.svg`: ícone do app.
 - `ideia.md`: documento original da ideia.
 - `CONTEXTO_PROJETO.md`: este arquivo.
+
+## Rotina de Desenvolvimento Local
+
+O servidor local é iniciado com:
+
+```bash
+npm run dev
+```
+
+Esse comando gera `assets/app.css`, mantém o Tailwind/DaisyUI em watch e sobe o Vite em:
+
+```txt
+http://localhost:5173/
+```
+
+O build de produção é:
+
+```bash
+npm run build
+```
+
+O resultado fica em `dist/`.
 
 ## Persistência
 
@@ -270,13 +294,13 @@ dark
 
 O reset do banco não apaga essa preferência visual.
 
-A aba também permite escolher a cor de destaque. A preferência é salva em `localStorage`, com a chave:
+A aba também permite escolher o tema DaisyUI usado quando o modo escuro está desligado. A preferência é salva em `localStorage`, com a chave legada:
 
 ```txt
 feira:accent
 ```
 
-As opções usam cores inspiradas no Tailwind, como emerald, green, sky, blue, purple, fuchsia, rose, amber, teal e cyan. O accent afeta tanto o modo claro quanto o modo escuro.
+As opções usam temas padrão do DaisyUI, como light, emerald, corporate, garden, cupcake, bumblebee, lofi, pastel, fantasy, wireframe e aqua. Quando `feira:theme` está em `dark`, o app usa o tema padrão `dark` do DaisyUI.
 
 A aba também permite salvar um perfil local:
 
@@ -373,31 +397,28 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v48.11
+feira-v49.0
 ```
 
-O cache foi atualizado para `feira-v48.11` para garantir que o último ajuste de versão seja entregue também para quem já está com o PWA em cache.
+O cache foi atualizado para `feira-v49.0` para forçar a troca da versão estática anterior para o pacote servido/buildado com npm/Vite e manter `assets/app.css` no precache offline.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
 ## Como Rodar
 
-Como não há Node no ambiente atual, o app roda com servidor estático via Python:
+Use Node 20 ou superior e rode:
 
 ```bash
-python3 -m http.server 5174
+npm run dev
 ```
 
-URL usada mais recentemente:
+URL de desenvolvimento:
 
 ```txt
-http://localhost:5174/
+http://localhost:5173/
 ```
 
-Observação:
-
-- A porta `5173` ficou ocupada em uma tentativa anterior.
-- A porta `5174` foi usada depois e respondeu com HTTP 200.
+Para produção, rode `npm run build` e publique `dist/`.
 
 Também é possível abrir `index.html` diretamente, mas para PWA/service worker o ideal é usar servidor local.
 
@@ -425,13 +446,13 @@ Direção visual atual:
 
 - Interface mobile-first.
 - Topbar fixa com saudação e saldo sempre visíveis.
-- Navegação inferior fixa usando DaisyUI `dock` padrão via CDN, com tema claro/escuro acompanhando o app.
+- Interface baseada no DaisyUI completo via CDN, com `dock`, `modal`, `dropdown`, `toast`, cards, inputs e temas padrão.
 - Transição animada ao trocar de aba, respeitando `prefers-reduced-motion`.
 - Modais em estilo bottom sheet com animação de subida.
 - Botões com feedback sutil ao toque.
 - Cards simples com raio de 8px.
-- Modo escuro AMOLED com base neutral e accent emerald.
-- Tema claro com fundo branco suave e accent configurável para modo claro e escuro.
+- Modo escuro usando o tema padrão `dark` do DaisyUI.
+- Tema claro configurável por temas padrão do DaisyUI.
 - Saldo sempre visível no topo.
 - Lista de mercado como tela inicial, com saldo e planejamento semanal sempre visíveis no topo.
 - FAB contextual: novo item na lista, nova refeição em refeições e nova compra em compras.
@@ -448,8 +469,8 @@ O app evita uma landing page e abre direto na experiência funcional.
 ## Pontos de Atenção
 
 - O app usa renderização manual no DOM.
-- Não há testes automatizados.
-- Não há lint/build por falta de Node.
+- Não há testes automatizados reais ainda; o script `npm test` roda Vitest com `--passWithNoTests`.
+- Há build via npm/Vite para gerar `dist/`, com CSS estático de Tailwind/DaisyUI.
 - Service worker pode manter cache antigo se a versão não for incrementada.
 - IndexedDB guarda dados por origem do navegador; mudar porta pode criar outro contexto de dados dependendo do navegador.
 
@@ -466,8 +487,7 @@ Melhorias pequenas e naturais:
 
 Evolução técnica:
 
-- Instalar Node.
-- Migrar para Vite + React + TypeScript.
+- Migrar para React + TypeScript quando fizer sentido.
 - Trocar IndexedDB manual por Dexie.
 - Separar camadas de banco, estado e UI.
 - Adicionar testes.
@@ -487,7 +507,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Aplicação de tokens personalizados do tema light do DaisyUI no CSS global para alinhar o visual base do app.
+Fluxo npm com `npm run dev` e `npm run build`, usando Vite para servir/empacotar o PWA estático e atualização de cache para `feira-v49.0`.
 ```
 
 Arquivos alterados nesse marco:

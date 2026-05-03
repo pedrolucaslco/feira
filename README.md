@@ -39,8 +39,8 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Diagnóstico de sincronização na tela de ajustes com testes unitários em sandbox isolado.
 - Estado marcado/desmarcado dos itens sincronizado entre usuários do mesmo espaço compartilhado.
 - Modo escuro com preferência salva no dispositivo.
-- Modo escuro AMOLED com accent emerald.
-- Cor de destaque configurável com opções inspiradas no Tailwind.
+- Modo escuro com tema padrão `dark` do DaisyUI.
+- Tema DaisyUI configurável para o modo claro.
 - Navegação inferior com Lucide Icons via CDN.
 - Topbar fixa com saudação, saldo total e saldo semanal sempre visíveis.
 - Animações leves ao trocar de tela.
@@ -77,16 +77,40 @@ Este repositório começou como um POC rápido e está evoluindo aos poucos. A v
 
 ## Stack atual
 
-Por enquanto, o app segue sem build e usa dependências via CDN quando necessário:
+O runtime do app continua estático e offline-first. O build existe apenas para gerar o CSS local do DaisyUI/Tailwind:
 
 - HTML
 - CSS
 - JavaScript
 - IndexedDB
 - Service Worker
-- DaisyUI via CDN para a dock inferior
+- DaisyUI/Tailwind gerados em CSS estático local
 - Supabase opcional para compartilhamento
 - Vercel
+
+## Desenvolvimento e build
+
+Use Node 20 ou superior:
+
+```bash
+nvm use
+npm install
+npm run dev
+```
+
+O comando de desenvolvimento gera `assets/app.css`, mantém o Tailwind/DaisyUI em watch e sobe o Vite. Por padrão, acesse:
+
+```txt
+http://localhost:5173/
+```
+
+Para gerar produção:
+
+```bash
+npm run build
+```
+
+O build final sai em `dist/` e inclui as páginas, service worker, manifest, ícone, `app.js`, `supabase-config.js` e o CSS estático em `dist/assets/app.css`.
 
 A ideia inicial considera uma futura migração para:
 
@@ -97,19 +121,7 @@ A ideia inicial considera uma futura migração para:
 
 ## Como rodar localmente
 
-Clone o projeto e rode um servidor estático na pasta:
-
-```bash
-python3 -m http.server 5174
-```
-
-Depois acesse:
-
-```txt
-http://localhost:5174/
-```
-
-Também é possível abrir o `index.html` diretamente, mas o servidor local é recomendado para testar melhor o comportamento de PWA/service worker.
+Use `npm run dev` para debug local. Também é possível abrir o `index.html` diretamente, mas o Vite é recomendado para testar melhor o comportamento de PWA/service worker durante a migração npm.
 
 ## Modelo de dados
 

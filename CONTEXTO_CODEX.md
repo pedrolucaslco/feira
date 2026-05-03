@@ -11,19 +11,29 @@ Antes de alterar código, leia nesta ordem:
 3. `README.md`: descrição pública do projeto e lista de funcionalidades atuais.
 4. `app.js`, `index.html`, `styles.css` e `sw.js`: implementação real.
 
-O projeto é um PWA estático, sem build:
+O projeto é um PWA estático servido e empacotado pelo Vite:
 
 - HTML puro.
-- CSS puro.
+- CSS residual próprio + CSS estático gerado por Tailwind/DaisyUI.
 - JavaScript puro.
 - IndexedDB nativo.
 - Service worker com cache offline.
 - Lucide Icons via CDN.
+- npm usado para gerar Tailwind/DaisyUI estático local e rodar Vite.
+
+## Servidor Local e Build
+
+- `npm run dev`: gera o CSS, mantém Tailwind/DaisyUI em watch e sobe Vite.
+- `npm run build`: gera o CSS e monta `dist/` com os arquivos de produção.
+- `npm run preview`: serve `dist/` para validação local de produção.
+- O app continua sem React/TypeScript no runtime.
 
 ## Arquivos Principais
 
 - `index.html`: estrutura das telas, modais, botões, navegação e textos visíveis.
-- `styles.css`: layout mobile-first, tema claro/escuro, accent colors, cards, modais, lista, gráficos e responsividade.
+- `assets/app.css`: CSS estático gerado por Tailwind/DaisyUI. Deve ser regenerado com `npm run build:css` quando classes DaisyUI/Tailwind mudarem.
+- `src/app.css`: entrada do build CSS com `@import "tailwindcss"`, plugin DaisyUI, temas habilitados e safelist de classes dinâmicas.
+- `styles.css`: camada residual de layout mobile-first, estados, gráficos e responsividade.
 - `app.js`: estado, IndexedDB, regras de negócio, renderização manual, eventos, formulários, modais, drag and drop e PWA refresh.
 - `sw.js`: service worker, lista de assets cacheados e versão do cache.
 - `supabase-config.js`: configuração pública opcional do Supabase (`url` e `anonKey`).
@@ -134,7 +144,7 @@ Já existem no app:
 - Registro, edição e remoção de compras via modal.
 - Histórico e gráfico simples de compras.
 - Budget mensal e dia de fechamento do cartão.
-- Perfil local, avatar, saudação, modo escuro e accent configurável.
+- Perfil local, avatar, saudação, modo escuro e tema DaisyUI configurável.
 - Reset local e atualização manual do app.
 - PWA com service worker e cache.
 
@@ -183,32 +193,32 @@ Regra prática:
 1. Rodar `git status --short` e preservar mudanças existentes.
 2. Ler os arquivos de contexto e confirmar o último cache em `sw.js`.
 3. Implementar a funcionalidade nos arquivos do app.
-4. Se `index.html`, `styles.css`, `app.js`, `manifest.webmanifest` ou `icon.svg` mudarem, incrementar `CACHE_NAME` em `sw.js`.
+4. Se `index.html`, `assets/app.css`, `styles.css`, `app.js`, `manifest.webmanifest` ou `icon.svg` mudarem, incrementar `CACHE_NAME` em `sw.js`.
 5. Atualizar `CONTEXTO_PROJETO.md` com:
    - funcionalidade implementada;
    - cache atual;
    - último marco;
    - arquivos alterados.
 6. Atualizar `README.md` se a funcionalidade for visível, pública ou remover um próximo passo.
-7. Rodar um servidor estático somente quando for necessário ou quando o usuário pedir:
+7. Rodar o servidor Vite somente quando for necessário ou quando o usuário pedir:
 
 ```bash
-python3 -m http.server 5174
+npm run dev
 ```
 
 URL esperada:
 
 ```txt
-http://localhost:5174/
+http://localhost:5173/
 ```
 
 8. Fazer verificação manual no navegador quando possível e solicitado, especialmente em alterações de UI/PWA.
 
 ## Observações Importantes
 
-- Não há testes automatizados.
-- Não há lint/build configurado.
-- Evitar dependências novas enquanto o projeto seguir sem Node/npm.
+- Não há testes automatizados reais ainda; `npm test` usa Vitest com `--passWithNoTests` para não bloquear a migração.
+- O build configurado hoje é `npm run build`, que gera `assets/app.css` e monta `dist/`.
+- TypeScript/Vite/React ainda não são o runtime do app; a migração continua pendente.
 - O app é mobile-first; validar telas pequenas antes de considerar pronto.
 - IndexedDB e service worker podem manter dados/cache antigos por origem.
 - Mudar porta no servidor local pode alterar o contexto de dados no navegador.

@@ -15,11 +15,14 @@
             : window.matchMedia("(prefers-color-scheme: dark)").matches
               ? "dark"
               : "light";
-        document.documentElement.dataset.theme = theme;
-        document.documentElement.dataset.accent = localStorage.getItem("feira:accent") || "emerald";
+        const daisyThemes = ["light", "emerald", "corporate", "garden", "cupcake", "bumblebee", "lofi", "pastel", "fantasy", "wireframe", "aqua"];
+        const storedDaisyTheme = localStorage.getItem("feira:accent");
+        const daisyTheme = daisyThemes.includes(storedDaisyTheme) ? storedDaisyTheme : "emerald";
+        document.documentElement.dataset.theme = theme === "dark" ? "dark" : daisyTheme;
+        document.documentElement.dataset.accent = daisyTheme;
       })();
     </script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/base/reset.css,npm/daisyui@5/base/properties.css,npm/daisyui@5/base/svg.css,npm/daisyui@5/components/badge.css,npm/daisyui@5/components/button.css,npm/daisyui@5/components/card.css,npm/daisyui@5/components/checkbox.css,npm/daisyui@5/components/dock.css,npm/daisyui@5/components/collapse.css,npm/daisyui@5/components/fieldset.css,npm/daisyui@5/components/list.css,npm/daisyui@5/components/input.css,npm/daisyui@5/components/label.css,npm/daisyui@5/components/navbar.css,npm/daisyui@5/components/select.css,npm/daisyui@5/theme/light.css,npm/daisyui@5/theme/dark.css" />
+    <link rel="stylesheet" href="./assets/app.css" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -27,13 +30,13 @@
       <header class="navbar topbar">
         <div class="navbar-start brand">
           <div class="brand-copy">
-            <div class="space-switcher-wrap">
-              <button class="space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="true" aria-expanded="false">
+            <div class="dropdown space-switcher-wrap">
+              <button class="btn btn-ghost space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="true" aria-expanded="false">
                 <strong id="activeSpaceName">Espaço local</strong>
                 <i data-lucide="chevron-down" aria-hidden="true"></i>
               </button>
-              <div class="space-menu" id="spaceMenu" hidden>
-                <div id="spaceMenuList"></div>
+              <div class="dropdown-content z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-2 shadow" id="spaceMenu" hidden>
+                <ul class="menu" id="spaceMenuList"></ul>
               </div>
             </div>
             <span class="sync-status" id="syncStatusLabel">Local</span>
@@ -55,7 +58,7 @@
       </header>
 
       <main>
-        <section class="conflict-banner" id="conflictBanner" hidden>
+        <section class="alert alert-warning conflict-banner" id="conflictBanner" hidden>
           <div>
             <strong>Conflitos de sincronização</strong>
             <span>Escolha qual versão manter para continuar sincronizando.</span>
@@ -69,15 +72,19 @@
               <h2 id="fullListTitle">Lista de compras</h2>
               <span id="itemCountLabel" class="badge badge-soft soft-label">0 itens</span>
             </div>
-            <div class="list-menu-wrap">
+            <div class="dropdown dropdown-end list-menu-wrap">
               <button class="btn btn-ghost btn-square" id="listMenuButton" type="button" aria-label="Abrir opções da lista" aria-expanded="false">
                 <i data-lucide="ellipsis" aria-hidden="true"></i>
               </button>
-              <div class="list-menu" id="listMenu" hidden>
-                <button class="btn btn-ghost" type="button" id="openCategoryDialogButton">
-                  <i data-lucide="plus" aria-hidden="true"></i>
-                  Adicionar seção
-                </button>
+              <div class="dropdown-content z-10 mt-2 w-52 rounded-box border border-base-300 bg-base-100 p-2 shadow" id="listMenu" hidden>
+                <ul class="menu">
+                  <li>
+                    <button type="button" id="openCategoryDialogButton">
+                      <i data-lucide="plus" aria-hidden="true"></i>
+                      Adicionar seção
+                    </button>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
@@ -216,7 +223,7 @@
                 <div class="settings-row settings-row-toggle">
                   <div class="settings-row-main">
                     <label class="settings-inline-check" for="themeToggle">
-                      <input class="checkbox checkbox-primary checkbox-sm" id="themeToggle" type="checkbox" role="switch" aria-label="Ativar modo escuro" />
+                      <input class="toggle toggle-primary toggle-sm" id="themeToggle" type="checkbox" role="switch" aria-label="Ativar modo escuro" />
                       <span id="themeTitle">Modo escuro</span>
                     </label>
                     <p>Cores neste dispositivo</p>
@@ -224,21 +231,22 @@
                 </div>
                 <div class="settings-row">
                   <div class="settings-row-main">
-                    <h3 id="accentTitle" class="card-title">Cor de destaque</h3>
-                    <p>Botões e indicadores</p>
+                    <h3 id="accentTitle" class="card-title">Tema DaisyUI</h3>
+                    <p>Usado quando o modo escuro está desligado</p>
                   </div>
                   <div class="settings-row-control">
-                    <select class="select accent-select" id="accentColorInput" name="accentColor" aria-label="Cor de destaque">
+                    <select class="select accent-select" id="accentColorInput" name="accentColor" aria-label="Tema DaisyUI">
+                      <option value="light">Light</option>
                       <option value="emerald">Emerald</option>
-                      <option value="green">Green</option>
-                      <option value="sky">Sky</option>
-                      <option value="blue">Blue</option>
-                      <option value="purple">Purple</option>
-                      <option value="fuchsia">Fuchsia</option>
-                      <option value="rose">Rose</option>
-                      <option value="amber">Amber</option>
-                      <option value="teal">Teal</option>
-                      <option value="cyan">Cyan</option>
+                      <option value="corporate">Corporate</option>
+                      <option value="garden">Garden</option>
+                      <option value="cupcake">Cupcake</option>
+                      <option value="bumblebee">Bumblebee</option>
+                      <option value="lofi">Lofi</option>
+                      <option value="pastel">Pastel</option>
+                      <option value="fantasy">Fantasy</option>
+                      <option value="wireframe">Wireframe</option>
+                      <option value="aqua">Aqua</option>
                     </select>
                   </div>
                 </div>
@@ -391,14 +399,16 @@
       </button>
     </div>
 
-    <dialog class="checkout-dialog" id="checkoutDialog">
-      <form id="checkoutForm">
+    <dialog class="modal modal-top checkout-dialog" id="checkoutDialog">
+      <form class="modal-box checkout-form" id="checkoutForm">
         <div class="dialog-head">
           <div>
             <p class="eyebrow">Compras</p>
             <h2 id="checkoutDialogTitle">Registrar compra</h2>
           </div>
-          <button class="btn btn-ghost btn-square" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">×</button>
+          <button class="btn btn-ghost btn-square" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
         </div>
         <label class="label" for="purchaseName">Nome da compra</label>
         <input class="input" id="purchaseName" name="name" autocomplete="off" placeholder="Compra do mercado" />
@@ -407,21 +417,23 @@
         <label class="label" for="purchaseTotal">Valor pago</label>
         <input class="input" id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
         <button class="btn btn-error btn-ghost" id="deletePurchaseButton" type="button" hidden>Excluir compra</button>
-        <div class="dialog-actions">
+        <div class="modal-action dialog-actions">
           <button class="btn btn-soft" id="cancelCheckoutButton" value="cancel" type="button">Cancelar</button>
           <button class="btn btn-primary" id="savePurchaseButton" value="confirm" type="submit">Salvar</button>
         </div>
       </form>
     </dialog>
 
-    <dialog class="item-dialog" id="itemDialog">
-      <form id="itemForm">
+    <dialog class="modal modal-top item-dialog" id="itemDialog">
+      <form class="modal-box item-form" id="itemForm">
         <div class="dialog-head">
           <div>
             <p class="eyebrow">Lista</p>
             <h2 id="itemDialogTitle">Novo item</h2>
           </div>
-          <button class="btn btn-ghost btn-square" id="closeItemDialogButton" type="button" aria-label="Fechar">×</button>
+          <button class="btn btn-ghost btn-square" id="closeItemDialogButton" type="button" aria-label="Fechar">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
         </div>
         <label class="label" for="itemName">Item</label>
         <input class="input" id="itemName" name="name" autocomplete="off" placeholder="Arroz" required />
@@ -430,25 +442,27 @@
         <label class="label" for="itemCategory">Seção</label>
         <select class="select" id="itemCategory" name="categoryId"></select>
         <button class="btn btn-error btn-ghost" id="deleteItemButton" type="button" hidden>Excluir item</button>
-        <div class="dialog-actions">
+        <div class="modal-action dialog-actions">
           <button class="btn btn-soft" id="cancelItemDialogButton" type="button">Cancelar</button>
           <button class="btn btn-primary" id="saveItemButton" type="submit">Adicionar</button>
         </div>
       </form>
     </dialog>
 
-    <dialog class="item-dialog" id="categoryDialog">
-      <form id="categoryForm">
+    <dialog class="modal modal-top item-dialog" id="categoryDialog">
+      <form class="modal-box item-form" id="categoryForm">
         <div class="dialog-head">
           <div>
             <p class="eyebrow">Lista</p>
             <h2>Adicionar seção</h2>
           </div>
-          <button class="btn btn-ghost btn-square" id="closeCategoryDialogButton" type="button" aria-label="Fechar">×</button>
+          <button class="btn btn-ghost btn-square" id="closeCategoryDialogButton" type="button" aria-label="Fechar">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
         </div>
         <label class="label" for="categoryNameInput">Seção personalizada</label>
         <input class="input" id="categoryNameInput" name="category" autocomplete="off" placeholder="Ex.: Congelados" />
-        <fieldset class="fieldset preset-grid">
+        <fieldset class="fieldset preset-grid bg-base-200 rounded-box border border-base-300 p-3">
           <legend class="fieldset-legend">Sugestões rápidas</legend>
           <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Frutas" /> Frutas</label>
           <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Verduras" /> Verduras</label>
@@ -459,21 +473,23 @@
           <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Limpeza" /> Limpeza</label>
           <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Mercearia" /> Mercearia</label>
         </fieldset>
-        <div class="dialog-actions">
+        <div class="modal-action dialog-actions">
           <button class="btn btn-soft" id="cancelCategoryDialogButton" type="button">Cancelar</button>
           <button class="btn btn-primary" type="submit">Adicionar</button>
         </div>
       </form>
     </dialog>
 
-    <dialog class="item-dialog meal-dialog" id="mealDialog">
-      <form id="mealForm">
+    <dialog class="modal modal-top item-dialog meal-dialog" id="mealDialog">
+      <form class="modal-box item-form" id="mealForm">
         <div class="dialog-head">
           <div>
             <p class="eyebrow">Refeições</p>
             <h2 id="mealDialogTitle">Nova refeição</h2>
           </div>
-          <button class="btn btn-ghost btn-square" id="closeMealDialogButton" type="button" aria-label="Fechar">×</button>
+          <button class="btn btn-ghost btn-square" id="closeMealDialogButton" type="button" aria-label="Fechar">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
         </div>
         <label class="label" for="mealName">Nome da refeição</label>
         <input class="input" id="mealName" name="name" autocomplete="off" placeholder="Ex.: Strogonoff" required />
@@ -486,27 +502,31 @@
         </div>
         <div class="meal-items-editor" id="mealItemsEditor"></div>
         <button class="btn btn-error btn-ghost" id="deleteMealButton" type="button" hidden>Excluir refeição</button>
-        <div class="dialog-actions">
+        <div class="modal-action dialog-actions">
           <button class="btn btn-soft" id="cancelMealDialogButton" type="button">Cancelar</button>
           <button class="btn btn-primary" id="saveMealButton" type="submit">Adicionar</button>
         </div>
       </form>
     </dialog>
 
-    <dialog class="item-dialog" id="conflictDialog">
-      <div>
+    <dialog class="modal modal-top item-dialog" id="conflictDialog">
+      <div class="modal-box">
         <div class="dialog-head">
           <div>
             <p class="eyebrow">Sincronização</p>
             <h2>Resolver conflitos</h2>
           </div>
-          <button class="btn btn-ghost btn-square" id="closeConflictDialogButton" type="button" aria-label="Fechar">×</button>
+          <button class="btn btn-ghost btn-square" id="closeConflictDialogButton" type="button" aria-label="Fechar">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
         </div>
         <div class="conflict-list" id="conflictList"></div>
       </div>
     </dialog>
 
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="toast toast-top toast-center app-toast">
+      <div class="alert alert-info" id="toast" role="status" aria-live="polite"></div>
+    </div>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="./supabase-config.js" defer></script>
