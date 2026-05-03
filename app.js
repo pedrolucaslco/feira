@@ -521,6 +521,18 @@ function deriveSyncStatus({ isShared = true, isRunning = false, outbox = [], con
   return "synced";
 }
 
+function isEntityTypeConstraintError(error) {
+  const message = `${error?.message || ""} ${error?.details || ""} ${error?.hint || ""}`;
+  return /space_records_entity_type_check|entity_type|check constraint/i.test(message);
+}
+
+function syncErrorMessage(error, operation) {
+  if (operation?.entityType === "meal" && isEntityTypeConstraintError(error)) {
+    return "Atualize o SQL do Supabase para aceitar refeições na sincronização.";
+  }
+  return "Erro ao sincronizar operação.";
+}
+
 async function enqueueSync(storeName, value, action = "upsert") {
   const space = activeSpace();
   if (!isSharedSpace(space) || !STORE_TO_ENTITY[storeName]) return;
@@ -1429,6 +1441,7 @@ async function syncNow() {
       });
       if (error) {
         console.info("Erro ao sincronizar operação.", error);
+        showToast(syncErrorMessage(error, operation));
         state.syncStatus = navigator.onLine ? "offline" : "offline";
         failed = true;
         break;
