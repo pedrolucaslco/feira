@@ -373,10 +373,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v43
+feira-v48.9
 ```
 
-O cache foi atualizado para `feira-v43` depois de adicionar espaços compartilháveis, configuração Supabase e camada inicial de sincronização offline-first.
+O cache foi atualizado para `feira-v48.9` após ajustes no tema claro com tokens personalizados do DaisyUI em `styles.css`.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -487,7 +487,7 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Diagnóstico de sincronização em Ajustes com testes sandboxados e correção para evitar conflitos falsos em dados equivalentes.
+Aplicação de tokens personalizados do tema light do DaisyUI no CSS global para alinhar o visual base do app.
 ```
 
 Arquivos alterados nesse marco:
