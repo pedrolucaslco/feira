@@ -19,7 +19,7 @@
         document.documentElement.dataset.accent = localStorage.getItem("feira:accent") || "emerald";
       })();
     </script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/base/reset.css,npm/daisyui@5/base/properties.css,npm/daisyui@5/base/svg.css,npm/daisyui@5/components/badge.css,npm/daisyui@5/components/button.css,npm/daisyui@5/components/card.css,npm/daisyui@5/components/checkbox.css,npm/daisyui@5/components/dock.css,npm/daisyui@5/components/fieldset.css,npm/daisyui@5/components/input.css,npm/daisyui@5/components/label.css,npm/daisyui@5/components/navbar.css,npm/daisyui@5/components/select.css,npm/daisyui@5/theme/light.css,npm/daisyui@5/theme/dark.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/combine/npm/daisyui@5/base/reset.css,npm/daisyui@5/base/properties.css,npm/daisyui@5/base/svg.css,npm/daisyui@5/components/badge.css,npm/daisyui@5/components/button.css,npm/daisyui@5/components/card.css,npm/daisyui@5/components/checkbox.css,npm/daisyui@5/components/dock.css,npm/daisyui@5/components/collapse.css,npm/daisyui@5/components/fieldset.css,npm/daisyui@5/components/list.css,npm/daisyui@5/components/input.css,npm/daisyui@5/components/label.css,npm/daisyui@5/components/navbar.css,npm/daisyui@5/components/select.css,npm/daisyui@5/theme/light.css,npm/daisyui@5/theme/dark.css" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -427,6 +427,8 @@
         <input class="input" id="itemName" name="name" autocomplete="off" placeholder="Arroz" required />
         <label class="label" for="itemQuantity">Quantidade</label>
         <input class="input" id="itemQuantity" name="quantity" autocomplete="off" placeholder="2 kg" />
+        <label class="label" for="itemCategory">Seção</label>
+        <select class="select" id="itemCategory" name="categoryId"></select>
         <button class="btn btn-error btn-ghost" id="deleteItemButton" type="button" hidden>Excluir item</button>
         <div class="dialog-actions">
           <button class="btn btn-soft" id="cancelItemDialogButton" type="button">Cancelar</button>
