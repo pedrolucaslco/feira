@@ -162,163 +162,209 @@
           <p class="empty-state" id="emptyMeals">Nenhuma refeição criada.</p>
         </section>
 
-        <section id="settingsView" class="view" aria-labelledby="settingsTitle">
+        <section id="settingsView" class="view bg-base-200 settings-view-surface" aria-labelledby="settingsTitle">
           <div class="section-head">
             <div>
               <h2 id="settingsTitle">Ajustes</h2>
             </div>
           </div>
 
-          <p class="settings-group-label">Usuário</p>
-          <form class="card bg-base-100 shadow-sm profile-form" id="profileForm">
-            <div class="card-body">
-              <label class="label" for="userNameInput">Nome</label>
-              <input class="input" id="userNameInput" name="name" autocomplete="name" placeholder="Seu nome" />
-              <button class="btn btn-primary" type="submit">Salvar perfil</button>
-            </div>
-          </form>
-
-          <p class="settings-group-label">Orçamento</p>
-          <form class="card bg-base-100 shadow-sm budget-form" id="budgetForm">
-            <div class="card-body">
-              <div class="settings-fields">
-                <div class="settings-field">
-                  <label class="label" for="budgetInput">Orçamento mensal</label>
-                  <input class="input" id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
+          <div class="settings-stack">
+            <p class="settings-group-label">Perfil</p>
+            <form class="card bg-base-100 border border-base-300 settings-section profile-form" id="profileForm">
+              <div class="card-body">
+                <div class="settings-row settings-row-inline">
+                  <div class="settings-row-main">
+                    <label class="label" for="userNameInput">Nome</label>
+                    <input class="input" id="userNameInput" name="name" autocomplete="name" placeholder="Seu nome" />
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-primary btn-square btn-sm" type="submit" aria-label="Salvar perfil" title="Salvar perfil">
+                      <i data-lucide="save" aria-hidden="true"></i>
+                    </button>
+                  </div>
                 </div>
-                <div class="settings-field">
-                  <label class="label" for="cardClosingDayInput">Fechamento do cartão</label>
-                  <input class="input" id="cardClosingDayInput" name="cardClosingDay" type="number" min="1" max="31" inputmode="numeric" autocomplete="off" placeholder="Dia" />
+              </div>
+            </form>
+
+            <p class="settings-group-label">Financeiro</p>
+            <form class="card bg-base-100 border border-base-300 settings-section budget-form" id="budgetForm">
+              <div class="card-body">
+                <div class="settings-row settings-row-inline">
+                  <div class="settings-row-main">
+                    <label class="label" for="budgetInput">Orçamento mensal</label>
+                    <input class="input" id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
+                  </div>
                 </div>
-                <button class="btn btn-primary" type="submit">Salvar</button>
-              </div>
-            </div>
-          </form>
-
-          <p class="settings-group-label">Interface</p>
-          <section class="card bg-base-100 shadow-sm settings-card" aria-labelledby="themeTitle">
-            <div class="card-body settings-card-body">
-              <div>
-                <h3 id="themeTitle" class="card-title">Modo escuro</h3>
-                <p>Cores neste dispositivo.</p>
-              </div>
-              <label class="theme-switch" for="themeToggle">
-                <input id="themeToggle" type="checkbox" role="switch" aria-label="Ativar modo escuro" />
-                <span aria-hidden="true"></span>
-              </label>
-            </div>
-          </section>
-
-          <section class="card bg-base-100 shadow-sm settings-card" aria-labelledby="accentTitle">
-            <div class="card-body settings-card-body">
-              <div>
-                <h3 id="accentTitle" class="card-title">Cor de destaque</h3>
-                <p>Botões e indicadores.</p>
-              </div>
-              <select class="select accent-select" id="accentColorInput" name="accentColor" aria-label="Cor de destaque">
-                <option value="emerald">Emerald</option>
-                <option value="green">Green</option>
-                <option value="sky">Sky</option>
-                <option value="blue">Blue</option>
-                <option value="purple">Purple</option>
-                <option value="fuchsia">Fuchsia</option>
-                <option value="rose">Rose</option>
-                <option value="amber">Amber</option>
-                <option value="teal">Teal</option>
-                <option value="cyan">Cyan</option>
-              </select>
-            </div>
-          </section>
-
-          <section class="card bg-base-100 shadow-sm settings-card" aria-labelledby="editorModeTitle">
-            <div class="card-body settings-card-body">
-              <div>
-                <h3 id="editorModeTitle" class="card-title">Edição</h3>
-                <p>Itens e compras.</p>
-              </div>
-              <select class="select accent-select" id="editorModeInput" name="editorMode" aria-label="Modo de edição">
-                <option value="modal">Modal</option>
-                <option value="inline">Inline</option>
-              </select>
-            </div>
-          </section>
-
-          <p class="settings-group-label">Espaço</p>
-          <section class="card bg-base-100 shadow-sm settings-card share-settings" aria-labelledby="spacesTitle">
-            <div class="card-body share-settings-body">
-              <div>
-                <h3 id="spacesTitle" class="card-title">Espaços</h3>
-                <p>Compartilhe por código.</p>
-              </div>
-              <form class="compact-form" id="createSpaceForm">
-                <label class="label" for="createSpaceNameInput">Novo espaço</label>
-                <div class="input-row">
-                  <input class="input input-sm" id="createSpaceNameInput" name="name" autocomplete="off" placeholder="Ex.: Casa" />
-                  <button class="btn btn-soft" type="submit">Criar</button>
+                <div class="settings-row settings-row-inline">
+                  <div class="settings-row-main">
+                    <label class="label" for="cardClosingDayInput">Fechamento do cartão</label>
+                    <input class="input" id="cardClosingDayInput" name="cardClosingDay" type="number" min="1" max="31" inputmode="numeric" autocomplete="off" placeholder="Dia" />
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-primary btn-square btn-sm" type="submit" aria-label="Salvar orçamento" title="Salvar orçamento">
+                      <i data-lucide="save" aria-hidden="true"></i>
+                    </button>
+                  </div>
                 </div>
-              </form>
-              <form class="compact-form" id="joinSpaceForm">
-                <label class="label" for="joinSpaceCodeInput">Entrar por código</label>
-                <div class="input-row">
-                  <input class="input input-sm" id="joinSpaceCodeInput" name="code" autocomplete="off" autocapitalize="characters" placeholder="ABC123" />
-                  <button class="btn btn-soft" type="submit">Entrar</button>
+              </div>
+            </form>
+
+            <p class="settings-group-label">Aparência</p>
+            <section class="card bg-base-100 border border-base-300 settings-section settings-card" aria-labelledby="themeTitle">
+              <div class="card-body">
+                <div class="settings-row settings-row-toggle">
+                  <div class="settings-row-main">
+                    <label class="settings-inline-check" for="themeToggle">
+                      <input class="checkbox checkbox-primary checkbox-sm" id="themeToggle" type="checkbox" role="switch" aria-label="Ativar modo escuro" />
+                      <span id="themeTitle">Modo escuro</span>
+                    </label>
+                    <p>Cores neste dispositivo</p>
+                  </div>
                 </div>
-              </form>
-            </div>
-          </section>
+                <div class="settings-row">
+                  <div class="settings-row-main">
+                    <h3 id="accentTitle" class="card-title">Cor de destaque</h3>
+                    <p>Botões e indicadores</p>
+                  </div>
+                  <div class="settings-row-control">
+                    <select class="select accent-select" id="accentColorInput" name="accentColor" aria-label="Cor de destaque">
+                      <option value="emerald">Emerald</option>
+                      <option value="green">Green</option>
+                      <option value="sky">Sky</option>
+                      <option value="blue">Blue</option>
+                      <option value="purple">Purple</option>
+                      <option value="fuchsia">Fuchsia</option>
+                      <option value="rose">Rose</option>
+                      <option value="amber">Amber</option>
+                      <option value="teal">Teal</option>
+                      <option value="cyan">Cyan</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row-main">
+                    <h3 id="editorModeTitle" class="card-title">Edição</h3>
+                    <p>Itens e compras</p>
+                  </div>
+                  <div class="settings-row-control">
+                    <select class="select accent-select" id="editorModeInput" name="editorMode" aria-label="Modo de edição">
+                      <option value="modal">Modal</option>
+                      <option value="inline">Inline</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-          <section class="card bg-base-100 shadow-sm settings-card share-settings" id="shareSpaceCard" aria-labelledby="currentSpaceTitle" hidden>
-            <div class="card-body share-settings-body">
-              <div>
-                <h3 id="currentSpaceTitle" class="card-title">Espaço atual</h3>
-                <p>Código de convite.</p>
+            <p class="settings-group-label">Compartilhamento</p>
+            <section class="card bg-base-100 border border-base-300 settings-section settings-card share-settings" aria-labelledby="spacesTitle">
+              <div class="card-body">
+                <div class="settings-row">
+                  <div class="settings-row-main">
+                    <h3 id="spacesTitle" class="card-title">Espaços</h3>
+                    <p>Compartilhe por código</p>
+                  </div>
+                </div>
+                <form class="settings-row settings-row-inline compact-form" id="createSpaceForm">
+                  <div class="settings-row-main">
+                    <label class="label" for="createSpaceNameInput">Novo espaço</label>
+                    <input class="input input-sm" id="createSpaceNameInput" name="name" autocomplete="off" placeholder="Ex.: Casa" />
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-square btn-sm" type="submit" aria-label="Criar espaço" title="Criar espaço">
+                      <i data-lucide="plus" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </form>
+                <form class="settings-row settings-row-inline compact-form" id="joinSpaceForm">
+                  <div class="settings-row-main">
+                    <label class="label" for="joinSpaceCodeInput">Entrar por código</label>
+                    <input class="input input-sm" id="joinSpaceCodeInput" name="code" autocomplete="off" autocapitalize="characters" placeholder="ABC123" />
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-square btn-sm" type="submit" aria-label="Entrar no espaço" title="Entrar no espaço">
+                      <i data-lucide="log-in" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </form>
               </div>
-              <label class="label" for="currentSpaceNameInput">Nome do espaço</label>
-              <div class="input-row">
-                <input class="input input-sm" id="currentSpaceNameInput" name="spaceName" autocomplete="off" />
-                <button class="btn btn-soft" id="renameSpaceButton" type="button">Salvar</button>
-              </div>
-              <label class="label" for="inviteCodeInput">Código de convite</label>
-              <div class="input-row">
-                <input class="input input-sm" id="inviteCodeInput" name="inviteCode" readonly />
-                <button class="btn btn-soft" id="copyInviteButton" type="button">Copiar</button>
-              </div>
-            </div>
-          </section>
+            </section>
 
-          <p class="settings-group-label">App</p>
-          <section class="card bg-base-100 shadow-sm settings-card" aria-labelledby="refreshAppTitle">
-            <div class="card-body settings-card-body">
-              <div>
-                <h3 id="refreshAppTitle" class="card-title">Atualizar app</h3>
-                <p>Busca a versão recente.</p>
+            <section class="card bg-base-100 border border-base-300 settings-section settings-card share-settings" id="shareSpaceCard" aria-labelledby="currentSpaceTitle" hidden>
+              <div class="card-body">
+                <div class="settings-row">
+                  <div class="settings-row-main">
+                    <h3 id="currentSpaceTitle" class="card-title">Espaço atual</h3>
+                    <p>Código de convite</p>
+                  </div>
+                </div>
+                <div class="settings-row settings-row-inline">
+                  <div class="settings-row-main">
+                    <label class="label" for="currentSpaceNameInput">Nome do espaço</label>
+                    <input class="input input-sm" id="currentSpaceNameInput" name="spaceName" autocomplete="off" />
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-square btn-sm" id="renameSpaceButton" type="button" aria-label="Salvar nome do espaço" title="Salvar nome do espaço">
+                      <i data-lucide="save" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="settings-row settings-row-inline">
+                  <div class="settings-row-main">
+                    <label class="label" for="inviteCodeInput">Código de convite</label>
+                    <input class="input input-sm" id="inviteCodeInput" name="inviteCode" readonly />
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-square btn-sm" id="copyInviteButton" type="button" aria-label="Copiar código de convite" title="Copiar código de convite">
+                      <i data-lucide="copy" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <button class="btn btn-soft" id="manualRefreshButton" type="button">Atualizar</button>
-            </div>
-          </section>
+            </section>
 
-          <p class="settings-group-label">Diagnóstico</p>
-          <section class="card bg-base-100 shadow-sm settings-card sync-test-card" aria-labelledby="syncTestTitle">
-            <div class="card-body sync-test-card-body">
-              <div>
-                <h3 id="syncTestTitle" class="card-title">Testes de sincronização</h3>
-                <p>Valida conflitos e status sem alterar seus dados.</p>
+            <p class="settings-group-label">Sistema</p>
+            <section class="card bg-base-100 border border-base-300 settings-section settings-card" aria-labelledby="refreshAppTitle">
+              <div class="card-body">
+                <div class="settings-row settings-row-inline">
+                  <div class="settings-row-main">
+                    <h3 id="refreshAppTitle" class="card-title">Atualizar app</h3>
+                    <p>Busca a versão recente</p>
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-square btn-sm" id="manualRefreshButton" type="button" aria-label="Atualizar app" title="Atualizar app">
+                      <i data-lucide="refresh-cw" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="settings-row settings-row-inline sync-test-card" aria-labelledby="syncTestTitle">
+                  <div class="settings-row-main">
+                    <h3 id="syncTestTitle" class="card-title">Testes de sincronização</h3>
+                    <p>Valida conflitos e status sem alterar seus dados</p>
+                    <div class="sync-test-summary" id="syncTestSummary">Aguardando execução.</div>
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-square btn-sm" id="runSyncTestsButton" type="button" aria-label="Rodar testes de sincronização" title="Rodar testes de sincronização">
+                      <i data-lucide="play" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <div class="sync-test-list" id="syncTestList" aria-live="polite"></div>
+                </div>
+                <div class="settings-row settings-row-inline danger-zone" aria-labelledby="resetTitle">
+                  <div class="settings-row-main">
+                    <h3 id="resetTitle" class="card-title">Resetar dados</h3>
+                    <p>Apaga dados locais</p>
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-error btn-square btn-sm" id="resetDatabaseButton" type="button" aria-label="Resetar dados" title="Resetar dados">
+                      <i data-lucide="trash-2" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <button class="btn btn-soft" id="runSyncTestsButton" type="button">Rodar testes</button>
-              <div class="sync-test-summary" id="syncTestSummary">Aguardando execução.</div>
-              <div class="sync-test-list" id="syncTestList" aria-live="polite"></div>
-            </div>
-          </section>
-
-          <section class="card bg-base-100 shadow-sm danger-zone" aria-labelledby="resetTitle">
-            <div class="card-body danger-zone-body">
-              <div>
-                <h3 id="resetTitle" class="card-title">Resetar dados</h3>
-                <p>Apaga dados locais.</p>
-              </div>
-              <button class="btn btn-error" id="resetDatabaseButton" type="button">Resetar</button>
-            </div>
-          </section>
+            </section>
+          </div>
         </section>
       </main>
 
