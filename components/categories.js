@@ -26,7 +26,7 @@ function renderCategorySections() {
           </div>
           
         </div>
-        <div class="collapse-content">
+        <div class="collapse-content p-0">
           <ul class="list category-items" id="${listId}"></ul>
         </div>
       </div>

@@ -59,7 +59,7 @@ h2 { margin-bottom: 0; font-size: clamp(1.45rem, 5vw, 2.4rem); font-weight: 850;
 .category-head-main { display: flex; align-items: center; gap: 0.5rem; min-width: 0; justify-content: space-between;}
 .category-items { list-style: none; }
 .category-empty, .empty-state { display: none; }
-.category-empty { display: block; padding: 0.85rem; border: 1px dashed var(--color-base-300); border-radius: var(--radius-box); }
+.category-empty { display: block; padding: 0.85rem; border-radius: var(--radius-box); }
 .empty-state.is-visible { display: block; margin-top: 0.75rem; }
 .item-row, .purchase-row { cursor: pointer; }
 .item-row.is-checked .item-main strong { color: color-mix(in oklch, var(--color-base-content) 52%, transparent); text-decoration: line-through; text-decoration-thickness: 2px; }

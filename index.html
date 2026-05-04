@@ -104,8 +104,8 @@
             </button>
           </div>
 
-          <section class="card bg-base-100 shadow-sm period-card" aria-labelledby="purchasePeriodTitle">
-            <div class="card-body period-card-body">
+          <section class="card bg-base-100 shadow-sm content-block" aria-labelledby="purchasePeriodTitle">
+            <div class="card-body">
               <div>
                 <span>Período atual</span>
                 <strong id="purchasePeriodTitle">Mês atual</strong>
@@ -117,8 +117,7 @@
             </div>
           </section>
 
-          <div class="metrics-grid report-grid">
-            <article class="card bg-base-100 shadow-sm metric">
+          <section class="card bg-base-100 shadow-sm content-block">
               <div class="card-body">
                 <span>Gasto / Orçamento</span>
                 <strong class="spent-budget-ratio" id="spentBudgetRatio">
@@ -127,14 +126,13 @@
                   <small id="spentBudgetTotal">R$ 0,00</small>
                 </strong>
               </div>
-            </article>
-          </div>
+            </section>
 
           <section class="card bg-base-100 shadow-sm content-block chart-block" aria-labelledby="purchaseChartTitle">
             <div class="card-body">
               <div class="block-title-row">
                 <h3 id="purchaseChartTitle" class="card-title">Variação das compras</h3>
-                <span id="purchaseMedianLabel" class="badge badge-soft soft-label">Mediana R$ 0,00</span>
+                <span id="purchaseMedianLabel" class="">Mediana R$ 0,00</span>
               </div>
               <div class="purchase-chart" id="purchaseChart" aria-label="Gráfico de barras das compras"></div>
               <p class="empty-state" id="emptyPurchaseChart">Registre compras para ver a variação.</p>
