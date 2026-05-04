@@ -1,5 +1,6 @@
 import { copyFile, mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
 const staticFiles = ["app.js", "styles.css", "sw.js", "supabase-config.js", "manifest.webmanifest", "icon.svg"];
@@ -32,5 +33,5 @@ export default defineConfig({
       },
     },
   },
-  plugins: [copyPwaStaticFiles()],
+  plugins: [tailwindcss(), copyPwaStaticFiles()],
 });

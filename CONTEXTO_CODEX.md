@@ -19,19 +19,19 @@ O projeto é um PWA estático servido e empacotado pelo Vite:
 - IndexedDB nativo.
 - Service worker com cache offline.
 - Lucide Icons via CDN.
-- npm usado para gerar Tailwind/DaisyUI estático local e rodar Vite.
+- npm usado para rodar Vite e processar Tailwind/DaisyUI pelo plugin oficial.
 
 ## Servidor Local e Build
 
-- `npm run dev`: gera o CSS, mantém Tailwind/DaisyUI em watch e sobe Vite.
-- `npm run build`: gera o CSS e monta `dist/` com os arquivos de produção.
+- `npm run dev`: sobe Vite e processa `src/app.css` com Tailwind/DaisyUI.
+- `npm run build`: monta `dist/` com os arquivos de produção e `dist/assets/app.css`.
 - `npm run preview`: serve `dist/` para validação local de produção.
 - O app continua sem React/TypeScript no runtime.
 
 ## Arquivos Principais
 
 - `index.html`: estrutura das telas, modais, botões, navegação e textos visíveis.
-- `assets/app.css`: CSS estático gerado por Tailwind/DaisyUI. Deve ser regenerado com `npm run build:css` quando classes DaisyUI/Tailwind mudarem.
+- `assets/app.css`: CSS legado gerado antes da pipeline Vite; produção usa `dist/assets/app.css`.
 - `src/app.css`: entrada do build CSS com `@import "tailwindcss"`, plugin DaisyUI, temas habilitados e safelist de classes dinâmicas.
 - `styles.css`: camada residual de layout mobile-first, estados, gráficos e responsividade.
 - `app.js`: estado, IndexedDB, regras de negócio, renderização manual, eventos, formulários, modais, drag and drop e PWA refresh.
@@ -217,8 +217,8 @@ http://localhost:5173/
 ## Observações Importantes
 
 - Não há testes automatizados reais ainda; `npm test` usa Vitest com `--passWithNoTests` para não bloquear a migração.
-- O build configurado hoje é `npm run build`, que gera `assets/app.css` e monta `dist/`.
-- TypeScript/Vite/React ainda não são o runtime do app; a migração continua pendente.
+- O build configurado hoje é `npm run build`, que processa Tailwind/DaisyUI via Vite e monta `dist/`.
+- TypeScript/React ainda não são o runtime do app; a migração continua pendente.
 - O app é mobile-first; validar telas pequenas antes de considerar pronto.
 - IndexedDB e service worker podem manter dados/cache antigos por origem.
 - Mudar porta no servidor local pode alterar o contexto de dados no navegador.

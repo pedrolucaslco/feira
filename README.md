@@ -90,7 +90,7 @@ O runtime do app continua estático e offline-first. O build existe apenas para 
 
 ## Desenvolvimento e build
 
-Use Node 20 ou superior:
+Use Node 20.19 ou superior dentro da linha 20.x:
 
 ```bash
 nvm use
@@ -98,7 +98,7 @@ npm install
 npm run dev
 ```
 
-O comando de desenvolvimento gera `assets/app.css`, mantém o Tailwind/DaisyUI em watch e sobe o Vite. Por padrão, acesse:
+O comando de desenvolvimento sobe o Vite e processa `src/app.css` com Tailwind/DaisyUI pelo plugin oficial do Vite. Por padrão, acesse:
 
 ```txt
 http://localhost:5173/
@@ -110,7 +110,7 @@ Para gerar produção:
 npm run build
 ```
 
-O build final sai em `dist/` e inclui as páginas, service worker, manifest, ícone, `app.js`, `supabase-config.js` e o CSS estático em `dist/assets/app.css`.
+O build final sai em `dist/` e inclui as páginas, service worker, manifest, ícone, `app.js`, `supabase-config.js` e o CSS gerado em `dist/assets/app.css`.
 
 A ideia inicial considera uma futura migração para:
 
@@ -121,7 +121,7 @@ A ideia inicial considera uma futura migração para:
 
 ## Como rodar localmente
 
-Use `npm run dev` para debug local. Também é possível abrir o `index.html` diretamente, mas o Vite é recomendado para testar melhor o comportamento de PWA/service worker durante a migração npm.
+Use `npm run dev` para debug local. O `index.html` de desenvolvimento depende do Vite para transformar `src/app.css`; para validar produção, rode `npm run build` e use `npm run preview`.
 
 ## Modelo de dados
 

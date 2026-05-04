@@ -67,14 +67,14 @@ Por isso, a primeira versão foi implementada como app estático:
 - IndexedDB nativo no lugar de Dexie.
 - PWA básico com `manifest.webmanifest` e `sw.js`.
 
-Essa decisão foi tomada para não bloquear o desenvolvimento. Atualmente existe um fluxo npm com Vite para desenvolvimento/build e CSS estático do Tailwind/DaisyUI, exigindo Node 20 ou superior. A migração para React/Dexie continua possível no futuro.
+Essa decisão foi tomada para não bloquear o desenvolvimento. Atualmente existe um fluxo npm com Vite para desenvolvimento/build e Tailwind/DaisyUI processado pelo plugin oficial do Vite, exigindo Node 20.19 ou superior dentro da linha 20.x. A migração para React/Dexie continua possível no futuro.
 
 ## Estrutura Atual
 
 Arquivos principais:
 
 - `index.html`: estrutura da interface.
-- `assets/app.css`: CSS estático gerado por Tailwind/DaisyUI e cacheado offline.
+- `assets/app.css`: CSS legado gerado antes da pipeline Vite; produção usa `dist/assets/app.css`.
 - `src/app.css`: entrada do build CSS, com temas DaisyUI habilitados e safelist de classes dinâmicas.
 - `styles.css`: camada residual de layout responsivo, estados e gráficos.
 - `app.js`: lógica de estado, IndexedDB, renderização e eventos.
@@ -94,7 +94,7 @@ O servidor local é iniciado com:
 npm run dev
 ```
 
-Esse comando gera `assets/app.css`, mantém o Tailwind/DaisyUI em watch e sobe o Vite em:
+Esse comando sobe o Vite e processa `src/app.css` com Tailwind/DaisyUI em:
 
 ```txt
 http://localhost:5173/
