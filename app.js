@@ -1790,6 +1790,22 @@ async function saveInlineItem(event, id = null, categoryId = "") {
   showToast(item ? "Item atualizado." : "Item adicionado.");
 }
 
+async function removeItem(id) {
+  if (!id) return;
+  const confirmed = window.confirm("Excluir este item?");
+  if (!confirmed) return;
+
+  await deleteRecord("items", id);
+  if (state.editingItemId === id) {
+    state.editingItemId = null;
+  }
+  if (state.inlineItemEditor?.id === id) {
+    state.inlineItemEditor = null;
+  }
+  await reloadAndRender();
+  showToast("Item removido.");
+}
+
 function openItemDialog(id = null, categoryId = "") {
   state.inlineItemEditor = null;
   state.editingItemId = id;
