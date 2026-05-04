@@ -9,8 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests",
     "typecheck": "node -e \"console.log('TypeScript ainda nao esta configurado neste PWA estatico.')\"",
-    "build:css": "tailwindcss -i ./src/app.css -o ./assets/app.css --minify",
-    "watch:css": "tailwindcss -i ./src/app.css -o ./assets/app.css --watch"
+    "build:css": "npx @tailwindcss/cli -i ./src/app.css -o ./assets/app.css --minify",
+    "watch:css": "npx @tailwindcss/cli -i ./src/app.css -o ./assets/app.css --watch"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.87.1",
