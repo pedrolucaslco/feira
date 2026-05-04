@@ -14,8 +14,6 @@ const staticFiles = [
   "components/meals.js",
   "components/purchases.js",
   "components/categories.js",
-  "index.html",
-  "landing-page.html",
 ];
 
 function copyPwaStaticFiles() {
