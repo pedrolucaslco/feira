@@ -843,7 +843,7 @@ function renderFinancialState() {
       el.purchaseList.append(createPurchaseInlineEditor(purchase));
       return;
     }
-    el.purchaseList.append(createPurchaseRow(purchase, index));
+    el.purchaseList.append(createPurchaseCard(purchase, index));
   });
 
   el.emptyPurchases.classList.toggle("is-visible", monthPurchases.length === 0 && !state.inlinePurchaseEditor);
