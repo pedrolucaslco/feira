@@ -1,9 +1,22 @@
 import { copyFile, mkdir } from "node:fs/promises";
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
-const staticFiles = ["app.js", "styles.css", "sw.js", "supabase-config.js", "manifest.webmanifest", "icon.svg"];
+const staticFiles = [
+  "app.js",
+  "styles.css",
+  "sw.js",
+  "supabase-config.js",
+  "manifest.webmanifest",
+  "icon.svg",
+  "components/items.js",
+  "components/meals.js",
+  "components/purchases.js",
+  "components/categories.js",
+  "index.html",
+  "landing-page.html",
+];
 
 function copyPwaStaticFiles() {
   return {
@@ -12,7 +25,12 @@ function copyPwaStaticFiles() {
       const root = process.cwd();
       const outDir = resolve(root, "dist");
       await mkdir(outDir, { recursive: true });
-      await Promise.all(staticFiles.map((file) => copyFile(resolve(root, file), resolve(outDir, file))));
+      for (const file of staticFiles) {
+        const source = resolve(root, file);
+        const dest = resolve(outDir, file);
+        await mkdir(dirname(dest), { recursive: true });
+        await copyFile(source, dest);
+      }
     },
   };
 }
@@ -30,6 +48,11 @@ export default defineConfig({
           if (assetInfo.name?.endsWith(".css")) return "assets/[name][extname]";
           return "[name][extname]";
         },
+      },
+      onwarn(warning, warn) {
+        // Ignora avisos de scripts sem type="module"
+        if (warning.message?.includes("can't be bundled without type=\"module\" attribute")) return;
+        warn(warning);
       },
     },
   },

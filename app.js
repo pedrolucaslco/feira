@@ -108,7 +108,7 @@ function saveLocalProfile(userName, userGender) {
 
 applyDaisyTheme(getInitialTheme(), getInitialAccent());
 
-const state = {
+var state = {
   db: null,
   supabase: null,
   syncChannel: null,
@@ -202,7 +202,7 @@ function animateCategoryList(list, shouldExpand) {
   }
 }
 
-const el = {
+var el = {
   views: [...document.querySelectorAll(".view")],
   navButtons: [...document.querySelectorAll("[data-nav-button]")],
   remainingBalance: document.querySelector("#remainingBalance"),
@@ -955,40 +955,7 @@ function renderSpaces() {
   }
 }
 
-function createItemRow(item, { removable } = {}) {
-  const row = document.createElement("li");
-  row.className = `list-row item-row${item.checked ? " is-checked" : ""}`;
-  row.setAttribute("role", "button");
-  row.setAttribute("tabindex", "0");
-  row.setAttribute("aria-label", `Editar ${item.name}`);
 
-  const quantity = item.quantity ? `<span class="item-quantity">${escapeHtml(item.quantity)}</span>` : "";
-  row.innerHTML = `
-    <input class="checkbox checkbox-primary checkbox-md check-button" type="checkbox" aria-label="Marcar ${escapeHtml(item.name)}" ${item.checked ? "checked" : ""} />
-    <div class="item-main">
-      <strong>${escapeHtml(item.name)}</strong>
-      ${quantity}
-    </div>
-  `;
-
-  row.addEventListener("click", () => openItemEditor(item.id, itemCategoryId(item)));
-  row.addEventListener("keydown", (event) => {
-    if (event.target !== row) return;
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      openItemEditor(item.id, itemCategoryId(item));
-    }
-  });
-
-  const checkInput = row.querySelector(".check-button");
-  checkInput.addEventListener("click", (event) => {
-    event.stopPropagation();
-  });
-  checkInput.addEventListener("change", () => {
-    toggleItem(item.id);
-  });
-  return row;
-}
 
 function renderItems() {
   el.itemList.innerHTML = "";
@@ -1015,92 +982,7 @@ function renderMeals() {
   }
 }
 
-function createMealRow(meal) {
-  const row = document.createElement("article");
-  row.className = "card bg-base-100 border border-base-300 shadow-sm meal-row";
-  const itemCount = Array.isArray(meal.items) ? meal.items.length : 0;
-  const preview = (meal.items || [])
-    .slice(0, 3)
-    .map((item) => item.quantity ? `${item.name} (${item.quantity})` : item.name)
-    .join(", ");
-  row.innerHTML = `
-    <div class="card-body">
-      <button class="meal-main" type="button" aria-label="Editar ${escapeHtml(meal.name)}">
-        <strong class="card-title">${escapeHtml(meal.name)}</strong>
-        <span>${itemCount} ${itemCount === 1 ? "item" : "itens"}${preview ? ` - ${escapeHtml(preview)}` : ""}</span>
-      </button>
-      <div class="meal-actions">
-        <button class="btn btn-soft meal-copy-button" type="button">
-          <i data-lucide="list-plus" aria-hidden="true"></i>
-          Adicionar à lista de compras atual
-        </button>
-      </div>
-    </div>
-  `;
 
-  row.querySelector(".meal-main").addEventListener("click", () => openMealEditor(meal.id));
-  row.querySelector(".meal-copy-button").addEventListener("click", () => addMealToCurrentList(meal.id));
-  return row;
-}
-
-function renderCategorySections() {
-  const categories = [{ id: UNCATEGORIZED_ID, name: "Sem seção", locked: true }, ...state.categories];
-  categories.forEach((category) => {
-    const items = state.items.filter((item) => itemCategoryId(item) === category.id);
-    const hasInlineNewItem = state.inlineItemEditor && !state.inlineItemEditor.id && itemCategoryId({ categoryId: state.inlineItemEditor.categoryId }) === category.id;
-    if (category.locked && !items.length && state.categories.length && !hasInlineNewItem) return;
-
-    const section = document.createElement("section");
-    section.className = "category-section";
-    section.dataset.categoryId = category.id;
-
-    const isCollapsed = state.collapsedCategoryIds.has(category.id);
-    const listId = `category-list-${category.id}`;
-    section.innerHTML = `
-      <div class="collapse collapse-arrow bg-base-100 category-collapse border border-base-300">
-        <input type="checkbox" ${isCollapsed ? "" : "checked"} />
-        <div class="collapse-title category-head">
-          <div class="category-head-main">
-            <span>${escapeHtml(category.name)}</span>
-            <small>${items.length} ${items.length === 1 ? "item" : "itens"}</small>
-          </div>
-          <button class="btn btn-ghost btn-square btn-sm category-add-button" type="button" aria-label="Adicionar item em ${escapeHtml(category.name)}">
-            <i data-lucide="plus" aria-hidden="true"></i>
-          </button>
-        </div>
-        <div class="collapse-content">
-          <ul class="list category-items" id="${listId}"></ul>
-        </div>
-      </div>
-    `;
-
-    const list = section.querySelector(".category-items");
-
-    if (state.inlineItemEditor && !state.inlineItemEditor.id && itemCategoryId({ categoryId: state.inlineItemEditor.categoryId }) === category.id) {
-      list.append(createItemInlineEditor(null, category.id));
-    }
-
-    items.forEach((item) => {
-      if (state.inlineItemEditor?.id === item.id) {
-        list.append(createItemInlineEditor(item, category.id));
-        return;
-      }
-      list.append(createItemRow(item, { removable: true }));
-    });
-
-    if (!items.length && !hasInlineNewItem) {
-      const empty = document.createElement("li");
-      empty.className = "category-empty";
-      empty.textContent = "Use o botão + para adicionar itens nesta seção.";
-      list.append(empty);
-    }
-
-    const collapseToggle = section.querySelector(".category-collapse input");
-    collapseToggle?.addEventListener("change", () => toggleCategory(category.id));
-    section.querySelector(".category-add-button").addEventListener("click", () => openItemEditor(null, category.id));
-    el.itemList.append(section);
-  });
-}
 
 function renderNavigation() {
   el.views.forEach((view) => view.classList.toggle("is-active", view.id === state.activeView));
@@ -1796,138 +1678,7 @@ async function runSyncDiagnostics() {
   showToast(results.some((result) => result.status === "failed") ? "Testes de sincronização falharam." : "Testes de sincronização passaram.");
 }
 
-function createPurchaseRow(purchase, index) {
-  const row = document.createElement("li");
-  row.className = "list-row purchase-row";
-  row.setAttribute("role", "button");
-  row.setAttribute("tabindex", "0");
-  row.setAttribute("aria-label", `Editar compra de ${formatCurrency(purchase.total)}`);
-  row.innerHTML = `
-    <div class="purchase-main">
-      <strong>${escapeHtml(purchaseTitle(purchase, index))}</strong>
-      <span>${formatDate(purchase.date)}</span>
-    </div>
-    <strong>${formatCurrency(purchase.total)}</strong>
-  `;
 
-  row.addEventListener("click", () => openPurchaseEditor(purchase.id));
-  row.addEventListener("keydown", (event) => {
-    if (event.target !== row) return;
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      openPurchaseEditor(purchase.id);
-    }
-  });
-
-  return row;
-}
-
-function editorMode() {
-  return state.settings.editorMode === "inline" ? "inline" : "modal";
-}
-
-function createInlineActionButton(label, variant = "secondary") {
-  const button = document.createElement("button");
-  button.type = "button";
-  const classes = {
-    primary: "btn btn-primary",
-    secondary: "btn btn-soft",
-    danger: "btn btn-error btn-ghost",
-  };
-  button.className = classes[variant] || classes.secondary;
-  button.textContent = label;
-  return button;
-}
-
-function createItemInlineEditor(item = null, categoryId = "") {
-  const row = document.createElement("li");
-  row.className = "list-row bg-base-200 rounded-box inline-editor-row item-inline-editor";
-  const form = document.createElement("form");
-  form.className = "inline-editor-form";
-  form.innerHTML = `
-    <input class="input input-sm" name="name" autocomplete="off" placeholder="Item" required value="${escapeHtml(item?.name || "")}" />
-    <input class="input input-sm" name="quantity" autocomplete="off" placeholder="Quantidade" value="${escapeHtml(item?.quantity || "")}" />
-    <select class="select select-sm" name="categoryId"></select>
-    <div class="inline-editor-actions"></div>
-  `;
-  populateCategorySelect(form.elements.categoryId, item?.categoryId || categoryId || "");
-
-  const actions = form.querySelector(".inline-editor-actions");
-  const cancelButton = createInlineActionButton("Cancelar");
-  const saveButton = document.createElement("button");
-  saveButton.type = "submit";
-  saveButton.className = "btn btn-primary";
-  saveButton.textContent = item ? "Salvar" : "Adicionar";
-  actions.append(cancelButton);
-  if (item) {
-    const deleteButton = createInlineActionButton("Excluir", "danger");
-    deleteButton.classList.add("inline-delete-button");
-    deleteButton.addEventListener("click", () => removeItem(item.id));
-    actions.append(deleteButton);
-  }
-  actions.append(saveButton);
-
-  cancelButton.addEventListener("click", closeInlineItemEditor);
-  form.addEventListener("submit", (event) => saveInlineItem(event, item?.id || null, categoryId));
-
-  row.append(form);
-  return row;
-}
-
-function createPurchaseInlineEditor(purchase = null) {
-  const row = document.createElement("li");
-  row.className = "list-row bg-base-200 rounded-box inline-editor-row purchase-inline-editor";
-  const form = document.createElement("form");
-  form.className = "inline-editor-form purchase-inline-form";
-  form.innerHTML = `
-    <input class="input input-sm" name="name" autocomplete="off" placeholder="Nome da compra" value="${escapeHtml(purchase?.name || "")}" />
-    <input class="input input-sm" name="date" type="date" required value="${formatDateInput(purchase?.date || Date.now())}" />
-    <input class="input input-sm" name="total" inputmode="decimal" autocomplete="off" placeholder="Valor pago" required value="${purchase ? escapeHtml(String(purchase.total).replace(".", ",")) : ""}" />
-    <div class="inline-editor-actions"></div>
-  `;
-
-  const actions = form.querySelector(".inline-editor-actions");
-  const cancelButton = createInlineActionButton("Cancelar");
-  const saveButton = document.createElement("button");
-  saveButton.type = "submit";
-  saveButton.className = "btn btn-primary";
-  saveButton.textContent = purchase ? "Salvar" : "Registrar";
-  actions.append(cancelButton);
-  if (purchase) {
-    const deleteButton = createInlineActionButton("Excluir", "danger");
-    deleteButton.classList.add("inline-delete-button");
-    deleteButton.addEventListener("click", () => removePurchase(purchase.id));
-    actions.append(deleteButton);
-  }
-  actions.append(saveButton);
-
-  cancelButton.addEventListener("click", closeInlinePurchaseEditor);
-  form.addEventListener("submit", (event) => saveInlinePurchase(event, purchase?.id || null));
-
-  row.append(form);
-  return row;
-}
-
-function createMealItemEditorRow(item = {}) {
-  const row = document.createElement("div");
-  row.className = "meal-item-editor-row";
-  row.dataset.itemId = item.id || createId();
-  row.dataset.createdAt = item.createdAt || Date.now();
-  row.innerHTML = `
-    <input class="input input-sm" name="mealItemName" autocomplete="off" placeholder="Item" value="${escapeHtml(item.name || "")}" />
-    <input class="input input-sm" name="mealItemQuantity" autocomplete="off" placeholder="Quantidade" value="${escapeHtml(item.quantity || "")}" />
-    <button class="btn btn-ghost btn-square meal-item-remove-button" type="button" aria-label="Remover item">
-      <i data-lucide="trash-2" aria-hidden="true"></i>
-    </button>
-  `;
-  row.querySelector(".meal-item-remove-button").addEventListener("click", () => {
-    row.remove();
-    if (!el.mealItemsEditor.querySelector(".meal-item-editor-row")) {
-      addMealItemEditorRow();
-    }
-  });
-  return row;
-}
 
 function addMealItemEditorRow(item = {}) {
   if (!el.mealItemsEditor) return;
@@ -2353,6 +2104,16 @@ function toggleTheme(event) {
   applyTheme(theme);
 }
 
+function editorMode() {
+  return state.settings.editorMode === "inline" ? "inline" : "modal";
+}
+
+function changeEditorMode(event) {
+  const editorMode = event.currentTarget.value === "inline" ? "inline" : "modal";
+  localStorage.setItem(EDITOR_MODE_STORAGE_KEY, editorMode);
+  saveRecord("settings", { ...state.settings, editorMode }).then(() => reloadAndRender());
+}
+
 function changeAccent(event) {
   applyAccent(event.currentTarget.value);
 }
@@ -2697,4 +2458,6 @@ async function init() {
   }
 }
 
-init();
+window.addEventListener("load", () => {
+  init();
+});

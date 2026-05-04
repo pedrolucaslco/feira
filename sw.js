@@ -30,6 +30,8 @@ self.addEventListener("message", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  // Ignora requests de extensões do Chrome e outros schemes não suportados
+  if (!event.request.url.startsWith("http")) return;
   if (event.request.method !== "GET") return;
 
   if (event.request.mode === "navigate") {

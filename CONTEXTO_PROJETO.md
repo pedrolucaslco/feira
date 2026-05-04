@@ -74,10 +74,14 @@ Essa decisão foi tomada para não bloquear o desenvolvimento. Atualmente existe
 Arquivos principais:
 
 - `index.html`: estrutura da interface.
-- `assets/app.css`: CSS legado gerado antes da pipeline Vite; produção usa `dist/assets/app.css`.
 - `src/app.css`: entrada do build CSS, com temas DaisyUI habilitados e safelist de classes dinâmicas.
 - `styles.css`: camada residual de layout responsivo, estados e gráficos.
-- `app.js`: lógica de estado, IndexedDB, renderização e eventos.
+- `app.js`: lógica de estado, IndexedDB, renderização e eventos (usa componentes de `/components`).
+- `components/`: componentes da interface extraídos como funções vanilla JS.
+  - `items.js`: `createItemRow`, `createItemInlineEditor`, `createInlineActionButton`.
+  - `meals.js`: `createMealRow`, `createMealItemEditorRow`.
+  - `purchases.js`: `createPurchaseRow`, `createPurchaseInlineEditor`.
+  - `categories.js`: `renderCategorySections`.
 - `manifest.webmanifest`: configuração PWA.
 - `sw.js`: service worker e cache offline.
 - `supabase-config.js`: configuração pública opcional do Supabase.
@@ -400,7 +404,7 @@ Versão atual do cache:
 feira-v49.0
 ```
 
-O cache foi atualizado para `feira-v49.0` para forçar a troca da versão estática anterior para o pacote servido/buildado com npm/Vite e manter `assets/app.css` no precache offline.
+O cache foi atualizado para `feira-v49.0` para forçar a troca da versão estática anterior para o pacote servido/buildado com npm/Vite e manter o CSS gerado no precache offline.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -507,14 +511,17 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Fluxo npm com `npm run dev` e `npm run build`, usando Vite para servir/empacotar o PWA estático e atualização de cache para `feira-v49.0`.
+Limpeza de assets/css legado e componentização da interface em /components.
 ```
 
 Arquivos alterados nesse marco:
 
-- `index.html`
-- `app.js`
-- `styles.css`
-- `sw.js`
-- `README.md`
-- `CONTEXTO_PROJETO.md`
+- `app.js` (limpeza e extração de componentes)
+- `components/items.js` (novo)
+- `components/meals.js` (novo)
+- `components/purchases.js` (novo)
+- `components/categories.js` (novo)
+- `vite.config.js` (ajuste para copiar componentes)
+- `index.html` (ordem de scripts)
+- `assets/app.css` (removido)
+- `CONTEXTO_PROJETO.md` (atualizado)

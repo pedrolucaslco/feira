@@ -110,7 +110,7 @@ Para gerar produção:
 npm run build
 ```
 
-O build final sai em `dist/` e inclui as páginas, service worker, manifest, ícone, `app.js`, `supabase-config.js` e o CSS gerado em `dist/assets/app.css`.
+O build final sai em `dist/` e inclui as páginas, service worker, manifest, ícone, `app.js`, `components/`, `supabase-config.js` e o CSS gerado em `dist/assets/app.css`.
 
 A ideia inicial considera uma futura migração para:
 
