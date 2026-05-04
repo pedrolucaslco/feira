@@ -56,7 +56,7 @@ h2 { margin-bottom: 0; font-size: clamp(1.45rem, 5vw, 2.4rem); font-weight: 850;
 .settings-group-label { margin: 1.35rem 0 0.5rem; font-size: 0.78rem; font-weight: 850; text-transform: uppercase; }
 
 .category-collapse .collapse-title { align-items: center; padding: 0.75rem 1rem; }
-.category-head-main { display: flex; align-items: baseline; gap: 0.5rem; min-width: 0; }
+.category-head-main { display: flex; align-items: center; gap: 0.5rem; min-width: 0; justify-content: space-between;}
 .category-items { list-style: none; }
 .category-empty, .empty-state { display: none; }
 .category-empty { display: block; padding: 0.85rem; border: 1px dashed var(--color-base-300); border-radius: var(--radius-box); }

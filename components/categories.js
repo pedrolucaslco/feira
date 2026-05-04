@@ -16,8 +16,10 @@ function renderCategorySections() {
         <input type="checkbox" ${isCollapsed ? "" : "checked"} />
         <div class="collapse-title category-head after:start-5 after:end-auto">
           <div class="category-head-main">
+           <div> 
             <span>${escapeHtml(category.name)}</span>
             <small>${items.length} ${items.length === 1 ? "item" : "itens"}</small>
+            </div>
             <button class="btn btn-ghost btn-square btn-sm category-add-button" type="button" aria-label="Adicionar item em ${escapeHtml(category.name)}">
             <i data-lucide="plus" aria-hidden="true"></i>
           </button>
