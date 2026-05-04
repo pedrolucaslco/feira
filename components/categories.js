@@ -12,16 +12,17 @@ function renderCategorySections() {
     const isCollapsed = state.collapsedCategoryIds.has(category.id);
     const listId = `category-list-${category.id}`;
     section.innerHTML = `
-      <div class="collapse collapse-arrow bg-base-100 category-collapse border border-base-300">
+      <div class="collapse bg-base-100 category-collapse border border-base-300">
         <input type="checkbox" ${isCollapsed ? "" : "checked"} />
         <div class="collapse-title category-head after:start-5 after:end-auto">
           <div class="category-head-main">
             <span>${escapeHtml(category.name)}</span>
             <small>${items.length} ${items.length === 1 ? "item" : "itens"}</small>
-          </div>
-          <button class="btn btn-ghost btn-square btn-sm category-add-button" type="button" aria-label="Adicionar item em ${escapeHtml(category.name)}">
+            <button class="btn btn-ghost btn-square btn-sm category-add-button" type="button" aria-label="Adicionar item em ${escapeHtml(category.name)}">
             <i data-lucide="plus" aria-hidden="true"></i>
           </button>
+          </div>
+          
         </div>
         <div class="collapse-content">
           <ul class="list category-items" id="${listId}"></ul>
