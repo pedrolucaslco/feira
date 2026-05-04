@@ -147,17 +147,9 @@
                 <h3 id="latestTitle" class="card-title">Compras realizadas</h3>
                 <span id="purchaseCountLabel" class="badge badge-soft soft-label">0 compras</span>
               </div>
-              <div class="inline-editor-wrap" id="purchaseInlineEditorMount"></div>
-              <div class="purchase-grid" id="purchaseList"></div>
-              <div class="empty-state" id="emptyPurchases">
-                <div class="card bg-base-100 shadow-sm">
-                  <div class="card-body items-center text-center">
-                    <i data-lucide="shopping-basket" class="w-12 h-12 text-base-content/40"></i>
-                    <h3 class="card-title">Nenhuma compra registrada</h3>
-                    <p class="text-base-content/60">Use o botão + acima para registrar sua primeira compra</p>
-                  </div>
-                </div>
-              </div>
+              <ul class="purchase-list inline-editor-list" id="purchaseInlineEditorMount"></ul>
+              <ul class="purchase-list" id="purchaseList"></ul>
+              <p class="empty-state" id="emptyPurchases">Nenhuma compra registrada.</p>
             </div>
           </section>
         </section>
