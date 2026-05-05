@@ -2442,7 +2442,6 @@ function bindEvents() {
   el.themeToggle.addEventListener("change", toggleTheme);
   el.accentColorInput?.addEventListener("change", changeAccent);
   el.editorModeInput?.addEventListener("change", changeEditorMode);
-  el.spaceSwitcherButton?.addEventListener("click", toggleSpaceMenu);
   el.createSpaceForm?.addEventListener("submit", createSharedSpace);
   el.joinSpaceForm?.addEventListener("submit", joinSharedSpace);
   el.renameSpaceButton?.addEventListener("click", renameCurrentSpace);
@@ -2462,9 +2461,6 @@ function bindEvents() {
     });
   }
   document.addEventListener("click", (event) => {
-    if (el.spaceMenu && !el.spaceMenu.hidden && !event.target.closest(".space-switcher-wrap")) {
-      closeSpaceMenu();
-    }
     if (!el.listMenu || el.listMenu.hidden) return;
     if (event.target.closest(".list-menu-wrap")) return;
     closeListMenu();
