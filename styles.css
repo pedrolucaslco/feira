@@ -11,10 +11,11 @@ h1, h2, h3, p { margin-top: 0; }
 h2 { margin-bottom: 0; font-size: clamp(1.45rem, 5vw, 2.4rem); font-weight: 850; line-height: 1; }
 
 .app-shell { --shell-inline-padding: 18px; width: min(100%, 980px); min-height: 100vh; margin: 0 auto; padding: 100px var(--shell-inline-padding) 116px; }
-.topbard {
+.topbar {
   position: fixed; inset: 0 0 auto; z-index: 12; min-height: 82px; gap: 1rem;
   padding: max(14px, env(safe-area-inset-top)) max(18px, calc((100vw - 980px) / 2 + 18px)) 12px;
-  border-bottom: 1px solid var(--color-base-300); background: color-mix(in oklch, var(--color-base-100) 88%, transparent); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--color-base-300); 
+  
 }
 .brand, .brand-copy, .space-switcher-wrap, .purchase-main, .item-main, .settings-row-main { min-width: 0; }
 .brand-copy, .space-menu-label, .settings-row-main, .meal-main, .meal-actions, .inline-editor-form, .sync-test-list { display: grid; }
