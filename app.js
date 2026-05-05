@@ -305,6 +305,11 @@ var el = {
   toast: document.querySelector("#toast"),
 };
 
+console.log("[SPACE MENU] Elements initialized:");
+console.log("[SPACE MENU]   spaceSwitcherButton:", el.spaceSwitcherButton);
+console.log("[SPACE MENU]   spaceMenu:", el.spaceMenu);
+console.log("[SPACE MENU]   spaceMenuList:", el.spaceMenuList);
+
 function openDatabase() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -911,11 +916,12 @@ function renderProfile() {
 }
 
 function renderSpaces() {
+  console.log("[SPACE MENU] renderSpaces called");
   const space = activeSpace();
   const pendingCount = state.syncOutbox.length;
   const conflictCount = state.syncConflicts.length;
   if (el.spaceSwitcherButton) {
-    el.spaceSwitcherButton.setAttribute("aria-expanded", String(!el.spaceMenu?.hidden));
+    el.spaceSwitcherButton.setAttribute("aria-expanded", String(el.spaceMenu?.open || false));
   }
   if (el.spaceMenuList) {
     el.spaceMenuList.innerHTML = "";
@@ -1075,22 +1081,31 @@ function setView(viewId) {
 }
 
 function toggleSpaceMenu() {
-  if (!el.spaceMenu) return;
-  el.spaceMenu.hidden = !el.spaceMenu.hidden;
-  renderSpaces();
+  console.log("[SPACE MENU] toggleSpaceMenu called");
+  if (!el.spaceMenu) {
+    console.error("[SPACE MENU] spaceMenu element not found!");
+    return;
+  }
+  renderSpaces(); // Garante que o menu esteja populado antes de mostrar
+  console.log("[SPACE MENU] Opening modal");
+  el.spaceMenu.showModal();
 }
 
 function closeSpaceMenu() {
-  if (!el.spaceMenu) return;
-  el.spaceMenu.hidden = true;
-  renderSpaces();
+  console.log("[SPACE MENU] closeSpaceMenu called");
+  if (!el.spaceMenu) {
+    console.error("[SPACE MENU] spaceMenu element not found!");
+    return;
+  }
+  el.spaceMenu.close();
+  console.log("[SPACE MENU] Modal closed");
 }
 
 async function switchSpace(spaceId) {
-  if (spaceId === state.activeSpaceId) {
-    closeSpaceMenu();
-    return;
-  }
+  // if (spaceId === state.activeSpaceId) {
+  //   closeSpaceMenu();
+  //   return;
+  // }
   state.activeSpaceId = spaceId;
   localStorage.setItem(ACTIVE_SPACE_STORAGE_KEY, spaceId);
   state.editingItemId = null;
@@ -2451,6 +2466,11 @@ function bindEvents() {
   window.addEventListener("online", () => syncNow());
   el.quickAddButton.addEventListener("click", handleFabButton);
   el.listMenuButton?.addEventListener("click", toggleListMenu);
+  el.spaceSwitcherButton?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    console.log("[SPACE MENU] Space switcher button clicked");
+    toggleSpaceMenu();
+  });
   if (el.openCategoryDialogButton) {
     el.openCategoryDialogButton.addEventListener("click", openCategoryDialog);
   } else {
@@ -2464,6 +2484,12 @@ function bindEvents() {
     if (!el.listMenu || el.listMenu.hidden) return;
     if (event.target.closest(".list-menu-wrap")) return;
     closeListMenu();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && el.spaceMenu && !el.spaceMenu.hidden) {
+      closeSpaceMenu();
+    }
   });
   el.checkoutForm.addEventListener("submit", finishPurchase);
   el.deletePurchaseButton?.addEventListener("click", () => removePurchase(state.editingPurchaseId));
@@ -2480,6 +2506,12 @@ function bindEvents() {
 
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
+  if (window.__FEIRA_DEV__) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+    return;
+  }
+
   try {
     await navigator.serviceWorker.register("./sw.js");
   } catch (error) {

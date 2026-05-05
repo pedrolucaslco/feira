@@ -22,6 +22,9 @@
         document.documentElement.dataset.accent = daisyTheme;
       })();
     </script>
+    <script type="module">
+      window.__FEIRA_DEV__ = import.meta.env.DEV;
+    </script>
     <link rel="stylesheet" href="./src/app.css" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -30,19 +33,31 @@
       <header class="navbar bg-base-200 border-b border-base-300 topbar">
         <div class="navbar-start brand">
           <div class="brand-copy">
-            <div class="dropdown space-switcher-wrap">
-              <button class="btn btn-ghost space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="true" aria-expanded="false">
+            <div class="space-switcher-wrap">
+              <button class="btn btn-ghost space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="spaceMenu">
                 <strong id="activeSpaceName">Espaço local</strong>
                 <span class="sync-status-icon" id="syncStatusLabel" title="Status de sincronização">
                   <i data-lucide="check-circle-2" aria-hidden="true"></i>
                 </span>
                 <i data-lucide="chevron-down" aria-hidden="true"></i>
               </button>
-              <div tabindex="0" class="dropdown-content z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-2 shadow" id="spaceMenu">
-                <ul class="menu" id="spaceMenuList"></ul>
-              </div>
             </div>
-            
+            <dialog id="spaceMenu" class="modal modal-bottom sm:modal-middle">
+              <div class="modal-box p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <p class="font-bold">Espaços</p>
+                    <p class="text-sm text-base-content/70">Escolha o espaço para trabalhar</p>
+                  </div>
+                  <form method="dialog">
+                    <button type="submit" class="btn btn-ghost btn-sm" aria-label="Fechar painel">
+                      <i data-lucide="x" aria-hidden="true"></i>
+                    </button>
+                  </form>
+                </div>
+                <ul class="menu gap-2" id="spaceMenuList"></ul>
+              </div>
+            </dialog>
           </div>
         </div>
         <div class="navbar-end topbar-actions" aria-label="Ações do aplicativo">
@@ -429,19 +444,24 @@
       <form class="modal-box checkout-form" id="checkoutForm">
         <div class="dialog-head">
           <div>
-            
             <h2 id="checkoutDialogTitle">Registrar compra</h2>
           </div>
           <button class="btn btn-ghost btn-square" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">
             <i data-lucide="x" aria-hidden="true"></i>
           </button>
         </div>
-        <label class="label" for="purchaseName">Nome da compra</label>
-        <input class="input" id="purchaseName" name="name" autocomplete="off" placeholder="Compra do mercado" />
-        <label class="label" for="purchaseDate">Data da compra</label>
-        <input class="input" id="purchaseDate" name="date" type="date" required />
-        <label class="label" for="purchaseTotal">Valor pago</label>
-        <input class="input" id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
+        <div class="form-group">
+          <label class="form-label" for="purchaseName">Nome da compra</label>
+          <input class="input" id="purchaseName" name="name" autocomplete="off" placeholder="Compra do mercado" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="purchaseDate">Data da compra</label>
+          <input class="input" id="purchaseDate" name="date" type="date" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="purchaseTotal">Valor pago</label>
+          <input class="input" id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
+        </div>
         <button class="btn btn-error btn-ghost" id="deletePurchaseButton" type="button" hidden>Excluir compra</button>
         <div class="modal-action dialog-actions">
           <button class="btn btn-soft" id="cancelCheckoutButton" value="cancel" type="button">Cancelar</button>
@@ -461,12 +481,18 @@
             <i data-lucide="x" aria-hidden="true"></i>
           </button>
         </div>
-        <label class="label" for="itemName">Item</label>
-        <input class="input" id="itemName" name="name" autocomplete="off" placeholder="Arroz" required />
-        <label class="label" for="itemQuantity">Quantidade</label>
-        <input class="input" id="itemQuantity" name="quantity" autocomplete="off" placeholder="2 kg" />
-        <label class="label" for="itemCategory">Seção</label>
-        <select class="select" id="itemCategory" name="categoryId"></select>
+        <div class="form-group">
+          <label class="form-label" for="itemName">Item</label>
+          <input class="input" id="itemName" name="name" autocomplete="off" placeholder="Arroz" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="itemQuantity">Quantidade</label>
+          <input class="input" id="itemQuantity" name="quantity" autocomplete="off" placeholder="2 kg" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="itemCategory">Seção</label>
+          <select class="select" id="itemCategory" name="categoryId"></select>
+        </div>
         <button class="btn btn-error btn-ghost" id="deleteItemButton" type="button" hidden>Excluir item</button>
         <div class="modal-action dialog-actions">
           <button class="btn btn-soft" id="cancelItemDialogButton" type="button">Cancelar</button>
