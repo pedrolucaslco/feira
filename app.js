@@ -936,14 +936,43 @@ function renderSpaces() {
     });
   }
   if (el.syncStatusLabel) {
+    // Remove old classes
+    el.syncStatusLabel.className = "sync-status-icon";
+    let iconName = "server";
+    let statusClass = "is-local";
+    let title = "Local";
+
     if (!isSharedSpace(space)) {
-      el.syncStatusLabel.textContent = "Local";
+      iconName = "server";
+      statusClass = "is-local";
+      title = "Espaço local";
     } else if (conflictCount) {
-      el.syncStatusLabel.textContent = `${conflictCount} conflito${conflictCount === 1 ? "" : "s"}`;
+      iconName = "alert-circle";
+      statusClass = "is-conflict";
+      title = `${conflictCount} conflito${conflictCount === 1 ? "" : "s"}`;
     } else if (pendingCount) {
-      el.syncStatusLabel.textContent = "Sincronizando";
+      iconName = "refresh-cw";
+      statusClass = "is-syncing";
+      title = "Sincronizando";
+    } else if (state.syncStatus === "offline") {
+      iconName = "wifi-off";
+      statusClass = "is-offline";
+      title = "Offline";
     } else {
-      el.syncStatusLabel.textContent = state.syncStatus === "offline" ? "Offline" : "Sincronizado";
+      iconName = "check-circle-2";
+      statusClass = "is-synced";
+      title = "Sincronizado";
+    }
+
+    el.syncStatusLabel.className = `sync-status-icon ${statusClass}`;
+    el.syncStatusLabel.setAttribute("title", title);
+    
+    const icon = el.syncStatusLabel.querySelector("[data-lucide]");
+    if (icon) {
+      icon.setAttribute("data-lucide", iconName);
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
     }
   }
   if (el.conflictBanner) {
@@ -2423,7 +2452,15 @@ function bindEvents() {
   window.addEventListener("online", () => syncNow());
   el.quickAddButton.addEventListener("click", handleFabButton);
   el.listMenuButton?.addEventListener("click", toggleListMenu);
-  el.openCategoryDialogButton?.addEventListener("click", openCategoryDialog);
+  if (el.openCategoryDialogButton) {
+    el.openCategoryDialogButton.addEventListener("click", openCategoryDialog);
+  } else {
+    el.listMenu?.addEventListener("click", (event) => {
+      if (event.target.closest("#openCategoryDialogButton")) {
+        openCategoryDialog();
+      }
+    });
+  }
   document.addEventListener("click", (event) => {
     if (el.spaceMenu && !el.spaceMenu.hidden && !event.target.closest(".space-switcher-wrap")) {
       closeSpaceMenu();

@@ -20,10 +20,27 @@ h2 { margin-bottom: 0; font-size: clamp(1.45rem, 5vw, 2.4rem); font-weight: 850;
 .brand-copy, .space-menu-label, .settings-row-main, .meal-main, .meal-actions, .inline-editor-form, .sync-test-list { display: grid; }
 .brand-copy { gap: 0.15rem; }
 .space-switcher-button { max-width: min(54vw, 420px); justify-content: flex-start; padding-inline: 0.25rem; }
-.space-switcher-button strong, .space-menu-label strong, .sync-status, .topbar-metric strong, .topbar-metric span, .category-head-main span, .category-head-main small, .purchase-main strong, .purchase-main span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.space-switcher-button strong, .space-menu-label strong, .topbar-metric strong, .topbar-metric span, .category-head-main span, .category-head-main small, .purchase-main strong, .purchase-main span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .space-menu-label { text-align: left; }
-.space-menu-label small, .sync-status, .eyebrow, .settings-row-main p, .category-head-main small, .period-card small, .period-card span, .metric span, .purchase-main span, .item-main span, .meal-main span, .empty-state, .settings-group-label, .sync-test-summary { color: color-mix(in oklch, var(--color-base-content) 62%, transparent); }
-.topbar-metrics { flex: 0 1 auto; gap: 0.5rem; }
+.space-menu-label small, .eyebrow, .settings-row-main p, .category-head-main small, .period-card small, .period-card span, .metric span, .purchase-main span, .item-main span, .meal-main span, .empty-state, .settings-group-label, .sync-test-summary { color: color-mix(in oklch, var(--color-base-content) 62%, transparent); }
+.sync-status-icon { display: inline-flex; align-items: center; justify-content: center; width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+.sync-status-icon [data-lucide] { width: 0.875rem; height: 0.875rem; }
+.sync-status-icon.is-local { color: color-mix(in oklch, var(--color-base-content) 70%, transparent); }
+.sync-status-icon.is-syncing { color: var(--color-warning); animation: spin 1s linear infinite; }
+.sync-status-icon.is-synced { color: var(--color-success); }
+.sync-status-icon.is-conflict { color: var(--color-error); }
+.sync-status-icon.is-offline { color: var(--color-error); }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.topbar-actions { display: flex; align-items: center; gap: 0.5rem; }
+.purchase-indicators-card .card-body { padding: 1.25rem; }
+.indicators-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; align-items: center; }
+.indicator-item { display: flex; align-items: center; gap: 0.75rem; }
+.indicator-divider { height: 3rem; width: 1px; background: var(--color-base-300); margin: 0 0.5rem; }
+.indicator-icon { display: flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; border-radius: 50%; background: color-mix(in oklch, var(--color-primary) 12%, transparent); color: var(--color-primary); }
+.indicator-icon [data-lucide] { width: 1.25rem; height: 1.25rem; }
+.indicator-content { display: flex; flex-direction: column; gap: 0.25rem; }
+.indicator-label { font-size: 0.82rem; font-weight: 600; color: color-mix(in oklch, var(--color-base-content) 70%, transparent); }
+.indicator-value { display: block; font-size: 1.25rem; font-weight: 850; color: var(--color-base-content); }
 .topbar-metric { display: grid; justify-items: end; min-width: 96px; padding: 0.55rem 0.7rem; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background: var(--color-base-100); }
 .topbar-metric span, .sync-status, .eyebrow { font-size: 0.82rem; font-weight: 600; }
 .topbar-metric strong { font-weight: 850; }

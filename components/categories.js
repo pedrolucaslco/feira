@@ -55,7 +55,11 @@ function renderCategorySections() {
 
     const collapseToggle = section.querySelector(".category-collapse input");
     collapseToggle?.addEventListener("change", () => toggleCategory(category.id));
-    section.querySelector(".category-add-button").addEventListener("click", () => openItemEditor(null, category.id));
+    section.querySelector(".category-add-button").addEventListener("click", (event) => {
+      event.stopPropagation();
+      event.preventDefault();
+      openItemEditor(null, category.id);
+    });
     el.itemList.append(section);
   });
 }

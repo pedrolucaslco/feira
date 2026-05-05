@@ -31,29 +31,36 @@
         <div class="navbar-start brand">
           <div class="brand-copy">
             <div class="dropdown space-switcher-wrap">
-              <button class="btn btn-ghost space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="true" aria-expanded="false">
+              <button tabindex="0" class="btn btn-ghost space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="true" aria-expanded="false">
                 <strong id="activeSpaceName">Espaço local</strong>
+                <span class="sync-status-icon" id="syncStatusLabel" title="Status de sincronização">
+                  <i data-lucide="check-circle-2" aria-hidden="true"></i>
+                </span>
                 <i data-lucide="chevron-down" aria-hidden="true"></i>
               </button>
               <div class="dropdown-content z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-2 shadow" id="spaceMenu" hidden>
                 <ul class="menu" id="spaceMenuList"></ul>
               </div>
             </div>
-            <span class="sync-status" id="syncStatusLabel">Local</span>
+            
           </div>
         </div>
-        <div class="navbar-end topbar-metrics" aria-label="Resumo financeiro">
-          <div class="topbar-metric">
-            <span>Saldo</span>
-            <strong id="remainingBalance">R$ 0,00</strong>
-          </div>
-          <div class="topbar-metric">
-            <span id="topbarWeeklyLabel">Semana</span>
-            <strong id="topbarWeeklyBudget">--</strong>
-          </div>
+        <div class="navbar-end topbar-actions" aria-label="Ações do aplicativo">
           <button class="btn btn-ghost btn-square btn-sm topbar-refresh-button" id="topbarRefreshButton" type="button" aria-label="Atualizar app" title="Atualizar app">
             <i data-lucide="refresh-cw" aria-hidden="true"></i>
           </button>
+          <div class="dropdown dropdown-end topbar-avatar-wrap">
+            <button tabindex="0" type="button" class="btn btn-ghost btn-circle avatar avatar-button" aria-label="Abrir configurações">
+              <div class="w-10 rounded-full bg-base-200 flex items-center justify-center">
+                <i data-lucide="user" aria-hidden="true"></i>
+              </div>
+            </button>
+            <ul tabindex="-1" class="menu dropdown-content bg-base-100 rounded-box z-20 mt-3 w-52 p-2 shadow">
+              <li>
+                <button type="button" data-nav-button data-view="settingsView" aria-label="Ajustes">Ajustes</button>
+              </li>
+            </ul>
+          </div>
         </div>
       </header>
 
@@ -104,6 +111,50 @@
             </button>
           </div>
 
+          <section class="card bg-base-100 shadow-sm content-block purchase-indicators-card">
+            <div class="card-body">
+              <div class="indicators-grid">
+                <div class="indicator-item">
+                  <div class="indicator-icon">
+                    <i data-lucide="wallet" aria-hidden="true"></i>
+                  </div>
+                  <div class="indicator-content">
+                    <span class="indicator-label">Saldo disponível</span>
+                    <strong class="indicator-value" id="remainingBalance">R$ 0,00</strong>
+                  </div>
+                </div>
+                
+                <div class="indicator-item">
+                  <div class="indicator-icon">
+                    <i data-lucide="calendar" aria-hidden="true"></i>
+                  </div>
+                  <div class="indicator-content">
+                    <span class="indicator-label" id="topbarWeeklyLabel">Por semana</span>
+                    <strong class="indicator-value" id="topbarWeeklyBudget">--</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card bg-base-100 shadow-sm content-block purchase-indicators-card">
+            <div class="card-body">
+              <div class="indicators-grid">
+                <div class="indicator-item">
+                  <div class="indicator-icon">
+                    <i data-lucide="trending-up" aria-hidden="true"></i>
+                  </div>
+                  <div class="indicator-content">
+                    <span class="indicator-label">Gasto / Orçamento</span>
+                    <strong class="indicator-value" id="spentBudgetRatio">
+                      <span id="spentBudgetSpent">R$ 0,00</span> / <span id="spentBudgetTotal">R$ 0,00</span>
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section class="card bg-base-100 shadow-sm content-block" aria-labelledby="purchasePeriodTitle">
             <div class="card-body">
               <div>
@@ -116,17 +167,6 @@
               </div>
             </div>
           </section>
-
-          <section class="card bg-base-100 shadow-sm content-block">
-              <div class="card-body">
-                <span>Gasto / Orçamento</span>
-                <strong class="spent-budget-ratio" id="spentBudgetRatio">
-                  <b id="spentBudgetSpent">R$ 0,00</b>
-                  <small>/</small>
-                  <small id="spentBudgetTotal">R$ 0,00</small>
-                </strong>
-              </div>
-            </section>
 
           <section class="card bg-base-100 shadow-sm content-block chart-block" aria-labelledby="purchaseChartTitle">
             <div class="card-body">
@@ -386,10 +426,6 @@
         <button type="button" data-nav-button data-view="purchaseView" aria-label="Compras">
           <i data-lucide="shopping-basket" aria-hidden="true"></i>
           <span class="dock-label">Compras</span>
-        </button>
-        <button type="button" data-nav-button data-view="settingsView" aria-label="Ajustes">
-          <i data-lucide="sliders-horizontal" aria-hidden="true"></i>
-          <span class="dock-label">Ajustes</span>
         </button>
       </nav>
       <button class="btn btn-primary btn-circle btn-lg fab-button" id="quickAddButton" type="button" aria-label="Adicionar">
