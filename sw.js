@@ -1,4 +1,4 @@
-const CACHE_NAME = "feira-v57";
+const CACHE_NAME = "feira-v57.1";
 const ASSETS = ["./", "./index.html", "./assets/app.css", "./styles.css", "./app.js", "./supabase-config.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
