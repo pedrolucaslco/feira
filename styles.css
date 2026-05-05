@@ -4,7 +4,7 @@
 
 *, *::before, *::after { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 html, body { touch-action: pan-x pan-y; }
-body { min-height: 100vh; background: var(--color-base-300); color: var(--color-base-content); }
+body { min-height: 100vh; background: var(--color-base-200); color: var(--color-base-content); }
 button, input, select, .item-row { touch-action: manipulation; }
 button[hidden], [hidden] { display: none !important; }
 h1, h2, h3, p { margin-top: 0; }
