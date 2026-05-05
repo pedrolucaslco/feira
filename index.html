@@ -31,7 +31,7 @@
         <div class="navbar-start brand">
           <div class="brand-copy">
             <div class="dropdown space-switcher-wrap">
-              <button class="btn space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="true" aria-expanded="false">
+              <button class="btn btn-ghost space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="true" aria-expanded="false">
                 <strong id="activeSpaceName">Espaço local</strong>
                 <span class="sync-status-icon" id="syncStatusLabel" title="Status de sincronização">
                   <i data-lucide="check-circle-2" aria-hidden="true"></i>
@@ -49,16 +49,12 @@
           <button class="btn btn-ghost btn-circle btn-sm topbar-refresh-button" id="topbarRefreshButton" type="button" aria-label="Atualizar app" title="Atualizar app">
             <i data-lucide="refresh-cw" aria-hidden="true"></i>
           </button>
-          <div class="dropdown dropdown-end topbar-avatar-wrap">
-            <button tabindex="0" type="button" class="btn btn-ghost btn-sm btn-circle" aria-label="Abrir configurações">
+          
+            <button tabindex="0" type="button" class="btn btn-ghost btn-sm btn-circle" data-nav-button data-view="settingsView" aria-label="Ajustes">
                 <i data-lucide="cog" aria-hidden="true"></i>
             </button>
-            <ul tabindex="-1" class="menu dropdown-content bg-base-100 rounded-box z-20 mt-3 w-52 p-2 shadow">
-              <li>
-                <button type="button" data-nav-button data-view="settingsView" aria-label="Ajustes">Ajustes</button>
-              </li>
-            </ul>
-          </div>
+            
+      
         </div>
       </header>
 
