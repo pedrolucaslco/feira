@@ -27,11 +27,11 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="navbar topbar">
+      <header class="navbar bg-base-100 topbar">
         <div class="navbar-start brand">
           <div class="brand-copy">
             <div class="dropdown space-switcher-wrap">
-              <button class="btn btn-ghost space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="true" aria-expanded="false">
+              <button class="btn space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="true" aria-expanded="false">
                 <strong id="activeSpaceName">Espaço local</strong>
                 <span class="sync-status-icon" id="syncStatusLabel" title="Status de sincronização">
                   <i data-lucide="check-circle-2" aria-hidden="true"></i>
@@ -46,14 +46,12 @@
           </div>
         </div>
         <div class="navbar-end topbar-actions" aria-label="Ações do aplicativo">
-          <button class="btn btn-ghost btn-square btn-sm topbar-refresh-button" id="topbarRefreshButton" type="button" aria-label="Atualizar app" title="Atualizar app">
+          <button class="btn btn-ghost btn-circle btn-sm topbar-refresh-button" id="topbarRefreshButton" type="button" aria-label="Atualizar app" title="Atualizar app">
             <i data-lucide="refresh-cw" aria-hidden="true"></i>
           </button>
           <div class="dropdown dropdown-end topbar-avatar-wrap">
-            <button tabindex="0" type="button" class="btn btn-ghost btn-circle avatar avatar-button" aria-label="Abrir configurações">
-              <div class="w-10 rounded-full bg-base-200 flex items-center justify-center">
-                <i data-lucide="user" aria-hidden="true"></i>
-              </div>
+            <button tabindex="0" type="button" class="btn btn-ghost btn-sm btn-circle" aria-label="Abrir configurações">
+                <i data-lucide="cog" aria-hidden="true"></i>
             </button>
             <ul tabindex="-1" class="menu dropdown-content bg-base-100 rounded-box z-20 mt-3 w-52 p-2 shadow">
               <li>
@@ -215,7 +213,7 @@
           </div>
 
           <div class="settings-stack">
-            <p class="settings-group-label">Perfil</p>
+            
             <form class="card bg-base-100 border border-base-300 settings-section profile-form" id="profileForm">
               <div class="card-body">
                 <div class="settings-row settings-row-inline">
@@ -232,7 +230,6 @@
               </div>
             </form>
 
-            <p class="settings-group-label">Financeiro</p>
             <form class="card bg-base-100 border border-base-300 settings-section budget-form" id="budgetForm">
               <div class="card-body">
                 <div class="settings-row settings-row-inline">
@@ -255,7 +252,6 @@
               </div>
             </form>
 
-            <p class="settings-group-label">Aparência</p>
             <section class="card bg-base-100 border border-base-300 settings-section settings-card" aria-labelledby="themeTitle">
               <div class="card-body">
                 <div class="settings-row settings-row-toggle">
@@ -303,7 +299,7 @@
               </div>
             </section>
 
-            <p class="settings-group-label">Compartilhamento</p>
+            
             <section class="card bg-base-100 border border-base-300 settings-section settings-card share-settings" aria-labelledby="spacesTitle">
               <div class="card-body">
                 <div class="settings-row">
@@ -370,7 +366,7 @@
               </div>
             </section>
 
-            <p class="settings-group-label">Sistema</p>
+            
             <section class="card bg-base-100 border border-base-300 settings-section settings-card" aria-labelledby="refreshAppTitle">
               <div class="card-body">
                 <div class="settings-row settings-row-inline">
@@ -414,18 +410,18 @@
         </section>
       </main>
 
-      <nav class="dock dock-lg" aria-label="Navegação principal">
+      <nav class="dock" aria-label="Navegação principal">
         <button class="dock-active" type="button" data-nav-button data-view="listView" aria-label="Lista">
           <i data-lucide="list-checks" aria-hidden="true"></i>
-          <span class="dock-label">Lista</span>
+          
         </button>
         <button type="button" data-nav-button data-view="mealsView" aria-label="Refeições">
           <i data-lucide="utensils" aria-hidden="true"></i>
-          <span class="dock-label">Refeições</span>
+          
         </button>
         <button type="button" data-nav-button data-view="purchaseView" aria-label="Compras">
           <i data-lucide="shopping-basket" aria-hidden="true"></i>
-          <span class="dock-label">Compras</span>
+          
         </button>
       </nav>
       <button class="btn btn-primary btn-circle btn-lg fab-button" id="quickAddButton" type="button" aria-label="Adicionar">
@@ -437,7 +433,7 @@
       <form class="modal-box checkout-form" id="checkoutForm">
         <div class="dialog-head">
           <div>
-            <p class="eyebrow">Compras</p>
+            
             <h2 id="checkoutDialogTitle">Registrar compra</h2>
           </div>
           <button class="btn btn-ghost btn-square" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">
