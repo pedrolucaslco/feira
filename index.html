@@ -105,7 +105,7 @@
             </div>
           </div>
 
-          <div class="category-list" id="itemList"></div>
+          <div class="list-surface" id="itemList"></div>
           <p class="empty-state" id="emptyItems">Sua lista ainda está vazia.</p>
         </section>
 
@@ -506,7 +506,7 @@
         <div class="dialog-head">
           <div>
             <p class="eyebrow">Lista</p>
-            <h2>Adicionar seção</h2>
+            <h2 id="categoryDialogTitle">Adicionar seção</h2>
           </div>
           <button class="btn btn-ghost btn-square" id="closeCategoryDialogButton" type="button" aria-label="Fechar">
             <i data-lucide="x" aria-hidden="true"></i>
@@ -514,7 +514,7 @@
         </div>
         <label class="label" for="categoryNameInput">Seção personalizada</label>
         <input class="input" id="categoryNameInput" name="category" autocomplete="off" placeholder="Ex.: Congelados" />
-        <fieldset class="fieldset preset-grid bg-base-200 rounded-box border border-base-300 p-3">
+        <fieldset class="fieldset preset-grid bg-base-200 rounded-box border border-base-300 p-3" id="categoryPresetGrid">
           <legend class="fieldset-legend">Sugestões rápidas</legend>
           <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Frutas" /> Frutas</label>
           <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Verduras" /> Verduras</label>
@@ -527,9 +527,46 @@
         </fieldset>
         <div class="modal-action dialog-actions">
           <button class="btn btn-soft" id="cancelCategoryDialogButton" type="button">Cancelar</button>
-          <button class="btn btn-primary" type="submit">Adicionar</button>
+          <button class="btn btn-primary" id="saveCategoryButton" type="submit">Adicionar</button>
         </div>
       </form>
+    </dialog>
+
+    <dialog class="modal modal-bottom sm:modal-middle" id="reorderCategoryDialog">
+      <div class="modal-box p-0 reorder-category-dialog">
+        <div class="dialog-head reorder-dialog-head">
+          <div>
+            <p class="eyebrow">Lista</p>
+            <h2>Reordenar seções</h2>
+          </div>
+          <div class="reorder-dialog-actions">
+            <button class="btn btn-primary btn-sm" id="confirmReorderCategoriesButton" type="button">Confirmar</button>
+            <button class="btn btn-ghost btn-square btn-sm" id="closeReorderCategoryDialogButton" type="button" aria-label="Fechar">
+              <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div class="reorder-section-list" id="reorderCategoryList"></div>
+      </div>
+    </dialog>
+
+    <dialog class="modal modal-bottom sm:modal-middle" id="deleteCategoryDialog">
+      <div class="modal-box">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Lista</p>
+            <h2>Apagar seção</h2>
+          </div>
+          <button class="btn btn-ghost btn-square btn-sm" id="closeDeleteCategoryDialogButton" type="button" aria-label="Fechar">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+        <p class="delete-section-copy" id="deleteCategoryMessage">Tem certeza?</p>
+        <div class="modal-action dialog-actions">
+          <button class="btn btn-soft" id="cancelDeleteCategoryDialogButton" type="button">Cancelar</button>
+          <button class="btn btn-error" id="confirmDeleteCategoryButton" type="button">Apagar</button>
+        </div>
+      </div>
     </dialog>
 
     <dialog class="modal modal-top item-dialog meal-dialog" id="mealDialog">

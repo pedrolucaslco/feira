@@ -129,6 +129,9 @@ var state = {
   inlineItemEditor: null,
   inlinePurchaseEditor: null,
   pendingItemCategoryId: "",
+  editingCategoryId: null,
+  pendingDeleteCategoryId: "",
+  reorderCategoryIds: [],
   collapsedCategoryIds: new Set(),
   draggingItemId: null,
 };
@@ -239,8 +242,11 @@ var el = {
   itemQuantity: document.querySelector("#itemQuantity"),
   itemCategory: document.querySelector("#itemCategory"),
   categoryForm: document.querySelector("#categoryForm"),
+  categoryDialogTitle: document.querySelector("#categoryDialogTitle"),
   categoryNameInput: document.querySelector("#categoryNameInput"),
   categoryPresetInputs: [...document.querySelectorAll("input[name='categoryPreset']")],
+  categoryPresetGrid: document.querySelector("#categoryPresetGrid"),
+  saveCategoryButton: document.querySelector("#saveCategoryButton"),
   itemDialog: document.querySelector("#itemDialog"),
   itemDialogTitle: document.querySelector("#itemDialogTitle"),
   saveItemButton: document.querySelector("#saveItemButton"),
@@ -250,6 +256,15 @@ var el = {
   categoryDialog: document.querySelector("#categoryDialog"),
   closeCategoryDialogButton: document.querySelector("#closeCategoryDialogButton"),
   cancelCategoryDialogButton: document.querySelector("#cancelCategoryDialogButton"),
+  reorderCategoryDialog: document.querySelector("#reorderCategoryDialog"),
+  reorderCategoryList: document.querySelector("#reorderCategoryList"),
+  closeReorderCategoryDialogButton: document.querySelector("#closeReorderCategoryDialogButton"),
+  confirmReorderCategoriesButton: document.querySelector("#confirmReorderCategoriesButton"),
+  deleteCategoryDialog: document.querySelector("#deleteCategoryDialog"),
+  deleteCategoryMessage: document.querySelector("#deleteCategoryMessage"),
+  closeDeleteCategoryDialogButton: document.querySelector("#closeDeleteCategoryDialogButton"),
+  cancelDeleteCategoryDialogButton: document.querySelector("#cancelDeleteCategoryDialogButton"),
+  confirmDeleteCategoryButton: document.querySelector("#confirmDeleteCategoryButton"),
   itemList: document.querySelector("#itemList"),
   emptyItems: document.querySelector("#emptyItems"),
   mealCountLabel: document.querySelector("#mealCountLabel"),
@@ -470,8 +485,24 @@ function normalizeItem(item, spaceId = state.activeSpaceId) {
   };
 }
 
+function normalizePurchase(purchase, spaceId = state.activeSpaceId) {
+  const now = Date.now();
+  const date = Number(purchase?.date);
+  const createdAt = Number(purchase?.createdAt);
+  return {
+    ...(purchase || {}),
+    id: purchase?.id || createId(),
+    spaceId,
+    name: String(purchase?.name || "").trim(),
+    total: Number(purchase?.total) || 0,
+    date: Number.isFinite(date) ? date : now,
+    createdAt: Number.isFinite(createdAt) ? createdAt : (Number.isFinite(date) ? date : now),
+  };
+}
+
 function normalizeStoreRecord(storeName, value, spaceId = state.activeSpaceId) {
   if (storeName === "items") return normalizeItem(value, spaceId);
+  if (storeName === "purchases") return normalizePurchase(value, spaceId);
   if (storeName === "meals") return normalizeMeal(value, spaceId);
   return value;
 }
@@ -643,7 +674,10 @@ async function loadState() {
   state.spaces = spaces.sort((a, b) => (a.type === "local" ? -1 : b.type === "local" ? 1 : a.name.localeCompare(b.name)));
   state.items = items.filter((item) => (item.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => b.createdAt - a.createdAt);
   state.categories = categories.filter((category) => (category.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => a.createdAt - b.createdAt);
-  state.purchases = purchases.filter((purchase) => (purchase.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => b.date - a.date);
+  state.purchases = purchases
+    .filter((purchase) => (purchase.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId)
+    .map((purchase) => normalizePurchase(purchase, state.activeSpaceId))
+    .sort((a, b) => (b.createdAt - a.createdAt) || (b.date - a.date));
   state.meals = meals
     .filter((meal) => (meal.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId)
     .map((meal) => normalizeMeal(meal, state.activeSpaceId))
@@ -657,7 +691,9 @@ async function migrateLocalRecords() {
   const [items, categories, purchases, meals, settings] = await Promise.all([getAll("items"), getAll("categories"), getAll("purchases"), getAll("meals"), getAll("settings")]);
   const migratedItems = items.filter((item) => !item.spaceId).map((item) => ({ ...item, spaceId: LOCAL_SPACE_ID }));
   const migratedCategories = categories.filter((category) => !category.spaceId).map((category) => ({ ...category, spaceId: LOCAL_SPACE_ID }));
-  const migratedPurchases = purchases.filter((purchase) => !purchase.spaceId).map((purchase) => ({ ...purchase, spaceId: LOCAL_SPACE_ID }));
+  const migratedPurchases = purchases
+    .filter((purchase) => !purchase.spaceId || !Number.isFinite(Number(purchase.createdAt)))
+    .map((purchase) => normalizePurchase({ ...purchase, spaceId: purchase.spaceId || LOCAL_SPACE_ID }, purchase.spaceId || LOCAL_SPACE_ID));
   const migratedMeals = meals.filter((meal) => !meal.spaceId).map((meal) => ({ ...meal, spaceId: LOCAL_SPACE_ID }));
   const legacySettings = settings.find((setting) => setting.id === SETTINGS_ID);
 
@@ -1834,6 +1870,14 @@ async function saveInlineItem(event, id = null, categoryId = "") {
   showToast(item ? "Item atualizado." : "Item adicionado.");
 }
 
+async function toggleItem(id) {
+  const item = state.items.find((current) => current.id === id);
+  if (!item) return;
+
+  await saveRecord("items", { ...item, checked: !item.checked });
+  await reloadAndRender();
+}
+
 async function removeItem(id) {
   if (!id) return;
   const confirmed = window.confirm("Excluir este item?");
@@ -1887,6 +1931,26 @@ function closeItemDialog() {
 
 async function saveCategory(event) {
   event.preventDefault();
+  const editingCategory = state.categories.find((category) => category.id === state.editingCategoryId);
+  if (editingCategory) {
+    const name = el.categoryNameInput.value.trim();
+    if (!name) {
+      showToast("Informe o nome da seção.");
+      return;
+    }
+    const duplicate = state.categories.some((category) => category.id !== editingCategory.id && category.name.toLowerCase() === name.toLowerCase());
+    if (duplicate) {
+      showToast("Já existe uma seção com esse nome.");
+      return;
+    }
+
+    await saveRecord("categories", { ...editingCategory, name });
+    closeCategoryDialog();
+    await reloadAndRender();
+    showToast("Seção atualizada.");
+    return;
+  }
+
   const names = [
     el.categoryNameInput.value.trim(),
     ...el.categoryPresetInputs.filter((input) => input.checked).map((input) => input.value.trim()),
@@ -1917,6 +1981,162 @@ async function saveCategory(event) {
   closeCategoryDialog();
   await reloadAndRender();
   showToast(categories.length === 1 ? "Seção adicionada." : "Seções adicionadas.");
+}
+
+function openCategoryEditor(id = null) {
+  closeListMenu();
+  state.editingCategoryId = id;
+  el.categoryForm.reset();
+  el.categoryPresetInputs.forEach((input) => { input.checked = false; });
+
+  const category = state.categories.find((current) => current.id === id);
+  const isEditing = Boolean(category);
+  if (el.categoryDialogTitle) {
+    el.categoryDialogTitle.textContent = isEditing ? "Editar seção" : "Adicionar seção";
+  }
+  if (el.saveCategoryButton) {
+    el.saveCategoryButton.textContent = isEditing ? "Salvar" : "Adicionar";
+  }
+  if (el.categoryPresetGrid) {
+    el.categoryPresetGrid.hidden = isEditing;
+  }
+  if (isEditing) {
+    el.categoryNameInput.value = category.name;
+  }
+
+  if (typeof el.categoryDialog.showModal === "function") {
+    el.categoryDialog.showModal();
+  } else {
+    el.categoryDialog.setAttribute("open", "");
+  }
+  focusDialogInput(el.categoryNameInput);
+}
+
+function openDeleteCategoryDialog(categoryId) {
+  const category = state.categories.find((current) => current.id === categoryId);
+  if (!category) return;
+  state.pendingDeleteCategoryId = categoryId;
+  const itemCount = state.items.filter((item) => itemCategoryId(item) === categoryId).length;
+  if (el.deleteCategoryMessage) {
+    el.deleteCategoryMessage.textContent = itemCount
+      ? `Apagar "${category.name}"? Os ${itemCount} ${itemCount === 1 ? "item será movido" : "itens serão movidos"} para Sem seção.`
+      : `Apagar "${category.name}"?`;
+  }
+  if (typeof el.deleteCategoryDialog.showModal === "function") {
+    el.deleteCategoryDialog.showModal();
+  } else {
+    el.deleteCategoryDialog.setAttribute("open", "");
+  }
+}
+
+function closeDeleteCategoryDialog() {
+  state.pendingDeleteCategoryId = "";
+  if (typeof el.deleteCategoryDialog.close === "function") {
+    el.deleteCategoryDialog.close();
+  } else {
+    el.deleteCategoryDialog.removeAttribute("open");
+  }
+}
+
+async function confirmDeleteCategory() {
+  const categoryId = state.pendingDeleteCategoryId;
+  const category = state.categories.find((current) => current.id === categoryId);
+  if (!category) {
+    closeDeleteCategoryDialog();
+    return;
+  }
+
+  const affectedItems = state.items.filter((item) => itemCategoryId(item) === categoryId);
+  if (affectedItems.length) {
+    await Promise.all(affectedItems.map((item) => saveRecord("items", { ...item, categoryId: "" })));
+  }
+  await deleteRecord("categories", categoryId);
+  closeDeleteCategoryDialog();
+  await reloadAndRender();
+  showToast("Seção apagada.");
+}
+
+function renderReorderCategoryList() {
+  if (!el.reorderCategoryList) return;
+  el.reorderCategoryList.innerHTML = "";
+  state.reorderCategoryIds.forEach((categoryId, index) => {
+    const category = state.categories.find((current) => current.id === categoryId);
+    if (!category) return;
+    const row = document.createElement("div");
+    row.className = "reorder-section-row";
+    row.innerHTML = `
+      <div class="reorder-section-main">
+        <strong>${escapeHtml(category.name)}</strong>
+        <span>${index + 1}</span>
+      </div>
+      <div class="reorder-section-controls">
+        <button class="btn btn-ghost btn-square btn-sm" type="button" data-move="up" aria-label="Subir ${escapeHtml(category.name)}" ${index === 0 ? "disabled" : ""}>
+          <i data-lucide="chevron-up" aria-hidden="true"></i>
+        </button>
+        <button class="btn btn-ghost btn-square btn-sm" type="button" data-move="down" aria-label="Descer ${escapeHtml(category.name)}" ${index === state.reorderCategoryIds.length - 1 ? "disabled" : ""}>
+          <i data-lucide="chevron-down" aria-hidden="true"></i>
+        </button>
+      </div>
+    `;
+    row.querySelectorAll("[data-move]").forEach((button) => {
+      button.addEventListener("click", () => moveReorderCategory(categoryId, button.dataset.move));
+    });
+    el.reorderCategoryList.append(row);
+  });
+}
+
+function moveReorderCategory(categoryId, direction) {
+  const index = state.reorderCategoryIds.indexOf(categoryId);
+  if (index === -1) return;
+  const nextIndex = direction === "up" ? index - 1 : index + 1;
+  if (nextIndex < 0 || nextIndex >= state.reorderCategoryIds.length) return;
+  const updated = state.reorderCategoryIds.slice();
+  const [moved] = updated.splice(index, 1);
+  updated.splice(nextIndex, 0, moved);
+  state.reorderCategoryIds = updated;
+  renderReorderCategoryList();
+  renderIcons();
+}
+
+function openReorderCategoryDialog() {
+  if (!state.categories.length) {
+    showToast("Crie uma seção para reordenar.");
+    return;
+  }
+  state.reorderCategoryIds = state.categories.map((category) => category.id);
+  renderReorderCategoryList();
+  if (typeof el.reorderCategoryDialog.showModal === "function") {
+    el.reorderCategoryDialog.showModal();
+  } else {
+    el.reorderCategoryDialog.setAttribute("open", "");
+  }
+  renderIcons();
+}
+
+function closeReorderCategoryDialog() {
+  state.reorderCategoryIds = [];
+  if (typeof el.reorderCategoryDialog.close === "function") {
+    el.reorderCategoryDialog.close();
+  } else {
+    el.reorderCategoryDialog.removeAttribute("open");
+  }
+}
+
+async function confirmReorderCategories() {
+  if (!state.reorderCategoryIds.length) {
+    closeReorderCategoryDialog();
+    return;
+  }
+  const base = Date.now();
+  await Promise.all(
+    state.reorderCategoryIds.map((categoryId, index) => {
+      const category = state.categories.find((current) => current.id === categoryId);
+      return category ? saveRecord("categories", { ...category, createdAt: base + index }) : Promise.resolve();
+    }),
+  );
+  closeReorderCategoryDialog();
+  await reloadAndRender();
+  showToast("Ordem das seções atualizada.");
 }
 
 function openMealEditor(id = null) {
@@ -2063,17 +2283,34 @@ async function addMealToCurrentList(id) {
 }
 
 function openCategoryDialog() {
-  closeListMenu();
-  el.categoryForm.reset();
-  if (typeof el.categoryDialog.showModal === "function") {
-    el.categoryDialog.showModal();
-  } else {
-    el.categoryDialog.setAttribute("open", "");
-  }
-  focusDialogInput(el.categoryNameInput);
+  openCategoryEditor();
+}
+
+function openCategoryDialogForEdit(id) {
+  openCategoryEditor(id);
+}
+
+function openCategoryReorderDialog() {
+  openReorderCategoryDialog();
+}
+
+function openCategoryDeleteDialog(id) {
+  openDeleteCategoryDialog(id);
 }
 
 function closeCategoryDialog() {
+  state.editingCategoryId = null;
+  if (el.categoryDialogTitle) {
+    el.categoryDialogTitle.textContent = "Adicionar seção";
+  }
+  if (el.saveCategoryButton) {
+    el.saveCategoryButton.textContent = "Adicionar";
+  }
+  if (el.categoryPresetGrid) {
+    el.categoryPresetGrid.hidden = false;
+  }
+  el.categoryForm.reset();
+  el.categoryPresetInputs.forEach((input) => { input.checked = false; });
   if (typeof el.categoryDialog.close === "function") {
     el.categoryDialog.close();
   } else {
@@ -2448,6 +2685,11 @@ function bindEvents() {
   el.cancelItemDialogButton.addEventListener("click", closeItemDialog);
   el.closeCategoryDialogButton?.addEventListener("click", closeCategoryDialog);
   el.cancelCategoryDialogButton?.addEventListener("click", closeCategoryDialog);
+  el.closeReorderCategoryDialogButton?.addEventListener("click", closeReorderCategoryDialog);
+  el.confirmReorderCategoriesButton?.addEventListener("click", confirmReorderCategories);
+  el.closeDeleteCategoryDialogButton?.addEventListener("click", closeDeleteCategoryDialog);
+  el.cancelDeleteCategoryDialogButton?.addEventListener("click", closeDeleteCategoryDialog);
+  el.confirmDeleteCategoryButton?.addEventListener("click", confirmDeleteCategory);
   el.budgetForm.addEventListener("submit", saveBudget);
   el.profileForm.addEventListener("submit", saveProfile);
   el.resetDatabaseButton.addEventListener("click", resetDatabase);

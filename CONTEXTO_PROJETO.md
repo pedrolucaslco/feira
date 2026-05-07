@@ -401,10 +401,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v49.0
+feira-v58.6
 ```
 
-O cache foi atualizado para `feira-v49.0` para forçar a troca da versão estática anterior para o pacote servido/buildado com npm/Vite e manter o CSS gerado no precache offline.
+O cache foi atualizado para `feira-v58.6` para publicar o menu de ações das seções como dropdown DaisyUI.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -511,17 +511,14 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Limpeza de assets/css legado e componentização da interface em /components.
+Correção do menu de ações das seções para usar dropdown, mantendo labels e listas separadas.
 ```
 
 Arquivos alterados nesse marco:
 
-- `app.js` (limpeza e extração de componentes)
-- `components/items.js` (novo)
-- `components/meals.js` (novo)
-- `components/purchases.js` (novo)
-- `components/categories.js` (novo)
-- `vite.config.js` (ajuste para copiar componentes)
-- `index.html` (ordem de scripts)
-- `assets/app.css` (removido)
+- `app.js` (remove estado manual do menu de ações por seção)
+- `components/categories.js` (troca menu manual por dropdown DaisyUI)
+- `index.html` (container da lista sem `category-list`)
+- `styles.css` (mantém apenas ajustes leves para dropdown/lista)
+- `sw.js` (incrementa cache para `feira-v58.6`)
 - `CONTEXTO_PROJETO.md` (atualizado)
