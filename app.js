@@ -134,6 +134,10 @@ var state = {
   reorderCategoryIds: [],
   collapsedCategoryIds: new Set(),
   draggingItemId: null,
+  dragTargetItemId: "",
+  dragTargetCategoryId: "",
+  dragTargetPlacement: "after",
+  suppressItemClickId: "",
 };
 
 function createId() {
@@ -473,6 +477,9 @@ function normalizeMeal(meal, spaceId = state.activeSpaceId) {
 
 function normalizeItem(item, spaceId = state.activeSpaceId) {
   const now = Date.now();
+  const createdAt = Number(item?.createdAt);
+  const sortOrder = Number(item?.sortOrder);
+  const safeCreatedAt = Number.isFinite(createdAt) ? createdAt : now;
   return {
     ...(item || {}),
     id: item?.id || createId(),
@@ -481,7 +488,8 @@ function normalizeItem(item, spaceId = state.activeSpaceId) {
     quantity: String(item?.quantity || "").trim(),
     categoryId: String(item?.categoryId || "").trim(),
     checked: item?.checked === true,
-    createdAt: Number(item?.createdAt) || now,
+    createdAt: safeCreatedAt,
+    sortOrder: Number.isFinite(sortOrder) ? sortOrder : safeCreatedAt,
   };
 }
 
@@ -642,14 +650,18 @@ async function seedData() {
   if (isFirstRun && !localItems.length) {
     await bulkPut(
       "items",
-      DEFAULT_ITEMS.map((item) => ({
-        id: createId(),
-        spaceId: LOCAL_SPACE_ID,
-        name: item.name,
-        quantity: item.quantity,
-        checked: false,
-        createdAt: Date.now(),
-      })),
+      DEFAULT_ITEMS.map((item, index) => {
+        const createdAt = Date.now() + index;
+        return {
+          id: createId(),
+          spaceId: LOCAL_SPACE_ID,
+          name: item.name,
+          quantity: item.quantity,
+          checked: false,
+          createdAt,
+          sortOrder: createdAt,
+        };
+      }),
     );
   }
 }
@@ -672,7 +684,10 @@ async function loadState() {
   }
 
   state.spaces = spaces.sort((a, b) => (a.type === "local" ? -1 : b.type === "local" ? 1 : a.name.localeCompare(b.name)));
-  state.items = items.filter((item) => (item.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => b.createdAt - a.createdAt);
+  state.items = items
+    .filter((item) => (item.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId)
+    .map((item) => normalizeItem(item, state.activeSpaceId))
+    .sort((a, b) => (b.sortOrder - a.sortOrder) || (b.createdAt - a.createdAt));
   state.categories = categories.filter((category) => (category.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId).sort((a, b) => a.createdAt - b.createdAt);
   state.purchases = purchases
     .filter((purchase) => (purchase.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId)
@@ -689,7 +704,9 @@ async function loadState() {
 
 async function migrateLocalRecords() {
   const [items, categories, purchases, meals, settings] = await Promise.all([getAll("items"), getAll("categories"), getAll("purchases"), getAll("meals"), getAll("settings")]);
-  const migratedItems = items.filter((item) => !item.spaceId).map((item) => ({ ...item, spaceId: LOCAL_SPACE_ID }));
+  const migratedItems = items
+    .filter((item) => !item.spaceId || !Number.isFinite(Number(item.sortOrder)))
+    .map((item) => normalizeItem({ ...item, spaceId: item.spaceId || LOCAL_SPACE_ID }, item.spaceId || LOCAL_SPACE_ID));
   const migratedCategories = categories.filter((category) => !category.spaceId).map((category) => ({ ...category, spaceId: LOCAL_SPACE_ID }));
   const migratedPurchases = purchases
     .filter((purchase) => !purchase.spaceId || !Number.isFinite(Number(purchase.createdAt)))
@@ -793,6 +810,16 @@ function itemCategoryId(item) {
   return item.categoryId || UNCATEGORIZED_ID;
 }
 
+function storeCategoryId(categoryId = "") {
+  return categoryId === UNCATEGORIZED_ID ? "" : categoryId;
+}
+
+function shouldSuppressItemClick(id) {
+  if (state.suppressItemClickId !== id) return false;
+  state.suppressItemClickId = "";
+  return true;
+}
+
 function normalizeItemName(name) {
   return String(name || "").trim().toLowerCase();
 }
@@ -803,6 +830,152 @@ function mergeQuantity(currentQuantity = "", nextQuantity = "") {
   if (!current) return next;
   if (!next || current.toLowerCase() === next.toLowerCase()) return current;
   return `${current} + ${next}`;
+}
+
+function sectionItems(categoryId, excludedItemId = "") {
+  return state.items.filter((item) => item.id !== excludedItemId && itemCategoryId(item) === categoryId);
+}
+
+function itemSortOrder(item) {
+  const sortOrder = Number(item?.sortOrder);
+  if (Number.isFinite(sortOrder)) return sortOrder;
+  const createdAt = Number(item?.createdAt);
+  return Number.isFinite(createdAt) ? createdAt : Date.now();
+}
+
+function sortOrderForItemPosition(items, targetIndex) {
+  const previous = items[targetIndex - 1];
+  const next = items[targetIndex];
+  if (previous && next) return (itemSortOrder(previous) + itemSortOrder(next)) / 2;
+  if (previous) return itemSortOrder(previous) - 1;
+  if (next) return itemSortOrder(next) + 1;
+  return Date.now();
+}
+
+function clearItemDropIndicators() {
+  document.querySelectorAll(".item-row.is-drop-before, .item-row.is-drop-after, .shopping-list.is-drop-target").forEach((element) => {
+    element.classList.remove("is-drop-before", "is-drop-after", "is-drop-target");
+  });
+}
+
+function updateItemDropTarget(clientX, clientY) {
+  clearItemDropIndicators();
+  const target = document.elementFromPoint(clientX, clientY);
+  const targetRow = target?.closest?.(".item-row");
+  const targetList = target?.closest?.(".shopping-list");
+  const targetSection = target?.closest?.(".market-section");
+  const draggedItem = state.items.find((item) => item.id === state.draggingItemId);
+  const fallbackCategoryId = draggedItem ? itemCategoryId(draggedItem) : UNCATEGORIZED_ID;
+  const categoryId = targetList?.dataset.categoryId || targetRow?.dataset.categoryId || targetSection?.dataset.categoryId || fallbackCategoryId;
+
+  state.dragTargetCategoryId = categoryId;
+  state.dragTargetItemId = "";
+  state.dragTargetPlacement = "after";
+
+  if (targetRow && targetRow.dataset.itemId !== state.draggingItemId) {
+    const rect = targetRow.getBoundingClientRect();
+    const placement = clientY < rect.top + rect.height / 2 ? "before" : "after";
+    targetRow.classList.add(placement === "before" ? "is-drop-before" : "is-drop-after");
+    state.dragTargetItemId = targetRow.dataset.itemId;
+    state.dragTargetPlacement = placement;
+    return;
+  }
+
+  targetList?.classList.add("is-drop-target");
+}
+
+async function moveDraggedItemToTarget() {
+  const item = state.items.find((current) => current.id === state.draggingItemId);
+  if (!item) return;
+
+  const targetCategoryId = state.dragTargetCategoryId || itemCategoryId(item);
+  const items = sectionItems(targetCategoryId, item.id);
+  const targetItemIndex = items.findIndex((current) => current.id === state.dragTargetItemId);
+  const targetIndex = targetItemIndex === -1
+    ? items.length
+    : targetItemIndex + (state.dragTargetPlacement === "after" ? 1 : 0);
+  const nextSortOrder = sortOrderForItemPosition(items, targetIndex);
+  const nextCategoryId = storeCategoryId(targetCategoryId);
+  const changedCategory = (item.categoryId || "") !== nextCategoryId;
+  const changedPosition = itemSortOrder(item) !== nextSortOrder;
+
+  if (!changedCategory && !changedPosition) return;
+  await saveRecord("items", {
+    ...item,
+    categoryId: nextCategoryId,
+    sortOrder: nextSortOrder,
+  });
+}
+
+function bindItemLongPressDrag(row, item) {
+  let longPressTimer = 0;
+  let isDragging = false;
+  const longPressDelay = 420;
+
+  const cleanup = () => {
+    window.clearTimeout(longPressTimer);
+    window.removeEventListener("pointermove", handlePointerMove);
+    window.removeEventListener("pointerup", handlePointerUp);
+    window.removeEventListener("pointercancel", handlePointerCancel);
+  };
+
+  const startDrag = (event) => {
+    isDragging = true;
+    state.draggingItemId = item.id;
+    state.dragTargetCategoryId = itemCategoryId(item);
+    state.dragTargetItemId = "";
+    state.dragTargetPlacement = "after";
+    row.classList.add("is-dragging");
+    document.body.classList.add("is-dragging-item");
+    updateItemDropTarget(event.clientX, event.clientY);
+  };
+
+  function handlePointerMove(event) {
+    if (!isDragging) return;
+    event.preventDefault();
+    updateItemDropTarget(event.clientX, event.clientY);
+  }
+
+  async function handlePointerUp(event) {
+    cleanup();
+    if (!isDragging) return;
+    event.preventDefault();
+    state.suppressItemClickId = item.id;
+    row.classList.remove("is-dragging");
+    document.body.classList.remove("is-dragging-item");
+    clearItemDropIndicators();
+    await moveDraggedItemToTarget();
+    state.draggingItemId = null;
+    state.dragTargetCategoryId = "";
+    state.dragTargetItemId = "";
+    await reloadAndRender();
+  }
+
+  function handlePointerCancel() {
+    cleanup();
+    row.classList.remove("is-dragging");
+    document.body.classList.remove("is-dragging-item");
+    clearItemDropIndicators();
+    state.draggingItemId = null;
+    state.dragTargetCategoryId = "";
+    state.dragTargetItemId = "";
+  }
+
+  row.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || event.target.closest("input, select, textarea, .check-button")) return;
+    window.clearTimeout(longPressTimer);
+    window.addEventListener("pointermove", handlePointerMove, { passive: false });
+    window.addEventListener("pointerup", handlePointerUp, { passive: false });
+    window.addEventListener("pointercancel", handlePointerCancel, { passive: false });
+    longPressTimer = window.setTimeout(() => startDrag(event), longPressDelay);
+  });
+
+  row.addEventListener("pointermove", (event) => {
+    if (isDragging) return;
+    if (Math.abs(event.movementX) > 8 || Math.abs(event.movementY) > 8) {
+      cleanup();
+    }
+  });
 }
 
 function median(values) {
@@ -1801,13 +1974,15 @@ async function saveItem(event) {
   if (item) {
     await saveRecord("items", { ...item, name, quantity, categoryId: categoryId === UNCATEGORIZED_ID ? "" : categoryId });
   } else {
+    const createdAt = Date.now();
     await saveRecord("items", {
       id: createId(),
       name,
       quantity,
       categoryId: categoryId === UNCATEGORIZED_ID ? "" : categoryId || (state.pendingItemCategoryId === UNCATEGORIZED_ID ? "" : state.pendingItemCategoryId),
       checked: false,
-      createdAt: Date.now(),
+      createdAt,
+      sortOrder: createdAt,
     });
   }
 
@@ -1851,17 +2026,19 @@ async function saveInlineItem(event, id = null, categoryId = "") {
   }
 
   const item = state.items.find((current) => current.id === id);
-  const selectedCategoryId = form.elements.categoryId.value.trim();
+  const selectedCategoryId = form.elements.categoryId?.value.trim() ?? categoryId;
   if (item) {
-    await saveRecord("items", { ...item, name, quantity, categoryId: selectedCategoryId === UNCATEGORIZED_ID ? "" : selectedCategoryId });
+    await saveRecord("items", { ...item, name, quantity, categoryId: storeCategoryId(selectedCategoryId) });
   } else {
+    const createdAt = Date.now();
     await saveRecord("items", {
       id: createId(),
       name,
       quantity,
-      categoryId: selectedCategoryId === UNCATEGORIZED_ID ? "" : selectedCategoryId || (categoryId === UNCATEGORIZED_ID ? "" : categoryId),
+      categoryId: storeCategoryId(selectedCategoryId || categoryId),
       checked: false,
-      createdAt: Date.now(),
+      createdAt,
+      sortOrder: createdAt,
     });
   }
 
@@ -2262,13 +2439,15 @@ async function addMealToCurrentList(id) {
       continue;
     }
 
+    const createdAt = Date.now() + addedCount;
     const newItem = {
       id: createId(),
       name: mealItem.name.trim(),
       quantity: mealItem.quantity || "",
       categoryId: "",
       checked: false,
-      createdAt: Date.now() + addedCount,
+      createdAt,
+      sortOrder: createdAt,
     };
     await saveRecord("items", newItem);
     itemsByName.set(key, newItem);

@@ -1,6 +1,7 @@
 function createShoppingList(category, items, hasInlineNewItem, isCollapsed) {
   const list = document.createElement("ul");
   list.className = "list shopping-list";
+  list.dataset.categoryId = category.id;
   list.hidden = isCollapsed;
 
   if (state.inlineItemEditor && !state.inlineItemEditor.id && itemCategoryId({ categoryId: state.inlineItemEditor.categoryId }) === category.id) {

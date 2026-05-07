@@ -144,7 +144,8 @@ items: {
   quantity: string,
   categoryId: string,
   checked: boolean, // sincronizado em espaços compartilhados
-  createdAt: number
+  createdAt: number,
+  sortOrder: number // posição mutável da lista; createdAt permanece imutável
 }
 
 categories: {
@@ -401,10 +402,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v58.6
+feira-v58.8
 ```
 
-O cache foi atualizado para `feira-v58.6` para publicar o menu de ações das seções como dropdown DaisyUI.
+O cache foi atualizado para `feira-v58.8` para publicar a ordenação de itens com `sortOrder`, preservando `createdAt`.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -466,6 +467,7 @@ Direção visual atual:
 - Espaços compartilhados usam código de convite e continuam com escrita local instantânea.
 - Itens, seções, compras, refeições e ajustes financeiros são sincronizáveis no espaço compartilhado.
 - O estado marcado/desmarcado de cada item (`checked`) é normalizado e sincronizado no registro do item para refletir entre usuários do mesmo espaço.
+- A posição visual dos itens usa `sortOrder`; `createdAt` fica preservado como data de criação.
 - Ajustes inclui diagnóstico de sincronização com testes unitários em sandbox isolado, sem alterar IndexedDB ou chamar Supabase.
 
 O app evita uma landing page e abre direto na experiência funcional.
@@ -511,14 +513,13 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Correção do menu de ações das seções para usar dropdown, mantendo labels e listas separadas.
+Ordenação de itens por `sortOrder`, evitando usar `createdAt` como posição mutável e reduzindo conflitos de sincronização.
 ```
 
 Arquivos alterados nesse marco:
 
-- `app.js` (remove estado manual do menu de ações por seção)
-- `components/categories.js` (troca menu manual por dropdown DaisyUI)
-- `index.html` (container da lista sem `category-list`)
-- `styles.css` (mantém apenas ajustes leves para dropdown/lista)
-- `sw.js` (incrementa cache para `feira-v58.6`)
+- `app.js` (normaliza `sortOrder`, ordena itens por esse campo e reordena sem alterar `createdAt`)
+- `README.md` (documenta `sortOrder` no modelo de itens)
+- `supabase-migration-item-sort-order.sql` (migração para preencher `data.sortOrder` nos itens sincronizados)
+- `sw.js` (incrementa cache para `feira-v58.8`)
 - `CONTEXTO_PROJETO.md` (atualizado)

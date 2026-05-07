@@ -149,7 +149,8 @@ items: {
   quantity: string,
   categoryId: string,
   checked: boolean,
-  createdAt: number
+  createdAt: number,
+  sortOrder: number
 }
 
 categories: {
