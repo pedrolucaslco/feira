@@ -325,13 +325,7 @@ dark
 
 O reset do banco não apaga essa preferência visual.
 
-A aba também permite escolher o tema DaisyUI usado quando o modo escuro está desligado. A preferência é salva em `localStorage`, com a chave legada:
-
-```txt
-feira:accent
-```
-
-As opções usam temas padrão do DaisyUI, como light, emerald, corporate, garden, cupcake, bumblebee, lofi, pastel, fantasy, wireframe e aqua. Quando `feira:theme` está em `dark`, o app usa o tema padrão `dark` do DaisyUI.
+A aba alterna entre dois temas DaisyUI fixos: `emerald` no modo claro e `dim` no modo escuro. A chave legada `feira:accent` pode existir em instalações antigas, mas não é mais usada.
 
 A aba também permite salvar um perfil local:
 
@@ -442,10 +436,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v58.11
+feira-v58.12
 ```
 
-O cache foi atualizado para `feira-v58.11` para ajustar foco em modais e iniciar Comprados recentemente recolhida.
+O cache foi atualizado para `feira-v58.12` para simplificar os temas DaisyUI para `emerald`/`dim` e ajustar o fundo do app por modo.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -496,8 +490,9 @@ Direção visual atual:
 - Modais em estilo bottom sheet com animação de subida.
 - Botões com feedback sutil ao toque.
 - Cards simples com raio de 8px.
-- Modo escuro usando o tema padrão `dark` do DaisyUI.
-- Tema claro configurável por temas padrão do DaisyUI.
+- Modo claro usando o tema `emerald` do DaisyUI.
+- Modo escuro usando o tema `dim` do DaisyUI.
+- Fundo do app usa `base-100` no modo claro e `base-300` no modo escuro.
 - Saldo sempre visível no topo.
 - Lista de mercado como tela inicial, com saldo e planejamento semanal sempre visíveis no topo.
 - FAB contextual: novo item na lista, nova refeição em refeições e nova compra em compras.
@@ -555,15 +550,14 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Fluxo opcional de compra ativa com foco correto nos modais e Comprados recentemente recolhida por padrão.
+Temas DaisyUI simplificados para claro/escuro com fundo do app ajustado por modo.
 ```
 
 Arquivos alterados nesse marco:
 
-- `app.js` (ajusta foco por criação/edição e estado inicial recolhido de Comprados recentemente)
-- `index.html` e `styles.css` (controles de compra ativa e seção visual do cronômetro)
-- `components/categories.js` (usa Comprados recentemente recolhida por padrão)
-- `supabase.sql` e `supabase-migration-purchase-sessions.sql` (aceitam `purchase_session`)
-- `README.md` (documenta o novo fluxo e modelo de dados)
-- `sw.js` (incrementa cache para `feira-v58.11`)
+- `src/app.css` (limita DaisyUI aos temas `emerald` e `dim`)
+- `app.js` e `index.html` (removem seletor/configuração de tema DaisyUI variável)
+- `styles.css` (aplica fundo `base-100` no claro e `base-300` no escuro)
+- `README.md` (documenta os temas fixos)
+- `sw.js` (incrementa cache para `feira-v58.12`)
 - `CONTEXTO_PROJETO.md` (atualizado)

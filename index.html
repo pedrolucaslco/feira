@@ -15,11 +15,8 @@
             : window.matchMedia("(prefers-color-scheme: dark)").matches
               ? "dark"
               : "light";
-        const daisyThemes = ["light", "emerald", "corporate", "garden", "cupcake", "bumblebee", "lofi", "pastel", "fantasy", "wireframe", "aqua"];
-        const storedDaisyTheme = localStorage.getItem("feira:accent");
-        const daisyTheme = daisyThemes.includes(storedDaisyTheme) ? storedDaisyTheme : "emerald";
-        document.documentElement.dataset.theme = theme === "dark" ? "dark" : daisyTheme;
-        document.documentElement.dataset.accent = daisyTheme;
+        document.documentElement.dataset.mode = theme;
+        document.documentElement.dataset.theme = theme === "dark" ? "dim" : "emerald";
       })();
     </script>
     <script type="module">
@@ -30,7 +27,7 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="navbar bg-base-200 border-b border-base-300 topbar">
+      <header class="navbar border-b border-base-300 topbar">
         <div class="navbar-start brand">
           <div class="brand-copy">
             <div class="space-switcher-wrap">
@@ -145,7 +142,7 @@
             </button>
           </div>
 
-          <section class="card bg-base-100 shadow-sm content-block purchase-indicators-card">
+          <section class="card border border-base-300 bg-base-100 content-block purchase-indicators-card">
             <div class="card-body">
               <div class="indicators-grid">
                 <div class="indicator-item">
@@ -171,7 +168,7 @@
             </div>
           </section>
 
-          <section class="card bg-base-100 shadow-sm content-block purchase-indicators-card">
+          <section class="card border border-base-300 bg-base-100 content-block purchase-indicators-card">
             <div class="card-body">
               <div class="indicators-grid">
                 <div class="indicator-item">
@@ -189,7 +186,7 @@
             </div>
           </section>
 
-          <section class="card bg-base-100 shadow-sm content-block" aria-labelledby="purchasePeriodTitle">
+          <section class="card border border-base-300 bg-base-100 content-block" aria-labelledby="purchasePeriodTitle">
             <div class="card-body">
               <div>
                 <span>Período atual</span>
@@ -202,7 +199,7 @@
             </div>
           </section>
 
-          <section class="card bg-base-100 shadow-sm content-block chart-block" aria-labelledby="purchaseChartTitle">
+          <section class="card border border-base-300 bg-base-100 content-block chart-block" aria-labelledby="purchaseChartTitle">
             <div class="card-body">
               <div class="block-title-row">
                 <h3 id="purchaseChartTitle" class="card-title">Variação das compras</h3>
@@ -213,7 +210,7 @@
             </div>
           </section>
 
-          <section class="card bg-base-100 shadow-sm content-block" aria-labelledby="latestTitle">
+          <section class="card border border-base-300 bg-base-100 content-block" aria-labelledby="latestTitle">
             <div class="card-body">
               <div class="block-title-row">
                 <h3 id="latestTitle" class="card-title">Compras realizadas</h3>
@@ -241,7 +238,7 @@
           <p class="empty-state" id="emptyMeals">Nenhuma refeição criada.</p>
         </section>
 
-        <section id="settingsView" class="view bg-base-200 settings-view-surface" aria-labelledby="settingsTitle">
+        <section id="settingsView" class="view settings-view-surface" aria-labelledby="settingsTitle">
           <div class="section-head">
             <div>
               <h2 id="settingsTitle">Ajustes</h2>
@@ -297,27 +294,6 @@
                       <span id="themeTitle">Modo escuro</span>
                     </label>
                     <p>Cores neste dispositivo</p>
-                  </div>
-                </div>
-                <div class="settings-row">
-                  <div class="settings-row-main">
-                    <h3 id="accentTitle" class="card-title">Tema DaisyUI</h3>
-                    <p>Usado quando o modo escuro está desligado</p>
-                  </div>
-                  <div class="settings-row-control">
-                    <select class="select accent-select" id="accentColorInput" name="accentColor" aria-label="Tema DaisyUI">
-                      <option value="light">Light</option>
-                      <option value="emerald">Emerald</option>
-                      <option value="corporate">Corporate</option>
-                      <option value="garden">Garden</option>
-                      <option value="cupcake">Cupcake</option>
-                      <option value="bumblebee">Bumblebee</option>
-                      <option value="lofi">Lofi</option>
-                      <option value="pastel">Pastel</option>
-                      <option value="fantasy">Fantasy</option>
-                      <option value="wireframe">Wireframe</option>
-                      <option value="aqua">Aqua</option>
-                    </select>
                   </div>
                 </div>
                 <div class="settings-row">

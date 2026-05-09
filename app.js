@@ -4,7 +4,6 @@ const SETTINGS_ID = "main";
 const LOCAL_SPACE_ID = "local";
 const ACTIVE_SPACE_STORAGE_KEY = "feira:active-space";
 const THEME_STORAGE_KEY = "feira:theme";
-const ACCENT_STORAGE_KEY = "feira:accent";
 const PROFILE_STORAGE_KEY = "feira:profile";
 const EDITOR_MODE_STORAGE_KEY = "feira:editor-mode";
 const SUPABASE_CONFIG = globalThis.FEIRA_SUPABASE || {};
@@ -17,7 +16,6 @@ const STORE_TO_ENTITY = {
   settings: "settings",
 };
 const ENTITY_TO_STORE = Object.fromEntries(Object.entries(STORE_TO_ENTITY).map(([storeName, entityType]) => [entityType, storeName]));
-const DAISY_THEMES = ["light", "emerald", "corporate", "garden", "cupcake", "bumblebee", "lofi", "pastel", "fantasy", "wireframe", "aqua"];
 const VIEW_ORDER = ["listView", "mealsView", "purchaseView", "settingsView"];
 const DEFAULT_ITEMS = [
   { name: "Arroz", quantity: "1 pacote" },
@@ -59,35 +57,23 @@ function getInitialTheme() {
 function applyTheme(theme) {
   const mode = theme === "dark" ? "dark" : "light";
   localStorage.setItem(THEME_STORAGE_KEY, mode);
-  applyDaisyTheme(mode, getInitialAccent());
-}
-
-function getInitialAccent() {
-  const storedAccent = localStorage.getItem(ACCENT_STORAGE_KEY);
-  return DAISY_THEMES.includes(storedAccent) ? storedAccent : "emerald";
-}
-
-function applyAccent(accent) {
-  const safeTheme = DAISY_THEMES.includes(accent) ? accent : "emerald";
-  localStorage.setItem(ACCENT_STORAGE_KEY, safeTheme);
-  applyDaisyTheme(getStoredThemeMode(), safeTheme);
+  applyDaisyTheme(mode);
 }
 
 function getStoredThemeMode() {
   return localStorage.getItem(THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
 }
 
-function applyDaisyTheme(mode = getStoredThemeMode(), daisyTheme = getInitialAccent()) {
-  const safeTheme = DAISY_THEMES.includes(daisyTheme) ? daisyTheme : "emerald";
-  document.documentElement.dataset.accent = safeTheme;
-  document.documentElement.dataset.theme = mode === "dark" ? "dark" : safeTheme;
+function applyDaisyTheme(mode = getStoredThemeMode()) {
+  document.documentElement.dataset.mode = mode;
+  document.documentElement.dataset.theme = mode === "dark" ? "dim" : "emerald";
   updateThemeColor();
 }
 
 function updateThemeColor() {
-  const theme = document.documentElement.dataset.theme;
   const accent = getComputedStyle(document.documentElement).getPropertyValue("--color-primary").trim();
-  document.querySelector("#themeColorMeta")?.setAttribute("content", theme === "dark" ? "#000000" : accent || "#059669");
+  const mode = document.documentElement.dataset.mode === "dark" ? "dark" : "light";
+  document.querySelector("#themeColorMeta")?.setAttribute("content", mode === "dark" ? "#1f2937" : accent || "#059669");
 }
 
 function localPersonalSettings() {
@@ -108,7 +94,7 @@ function saveLocalProfile(userName, userGender) {
   localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ userName, userGender }));
 }
 
-applyDaisyTheme(getInitialTheme(), getInitialAccent());
+applyDaisyTheme(getInitialTheme());
 
 var state = {
   db: null,
@@ -292,7 +278,6 @@ var el = {
   resetDatabaseButton: document.querySelector("#resetDatabaseButton"),
   manualRefreshButton: document.querySelector("#manualRefreshButton"),
   themeToggle: document.querySelector("#themeToggle"),
-  accentColorInput: document.querySelector("#accentColorInput"),
   editorModeInput: document.querySelector("#editorModeInput"),
   createSpaceForm: document.querySelector("#createSpaceForm"),
   createSpaceNameInput: document.querySelector("#createSpaceNameInput"),
@@ -1433,10 +1418,7 @@ function renderNavigation() {
 }
 
 function renderSettings() {
-  el.themeToggle.checked = document.documentElement.dataset.theme === "dark";
-  if (el.accentColorInput) {
-    el.accentColorInput.value = document.documentElement.dataset.accent || "emerald";
-  }
+  el.themeToggle.checked = document.documentElement.dataset.mode === "dark";
   if (el.editorModeInput) {
     el.editorModeInput.value = editorMode();
   }
@@ -2858,10 +2840,6 @@ function changeEditorMode(event) {
   saveRecord("settings", { ...state.settings, editorMode }).then(() => reloadAndRender());
 }
 
-function changeAccent(event) {
-  applyAccent(event.currentTarget.value);
-}
-
 function handleFabButton() {
   if (state.activeView === "listView") {
     openItemEditor();
@@ -3211,7 +3189,6 @@ function bindEvents() {
   el.runSyncTestsButton?.addEventListener("click", runSyncDiagnostics);
   el.topbarRefreshButton?.addEventListener("click", refreshApp);
   el.themeToggle.addEventListener("change", toggleTheme);
-  el.accentColorInput?.addEventListener("change", changeAccent);
   el.editorModeInput?.addEventListener("change", changeEditorMode);
   el.createSpaceForm?.addEventListener("submit", createSharedSpace);
   el.joinSpaceForm?.addEventListener("submit", joinSharedSpace);

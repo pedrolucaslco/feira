@@ -42,8 +42,8 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Diagnóstico de sincronização na tela de ajustes com testes unitários em sandbox isolado.
 - Estado marcado/desmarcado dos itens sincronizado entre usuários do mesmo espaço compartilhado.
 - Modo escuro com preferência salva no dispositivo.
-- Modo escuro com tema padrão `dark` do DaisyUI.
-- Tema DaisyUI configurável para o modo claro.
+- Modo claro com tema `emerald` do DaisyUI.
+- Modo escuro com tema `dim` do DaisyUI.
 - Navegação inferior com Lucide Icons via CDN.
 - Topbar fixa com saudação, saldo total e saldo semanal sempre visíveis.
 - Animações leves ao trocar de tela.
