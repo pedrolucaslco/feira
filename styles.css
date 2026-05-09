@@ -9,8 +9,8 @@
 
 *, *::before, *::after { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 html, body { touch-action: pan-x pan-y; }
-:root[data-mode="light"] body,:root[data-mode="light"] .navbar { background: var(--color-base-100); }
-:root[data-mode="dark"] body,:root[data-mode="dark"] .navbar { background: var(--color-base-300); }
+:root[data-mode="light"] body,:root[data-mode="light"] .navbar { background: var(--color-base-200); }
+:root[data-mode="dark"] body,:root[data-mode="dark"] .navbar { background: var(--color-base-200); }
 body { min-height: 100vh; color: var(--color-base-content); }
 button, input, select, .item-row { touch-action: manipulation; }
 button[hidden], [hidden] { display: none !important; }

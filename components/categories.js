@@ -44,10 +44,12 @@ function createCategorySection(category, items) {
   section.innerHTML = `
     <div class="section-label">
       <button class="section-toggle" type="button" aria-expanded="${isCollapsed ? "false" : "true"}">
-        <span>${escapeHtml(category.name)}</span>
-        <small>${items.length} ${items.length === 1 ? "item" : "itens"}</small>
+        <span>${escapeHtml(category.name)}<small class='pl-2'>${items.length}</small></span>
       </button>
       <div class="section-label-actions">
+      <button class="btn btn-ghost btn-square btn-sm section-collapse-button" type="button" aria-label="${isCollapsed ? "Expandir" : "Recolher"} ${escapeHtml(category.name)}">
+          <i data-lucide="${isCollapsed ? "chevron-up" : "chevron-down"}" aria-hidden="true"></i>
+        </button>
         ${hasMenuActions ? `
           <div class="dropdown dropdown-end section-actions-dropdown">
             <button class="btn btn-ghost btn-square btn-sm section-menu-button" type="button" tabindex="0" aria-label="Abrir opções de ${escapeHtml(category.name)}">
@@ -85,9 +87,7 @@ function createCategorySection(category, items) {
             </ul>
           </div>
         ` : ""}
-        <button class="btn btn-ghost btn-square btn-sm section-collapse-button" type="button" aria-label="${isCollapsed ? "Expandir" : "Recolher"} ${escapeHtml(category.name)}">
-          <i data-lucide="${isCollapsed ? "chevron-down" : "chevron-up"}" aria-hidden="true"></i>
-        </button>
+        
       </div>
     </div>
   `;

@@ -13,7 +13,7 @@ function createInlineActionButton(label, variant = "secondary") {
 
 function createItemCheckbox(item) {
   const checkInput = document.createElement("input");
-  checkInput.className = "checkbox checkbox-primary checkbox-md check-button";
+  checkInput.className = "checkbox checkbox-md check-button";
   checkInput.type = "checkbox";
   checkInput.setAttribute("aria-label", `Marcar ${item.name}`);
   checkInput.checked = item.checked === true;

@@ -422,18 +422,18 @@
         </section>
       </main>
 
-      <nav class="dock border-t border-base-200" aria-label="Navegação principal">
+      <nav class="dock border-t border-base-300" aria-label="Navegação principal">
         <button class="dock-active" type="button" data-nav-button data-view="listView" aria-label="Lista">
           <i data-lucide="list-checks" aria-hidden="true"></i>
-          
+          <span class="dock-label">Lista</span>
         </button>
         <button type="button" data-nav-button data-view="mealsView" aria-label="Refeições">
           <i data-lucide="utensils" aria-hidden="true"></i>
-          
+          <span class="dock-label">Refeições</span>
         </button>
         <button type="button" data-nav-button data-view="purchaseView" aria-label="Compras">
           <i data-lucide="shopping-basket" aria-hidden="true"></i>
-          
+          <span class="dock-label">Compras</span>
         </button>
       </nav>
       <button class="btn btn-primary btn-circle btn-lg fab-button" id="quickAddButton" type="button" aria-label="Adicionar">
@@ -524,14 +524,14 @@
         <input class="input" id="categoryNameInput" name="category" autocomplete="off" placeholder="Ex.: Congelados" />
         <fieldset class="fieldset preset-grid bg-base-200 rounded-box border border-base-300 p-3" id="categoryPresetGrid">
           <legend class="fieldset-legend">Sugestões rápidas</legend>
-          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Frutas" /> Frutas</label>
-          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Verduras" /> Verduras</label>
-          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Frios" /> Frios</label>
-          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Carnes" /> Carnes</label>
-          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Padaria" /> Padaria</label>
-          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Bebidas" /> Bebidas</label>
-          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Limpeza" /> Limpeza</label>
-          <label class="label"><input class="checkbox checkbox-primary checkbox-sm" type="checkbox" name="categoryPreset" value="Mercearia" /> Mercearia</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Frutas" /> Frutas</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Verduras" /> Verduras</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Frios" /> Frios</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Carnes" /> Carnes</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Padaria" /> Padaria</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Bebidas" /> Bebidas</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Limpeza" /> Limpeza</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Mercearia" /> Mercearia</label>
         </fieldset>
         <div class="modal-action dialog-actions">
           <button class="btn btn-soft" id="cancelCategoryDialogButton" type="button">Cancelar</button>
