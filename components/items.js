@@ -25,18 +25,20 @@ function createItemCheckbox(item) {
   return checkInput;
 }
 
-function createItemRow(item) {
+function createItemRow(item, options = {}) {
   const row = document.createElement("li");
   row.className = `list-row item-row${item.checked ? " is-checked" : ""}`;
   row.dataset.itemId = item.id;
   row.dataset.categoryId = itemCategoryId(item);
 
   const quantity = item.quantity ? `<span class="item-quantity">${escapeHtml(item.quantity)}</span>` : "";
+  const origin = options.originLabel ? `<span class="item-origin">${escapeHtml(options.originLabel)}</span>` : "";
   row.innerHTML = `
     <span class="item-check-cell"></span>
     <button class="item-edit-target" type="button" aria-label="Editar ${escapeHtml(item.name)}">
       <strong>${escapeHtml(item.name)}</strong>
       ${quantity}
+      ${origin}
     </button>
   `;
 
@@ -51,7 +53,9 @@ function createItemRow(item) {
       openItemEditor(item.id, itemCategoryId(item));
     }
   });
-  bindItemLongPressDrag(row, item);
+  if (options.draggable !== false) {
+    bindItemLongPressDrag(row, item);
+  }
   return row;
 }
 

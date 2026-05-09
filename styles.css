@@ -55,7 +55,7 @@ h2 { margin-bottom: 0; font-size: clamp(1.45rem, 5vw, 2.4rem); font-weight: 850;
 @keyframes view-enter { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes view-enter-back { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: translateX(0); } }
 
-.section-head, .block-title-row, .dialog-head, .meal-editor-head, .conflict-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.section-head, .block-title-row, .dialog-head, .meal-editor-head, .conflict-banner, .list-head-actions, .purchase-session-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .section-head { margin-bottom: 1rem; }
 .content-block, .period-card, .metric, .settings-section, .meal-row, .list-surface { border-radius: var(--radius-box); }
 .metrics-grid, .settings-stack, .list-surface, .meal-list, .purchase-list, .meal-items-editor, .conflict-list { display: grid; gap: 0.75rem; }
@@ -77,6 +77,24 @@ h2 { margin-bottom: 0; font-size: clamp(1.45rem, 5vw, 2.4rem); font-weight: 850;
 .settings-group-label { margin: 1.35rem 0 0.5rem; font-size: 0.78rem; font-weight: 850; text-transform: uppercase; }
 
 .list-surface { gap: 1.05rem; }
+.list-head-actions { flex-shrink: 0; gap: 0.45rem; }
+.purchase-session-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: center;
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in oklch, var(--color-primary) 34%, var(--color-base-300));
+  border-radius: var(--radius-box);
+  background: color-mix(in oklch, var(--color-primary) 10%, var(--color-base-100));
+}
+.purchase-session-copy { display: grid; gap: 0.15rem; min-width: 0; }
+.purchase-session-copy span, .purchase-session-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.purchase-session-copy span { font-size: 0.76rem; font-weight: 850; text-transform: uppercase; color: color-mix(in oklch, var(--color-base-content) 68%, transparent); }
+.purchase-session-copy strong { font-size: 1.45rem; line-height: 1; font-weight: 900; }
+.purchase-session-copy small, .item-origin { color: color-mix(in oklch, var(--color-base-content) 62%, transparent); font-weight: 700; }
+.purchase-session-actions { justify-content: flex-end; gap: 0.45rem; }
 .market-section { display: grid; gap: 0.45rem; }
 .section-label { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; min-height: 2.5rem; }
 .section-toggle { display: grid; min-width: 0; flex: 1; border: 0; background: transparent; padding: 0; text-align: left; }
@@ -110,6 +128,8 @@ h2 { margin-bottom: 0; font-size: clamp(1.45rem, 5vw, 2.4rem); font-weight: 850;
 .item-natural-quantity { flex: 0 1 7rem; color: color-mix(in oklch, var(--color-base-content) 62%, transparent); }
 .item-natural-name:focus, .item-natural-quantity:focus { outline: 0; }
 .item-quantity::before { content: "• "; }
+.item-origin::before { content: "• "; }
+.item-origin { flex-basis: 100%; font-size: 0.76rem; }
 .meal-main { gap: 0.25rem; padding: 0; border: 0; background: transparent; text-align: left; }
 .meal-actions, .inline-editor-form, .sync-test-list { gap: 0.6rem; }
 .inline-editor-row { display: block; }
@@ -142,6 +162,24 @@ h2 { margin-bottom: 0; font-size: clamp(1.45rem, 5vw, 2.4rem); font-weight: 850;
 .form-group .input, .form-group .select { width: 100%; }
 
 .item-form, .checkout-form { display: grid; grid-template-columns: 1fr; }
+.purchase-receipt {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.2rem 0 1rem;
+  padding: 0.85rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: var(--radius-box);
+  background: var(--color-base-200);
+}
+.receipt-head, .receipt-item, .receipt-item div { display: flex; align-items: center; gap: 0.5rem; }
+.receipt-head, .receipt-item { justify-content: space-between; }
+.receipt-head h3 { margin: 0; font-size: 0.95rem; font-weight: 850; }
+.receipt-head span, .receipt-item small, .receipt-item span { color: color-mix(in oklch, var(--color-base-content) 62%, transparent); font-weight: 700; }
+.receipt-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); overflow: hidden; background: var(--color-base-100); }
+.receipt-item { min-width: 0; padding: 0.7rem 0.8rem; border-bottom: 1px solid var(--color-base-300); }
+.receipt-item:last-child { border-bottom: 0; }
+.receipt-item div { min-width: 0; flex-wrap: wrap; justify-content: flex-start; }
+.receipt-item strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .preset-grid, .conflict-versions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; }
 .preset-grid .fieldset-legend { grid-column: 1 / -1; }
 .conflict-card pre { overflow: auto; margin: 0.35rem 0 0; font: 600 0.78rem/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; }
@@ -163,15 +201,20 @@ h2 { margin-bottom: 0; font-size: clamp(1.45rem, 5vw, 2.4rem); font-weight: 850;
   .topbar-metric { min-width: 74px; padding: 0.5rem 0.55rem; }
   .topbar-metric span { font-size: 0.72rem; }
   .topbar-metric strong { font-size: 0.85rem; }
-  .settings-row, .period-card-body, .conflict-versions { grid-template-columns: 1fr; }
+  .settings-row, .period-card-body, .conflict-versions, .purchase-session-bar { grid-template-columns: 1fr; }
   .settings-row-inline, .settings-row-toggle { grid-template-columns: minmax(0, 1fr) auto; }
   .settings-row-control .select, .settings-row-main > .input, .settings-row-main > .select, .accent-select { width: 100%; max-width: none; }
+  .list-head-actions { gap: 0.25rem; }
+  .purchase-session-actions { justify-content: stretch; }
+  .purchase-session-actions .btn:first-child { flex: 1; }
+  .receipt-item { align-items: flex-start; flex-direction: column; }
 }
 @media (max-width: 460px) {
   .topbar { gap: 0.5rem; }
   .space-switcher-button { max-width: 38vw; }
   .meal-item-editor-row, .preset-grid { grid-template-columns: 1fr; }
   .meal-item-remove-button { width: 100%; }
+  .list-head-actions .btn-sm:not(.btn-square) { padding-inline: 0.65rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .view.is-active, #toast { animation: none; }

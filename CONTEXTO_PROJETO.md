@@ -126,6 +126,7 @@ Stores:
 items
 categories
 purchases
+purchaseSessions
 meals
 settings
 spaces
@@ -160,7 +161,32 @@ purchases: {
   spaceId: string,
   name: string,
   total: number,
-  date: number
+  date: number,
+  createdAt: number,
+  startedAt?: number,
+  completedAt?: number,
+  durationMs?: number,
+  items?: Array<{
+    itemId: string,
+    name: string,
+    quantity: string,
+    categoryId: string,
+    categoryName: string,
+    checkedAt: number
+  }>
+}
+
+purchaseSessions: {
+  id: string,
+  spaceId: string,
+  status: "active" | "completed" | "cancelled",
+  startedAt: number,
+  completedAt?: number,
+  updatedAt: number,
+  checkedItems: Array<{
+    itemId: string,
+    checkedAt: number
+  }>
 }
 
 meals: {
@@ -344,6 +370,10 @@ O usuário pode:
 - Expandir/contrair seções em acordeon.
 - Adicionar item diretamente em uma seção.
 - Arrastar itens entre seções.
+- Iniciar uma compra ativa com cronômetro.
+- Finalizar a compra ativa informando o total pago.
+- Ver itens marcados no fim fixo da lista, em **Comprados recentemente**, preservando a seção original.
+- Limpar comprados recentes manualmente.
 
 A tela inicial é a **Lista**, que mostra todos os itens e inclui a adição inline no topo. Cada item tem:
 
@@ -353,7 +383,7 @@ A tela inicial é a **Lista**, que mostra todos os itens e inclui a adição inl
 
 O clique no fundo ou no texto de qualquer item abre o modal de edição. O botão de editar separado foi removido para reduzir ruído visual.
 
-O botão flutuante abre um novo item diretamente quando o usuário está na tela **Lista**. A linha inline acima da lista também inicia a criação de item. No modo `modal`, o modal de item é reutilizado; no modo `inline`, o formulário aparece dentro da seção correspondente.
+O botão flutuante abre um novo item diretamente quando o usuário está na tela **Lista**. A compra ativa é iniciada pelo botão **Começar** no topo da lista, e sua finalização fica na barra da sessão ativa.
 
 A tela **Lista** organiza itens por seções criadas pelo usuário. Há uma seção automática **Sem seção** para itens antigos ou itens adicionados sem categoria. A criação de seções fica em um modal aberto pelo menu de três pontos, mantendo a tela principal mais minimalista.
 
@@ -388,6 +418,16 @@ Ao registrar:
 
 Os itens permanecem na lista após a compra. Apenas os checks são resetados.
 
+### Compra Ativa
+
+O usuário pode iniciar uma sessão de compra pela tela **Lista**. Durante a sessão, o app mostra um cronômetro, permite marcar itens e move visualmente os marcados para a seção automática **Comprados recentemente**, fixada no fim da lista de seções e recolhida por padrão. O item mantém `categoryId`, então a seção original continua preservada para exibição e histórico.
+
+Ao finalizar uma compra ativa, o usuário informa o total pago e o app salva uma entrada em `purchases` com `startedAt`, `completedAt`, `durationMs` e um snapshot dos itens comprados. Os itens comprados continuam marcados e permanecem em **Comprados recentemente** até o usuário limpar manualmente.
+
+Ao abrir uma compra registrada com snapshot, o modal mostra um recibo com os itens comprados, quantidades e seções originais.
+
+Ao cancelar uma compra ativa, apenas os itens marcados naquela sessão são desmarcados.
+
 Ao editar uma compra existente, o app reaproveita o modal de compra e permite alterar nome, data e valor total. A edição não altera os checks da lista. A exclusão não aparece inline no histórico; ela fica disponível apenas dentro do modal de edição para reduzir exclusões acidentais.
 
 ## PWA e Cache
@@ -402,10 +442,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v58.8
+feira-v58.11
 ```
 
-O cache foi atualizado para `feira-v58.8` para publicar a ordenação de itens com `sortOrder`, preservando `createdAt`.
+O cache foi atualizado para `feira-v58.11` para ajustar foco em modais e iniciar Comprados recentemente recolhida.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -462,10 +502,12 @@ Direção visual atual:
 - Lista de mercado como tela inicial, com saldo e planejamento semanal sempre visíveis no topo.
 - FAB contextual: novo item na lista, nova refeição em refeições e nova compra em compras.
 - Preferência para criar e editar itens/compras em modal ou inline.
+- Modais de criação focam o primeiro campo automaticamente; modais de edição não roubam foco.
 - Textos da interface não ficam selecionáveis durante o uso.
 - Topbar exibe o seletor de Espaço atual, mantendo o saldo e o indicador semanal.
 - Espaços compartilhados usam código de convite e continuam com escrita local instantânea.
 - Itens, seções, compras, refeições e ajustes financeiros são sincronizáveis no espaço compartilhado.
+- Sessões de compra ativa também são sincronizáveis no espaço compartilhado como `purchase_session`.
 - O estado marcado/desmarcado de cada item (`checked`) é normalizado e sincronizado no registro do item para refletir entre usuários do mesmo espaço.
 - A posição visual dos itens usa `sortOrder`; `createdAt` fica preservado como data de criação.
 - Ajustes inclui diagnóstico de sincronização com testes unitários em sandbox isolado, sem alterar IndexedDB ou chamar Supabase.
@@ -513,13 +555,15 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Ordenação de itens por `sortOrder`, evitando usar `createdAt` como posição mutável e reduzindo conflitos de sincronização.
+Fluxo opcional de compra ativa com foco correto nos modais e Comprados recentemente recolhida por padrão.
 ```
 
 Arquivos alterados nesse marco:
 
-- `app.js` (normaliza `sortOrder`, ordena itens por esse campo e reordena sem alterar `createdAt`)
-- `README.md` (documenta `sortOrder` no modelo de itens)
-- `supabase-migration-item-sort-order.sql` (migração para preencher `data.sortOrder` nos itens sincronizados)
-- `sw.js` (incrementa cache para `feira-v58.8`)
+- `app.js` (ajusta foco por criação/edição e estado inicial recolhido de Comprados recentemente)
+- `index.html` e `styles.css` (controles de compra ativa e seção visual do cronômetro)
+- `components/categories.js` (usa Comprados recentemente recolhida por padrão)
+- `supabase.sql` e `supabase-migration-purchase-sessions.sql` (aceitam `purchase_session`)
+- `README.md` (documenta o novo fluxo e modelo de dados)
+- `sw.js` (incrementa cache para `feira-v58.11`)
 - `CONTEXTO_PROJETO.md` (atualizado)

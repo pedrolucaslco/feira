@@ -88,7 +88,14 @@
               <h2 id="fullListTitle">Lista de compras</h2>
               <span id="itemCountLabel">0 itens</span>
             </div>
-            <div class="dropdown dropdown-end list-menu-wrap">
+            <div class="list-head-actions">
+              <button class="btn btn-primary btn-sm" id="startPurchaseSessionButton" type="button">
+                <i data-lucide="play" aria-hidden="true"></i>
+              </button>
+              <button class="btn btn-soft btn-sm" id="clearRecentItemsButton" type="button" hidden>
+                <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+              </button>
+              <div class="dropdown dropdown-end list-menu-wrap">
               <button class="btn btn-ghost btn-square" id="listMenuButton" type="button" aria-label="Abrir opções da lista" aria-expanded="false">
                 <i data-lucide="ellipsis" aria-hidden="true"></i>
               </button>
@@ -102,8 +109,26 @@
                   </li>
                 </ul>
               </div>
+              </div>
             </div>
           </div>
+
+          <section class="purchase-session-bar" id="purchaseSessionBar" hidden>
+            <div class="purchase-session-copy">
+              <span id="purchaseSessionTitle">Compra em andamento</span>
+              <strong id="purchaseSessionTimer">00:00</strong>
+              <small id="purchaseSessionMeta">0 itens marcados nesta compra</small>
+            </div>
+            <div class="purchase-session-actions">
+              <button class="btn btn-primary btn-sm" id="finishPurchaseSessionButton" type="button">
+                <i data-lucide="check" aria-hidden="true"></i>
+                Finalizar
+              </button>
+              <button class="btn btn-ghost btn-square btn-sm" id="cancelPurchaseSessionButton" type="button" aria-label="Cancelar compra" title="Cancelar compra">
+                <i data-lucide="x" aria-hidden="true"></i>
+              </button>
+            </div>
+          </section>
 
           <div class="list-surface" id="itemList"></div>
           <p class="empty-state" id="emptyItems">Sua lista ainda está vazia.</p>
@@ -462,6 +487,13 @@
           <label class="form-label" for="purchaseTotal">Valor pago</label>
           <input class="input" id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
         </div>
+        <section class="purchase-receipt" id="purchaseReceipt" hidden aria-labelledby="purchaseReceiptTitle">
+          <div class="receipt-head">
+            <h3 id="purchaseReceiptTitle">Itens comprados</h3>
+            <span id="purchaseReceiptCount">0 itens</span>
+          </div>
+          <ul id="purchaseReceiptList" class="receipt-list"></ul>
+        </section>
         <button class="btn btn-error btn-ghost" id="deletePurchaseButton" type="button" hidden>Excluir compra</button>
         <div class="modal-action dialog-actions">
           <button class="btn btn-soft" id="cancelCheckoutButton" value="cancel" type="button">Cancelar</button>

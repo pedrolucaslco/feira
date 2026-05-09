@@ -4,10 +4,18 @@ function createPurchaseRow(purchase, index) {
   row.setAttribute("role", "button");
   row.setAttribute("tabindex", "0");
   row.setAttribute("aria-label", `Editar compra de ${formatCurrency(purchase.total)}`);
+  const details = [];
+  if (Array.isArray(purchase.items) && purchase.items.length) {
+    details.push(`${purchase.items.length} ${purchase.items.length === 1 ? "item" : "itens"}`);
+  }
+  if (Number.isFinite(Number(purchase.durationMs)) && Number(purchase.durationMs) > 0) {
+    details.push(formatDuration(purchase.durationMs));
+  }
+  const detailText = details.length ? ` · ${details.join(" · ")}` : "";
   row.innerHTML = `
     <div class="purchase-main">
       <strong>${escapeHtml(purchaseTitle(purchase, index))}</strong>
-      <span>${formatDate(purchase.date)}</span>
+      <span>${formatDate(purchase.date)}${escapeHtml(detailText)}</span>
     </div>
     <strong>${formatCurrency(purchase.total)}</strong>
   `;

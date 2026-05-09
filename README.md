@@ -27,9 +27,12 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Campo de fechamento do cartão para calcular semanas restantes e saldo sugerido por semana.
 - Botão flutuante contextual: novo item na lista, nova refeição em refeições e nova compra em compras.
 - Tela de lista completa com adição inline e botão flutuante de atalho.
+- Compra ativa opcional na lista, com cronômetro, finalização por total e seção de comprados recentemente.
+- Recibo dos itens comprados ao abrir uma compra registrada.
 - Modal compartilhado para adicionar e editar itens.
 - Tela de compras com histórico, período financeiro, gasto/budget, gráfico de variação e planejamento semanal.
 - Preferência para criar e editar itens/compras em modal ou inline.
+- Modais de criação focam o campo principal automaticamente; modais de edição não roubam foco.
 - Controle de budget mensal.
 - Aba de ajustes.
 - Perfil local com nome, avatar e saudação no topo.
@@ -60,6 +63,7 @@ Além de ser uma lista de compras, o app ajuda a responder uma pergunta prática
 - Edição de nome e quantidade dos itens.
 - Remoção de itens apenas pelo modal de edição.
 - Checklist para marcar itens já comprados.
+- Itens marcados aparecem em Comprados recentemente sem perder a seção original.
 - Registro de compra pelo botão flutuante na tela Compras.
 - Modal de compra com valor total.
 - Histórico simples das compras do mês.
@@ -131,6 +135,7 @@ O app usa IndexedDB local com coleções por espaço:
 items
 categories
 purchases
+purchaseSessions
 meals
 settings
 spaces
@@ -165,7 +170,32 @@ purchases: {
   spaceId: string,
   name: string,
   total: number,
-  date: number
+  date: number,
+  createdAt: number,
+  startedAt?: number,
+  completedAt?: number,
+  durationMs?: number,
+  items?: Array<{
+    itemId: string,
+    name: string,
+    quantity: string,
+    categoryId: string,
+    categoryName: string,
+    checkedAt: number
+  }>
+}
+
+purchaseSessions: {
+  id: string,
+  spaceId: string,
+  status: "active" | "completed" | "cancelled",
+  startedAt: number,
+  completedAt?: number,
+  updatedAt: number,
+  checkedItems: Array<{
+    itemId: string,
+    checkedAt: number
+  }>
 }
 
 meals: {
@@ -204,7 +234,7 @@ profile: {
 
 O compartilhamento é opcional. Sem configuração, o app continua funcionando com o `Espaço local`.
 
-Espaços compartilhados sincronizam itens, seções, compras, refeições e ajustes financeiros.
+Espaços compartilhados sincronizam itens, seções, compras, sessões de compra ativa, refeições e ajustes financeiros.
 
 Para ativar:
 

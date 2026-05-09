@@ -1,5 +1,5 @@
 const DB_NAME = "feira-db";
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const SETTINGS_ID = "main";
 const LOCAL_SPACE_ID = "local";
 const ACTIVE_SPACE_STORAGE_KEY = "feira:active-space";
@@ -12,6 +12,7 @@ const STORE_TO_ENTITY = {
   items: "item",
   categories: "category",
   purchases: "purchase",
+  purchaseSessions: "purchase_session",
   meals: "meal",
   settings: "settings",
 };
@@ -33,6 +34,7 @@ const DEFAULT_SETTINGS = {
   userGender: "neutral",
   editorMode: "modal",
 };
+const RECENTLY_PURCHASED_SECTION_ID = "recently-purchased";
 
 function preventIOSZoomGestures() {
   const preventDefault = (event) => event.preventDefault();
@@ -115,6 +117,7 @@ var state = {
   items: [],
   categories: [],
   purchases: [],
+  purchaseSessions: [],
   meals: [],
   spaces: [],
   syncOutbox: [],
@@ -125,6 +128,8 @@ var state = {
   activeView: "listView",
   editingItemId: null,
   editingPurchaseId: null,
+  finishingPurchaseSessionId: null,
+  purchaseTimerId: 0,
   editingMealId: null,
   inlineItemEditor: null,
   inlinePurchaseEditor: null,
@@ -133,6 +138,7 @@ var state = {
   pendingDeleteCategoryId: "",
   reorderCategoryIds: [],
   collapsedCategoryIds: new Set(),
+  manuallyToggledCategoryIds: new Set(),
   draggingItemId: null,
   dragTargetItemId: "",
   dragTargetCategoryId: "",
@@ -271,6 +277,14 @@ var el = {
   confirmDeleteCategoryButton: document.querySelector("#confirmDeleteCategoryButton"),
   itemList: document.querySelector("#itemList"),
   emptyItems: document.querySelector("#emptyItems"),
+  purchaseSessionBar: document.querySelector("#purchaseSessionBar"),
+  purchaseSessionTitle: document.querySelector("#purchaseSessionTitle"),
+  purchaseSessionTimer: document.querySelector("#purchaseSessionTimer"),
+  purchaseSessionMeta: document.querySelector("#purchaseSessionMeta"),
+  startPurchaseSessionButton: document.querySelector("#startPurchaseSessionButton"),
+  finishPurchaseSessionButton: document.querySelector("#finishPurchaseSessionButton"),
+  cancelPurchaseSessionButton: document.querySelector("#cancelPurchaseSessionButton"),
+  clearRecentItemsButton: document.querySelector("#clearRecentItemsButton"),
   mealCountLabel: document.querySelector("#mealCountLabel"),
   mealList: document.querySelector("#mealList"),
   emptyMeals: document.querySelector("#emptyMeals"),
@@ -301,6 +315,9 @@ var el = {
   purchaseName: document.querySelector("#purchaseName"),
   purchaseDate: document.querySelector("#purchaseDate"),
   purchaseTotal: document.querySelector("#purchaseTotal"),
+  purchaseReceipt: document.querySelector("#purchaseReceipt"),
+  purchaseReceiptCount: document.querySelector("#purchaseReceiptCount"),
+  purchaseReceiptList: document.querySelector("#purchaseReceiptList"),
   savePurchaseButton: document.querySelector("#savePurchaseButton"),
   deletePurchaseButton: document.querySelector("#deletePurchaseButton"),
   closeCheckoutButton: document.querySelector("#closeCheckoutButton"),
@@ -340,6 +357,9 @@ function openDatabase() {
       }
       if (!db.objectStoreNames.contains("purchases")) {
         db.createObjectStore("purchases", { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains("purchaseSessions")) {
+        db.createObjectStore("purchaseSessions", { keyPath: "id" });
       }
       if (!db.objectStoreNames.contains("meals")) {
         db.createObjectStore("meals", { keyPath: "id" });
@@ -497,6 +517,21 @@ function normalizePurchase(purchase, spaceId = state.activeSpaceId) {
   const now = Date.now();
   const date = Number(purchase?.date);
   const createdAt = Number(purchase?.createdAt);
+  const startedAt = Number(purchase?.startedAt);
+  const completedAt = Number(purchase?.completedAt);
+  const durationMs = Number(purchase?.durationMs);
+  const items = Array.isArray(purchase?.items)
+    ? purchase.items
+      .map((item) => ({
+        itemId: String(item.itemId || item.id || "").trim(),
+        name: String(item.name || "").trim(),
+        quantity: String(item.quantity || "").trim(),
+        categoryId: String(item.categoryId || "").trim(),
+        categoryName: String(item.categoryName || "Sem seção").trim() || "Sem seção",
+        checkedAt: Number(item.checkedAt) || Number(item.createdAt) || now,
+      }))
+      .filter((item) => item.itemId && item.name)
+    : [];
   return {
     ...(purchase || {}),
     id: purchase?.id || createId(),
@@ -505,12 +540,43 @@ function normalizePurchase(purchase, spaceId = state.activeSpaceId) {
     total: Number(purchase?.total) || 0,
     date: Number.isFinite(date) ? date : now,
     createdAt: Number.isFinite(createdAt) ? createdAt : (Number.isFinite(date) ? date : now),
+    ...(Number.isFinite(startedAt) ? { startedAt } : {}),
+    ...(Number.isFinite(completedAt) ? { completedAt } : {}),
+    ...(Number.isFinite(durationMs) ? { durationMs } : {}),
+    ...(items.length ? { items } : {}),
+  };
+}
+
+function normalizePurchaseSession(session, spaceId = state.activeSpaceId) {
+  const now = Date.now();
+  const startedAt = Number(session?.startedAt);
+  const completedAt = Number(session?.completedAt);
+  const updatedAt = Number(session?.updatedAt);
+  const status = ["active", "completed", "cancelled"].includes(session?.status) ? session.status : "active";
+  const checkedItems = Array.isArray(session?.checkedItems)
+    ? session.checkedItems
+      .map((item) => ({
+        itemId: String(item.itemId || item.id || "").trim(),
+        checkedAt: Number(item.checkedAt) || now,
+      }))
+      .filter((item) => item.itemId)
+    : [];
+  return {
+    ...(session || {}),
+    id: session?.id || createId(),
+    spaceId,
+    status,
+    startedAt: Number.isFinite(startedAt) ? startedAt : now,
+    ...(Number.isFinite(completedAt) ? { completedAt } : {}),
+    updatedAt: Number.isFinite(updatedAt) ? updatedAt : now,
+    checkedItems,
   };
 }
 
 function normalizeStoreRecord(storeName, value, spaceId = state.activeSpaceId) {
   if (storeName === "items") return normalizeItem(value, spaceId);
   if (storeName === "purchases") return normalizePurchase(value, spaceId);
+  if (storeName === "purchaseSessions") return normalizePurchaseSession(value, spaceId);
   if (storeName === "meals") return normalizeMeal(value, spaceId);
   return value;
 }
@@ -581,8 +647,10 @@ function isEntityTypeConstraintError(error) {
 }
 
 function syncErrorMessage(error, operation) {
-  if (operation?.entityType === "meal" && isEntityTypeConstraintError(error)) {
-    return "Atualize o SQL do Supabase para aceitar refeições na sincronização.";
+  if (isEntityTypeConstraintError(error) && ["meal", "purchase_session"].includes(operation?.entityType)) {
+    return operation.entityType === "purchase_session"
+      ? "Atualize o SQL do Supabase para aceitar sessões de compra na sincronização."
+      : "Atualize o SQL do Supabase para aceitar refeições na sincronização.";
   }
   return "Erro ao sincronizar operação.";
 }
@@ -667,10 +735,11 @@ async function seedData() {
 }
 
 async function loadState() {
-  const [items, categories, purchases, meals, settings, spaces, syncOutbox, syncConflicts] = await Promise.all([
+  const [items, categories, purchases, purchaseSessions, meals, settings, spaces, syncOutbox, syncConflicts] = await Promise.all([
     getAll("items"),
     getAll("categories"),
     getAll("purchases"),
+    getAll("purchaseSessions"),
     getAll("meals"),
     getOne("settings", activeSettingsId()),
     getAll("spaces"),
@@ -693,6 +762,10 @@ async function loadState() {
     .filter((purchase) => (purchase.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId)
     .map((purchase) => normalizePurchase(purchase, state.activeSpaceId))
     .sort((a, b) => (b.createdAt - a.createdAt) || (b.date - a.date));
+  state.purchaseSessions = purchaseSessions
+    .filter((session) => (session.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId)
+    .map((session) => normalizePurchaseSession(session, state.activeSpaceId))
+    .sort((a, b) => b.startedAt - a.startedAt);
   state.meals = meals
     .filter((meal) => (meal.spaceId || LOCAL_SPACE_ID) === state.activeSpaceId)
     .map((meal) => normalizeMeal(meal, state.activeSpaceId))
@@ -703,7 +776,7 @@ async function loadState() {
 }
 
 async function migrateLocalRecords() {
-  const [items, categories, purchases, meals, settings] = await Promise.all([getAll("items"), getAll("categories"), getAll("purchases"), getAll("meals"), getAll("settings")]);
+  const [items, categories, purchases, purchaseSessions, meals, settings] = await Promise.all([getAll("items"), getAll("categories"), getAll("purchases"), getAll("purchaseSessions"), getAll("meals"), getAll("settings")]);
   const migratedItems = items
     .filter((item) => !item.spaceId || !Number.isFinite(Number(item.sortOrder)))
     .map((item) => normalizeItem({ ...item, spaceId: item.spaceId || LOCAL_SPACE_ID }, item.spaceId || LOCAL_SPACE_ID));
@@ -712,12 +785,16 @@ async function migrateLocalRecords() {
     .filter((purchase) => !purchase.spaceId || !Number.isFinite(Number(purchase.createdAt)))
     .map((purchase) => normalizePurchase({ ...purchase, spaceId: purchase.spaceId || LOCAL_SPACE_ID }, purchase.spaceId || LOCAL_SPACE_ID));
   const migratedMeals = meals.filter((meal) => !meal.spaceId).map((meal) => ({ ...meal, spaceId: LOCAL_SPACE_ID }));
+  const migratedPurchaseSessions = purchaseSessions
+    .filter((session) => !session.spaceId)
+    .map((session) => normalizePurchaseSession({ ...session, spaceId: LOCAL_SPACE_ID }, LOCAL_SPACE_ID));
   const legacySettings = settings.find((setting) => setting.id === SETTINGS_ID);
 
   if (migratedItems.length) await bulkPut("items", migratedItems);
   if (migratedCategories.length) await bulkPut("categories", migratedCategories);
   if (migratedPurchases.length) await bulkPut("purchases", migratedPurchases);
   if (migratedMeals.length) await bulkPut("meals", migratedMeals);
+  if (migratedPurchaseSessions.length) await bulkPut("purchaseSessions", migratedPurchaseSessions);
   if (legacySettings) {
     if (legacySettings.userName || legacySettings.userGender) {
       saveLocalProfile(legacySettings.userName || "", legacySettings.userGender || "neutral");
@@ -757,6 +834,57 @@ function billingPeriodBounds(date = new Date(), closingDay = state.settings.card
 function currentMonthPurchases() {
   const { start, end } = billingPeriodBounds();
   return state.purchases.filter((purchase) => purchase.date >= start && purchase.date < end);
+}
+
+function activePurchaseSession() {
+  return state.purchaseSessions.find((session) => session.status === "active") || null;
+}
+
+function checkedItemsForSession(session = activePurchaseSession()) {
+  if (!session) return [];
+  const checkedIds = new Set((session.checkedItems || []).map((item) => item.itemId));
+  return state.items.filter((item) => checkedIds.has(item.id) && item.checked);
+}
+
+function recentCheckedItems() {
+  return state.items.filter((item) => item.checked === true);
+}
+
+function sessionHasItem(session, itemId) {
+  return Boolean(session?.checkedItems?.some((item) => item.itemId === itemId));
+}
+
+function categoryNameForItem(item) {
+  if (!item?.categoryId) return "Sem seção";
+  return state.categories.find((category) => category.id === item.categoryId)?.name || "Sem seção";
+}
+
+function formatDuration(durationMs = 0) {
+  const totalSeconds = Math.max(0, Math.floor(Number(durationMs) / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const parts = hours
+    ? [hours, minutes, seconds]
+    : [minutes, seconds];
+  return parts.map((part) => String(part).padStart(2, "0")).join(":");
+}
+
+function checkedItemsSnapshot(session) {
+  return (session?.checkedItems || [])
+    .map((checkedItem) => {
+      const item = state.items.find((current) => current.id === checkedItem.itemId);
+      if (!item || !item.checked) return null;
+      return {
+        itemId: item.id,
+        name: item.name,
+        quantity: item.quantity || "",
+        categoryId: item.categoryId || "",
+        categoryName: categoryNameForItem(item),
+        checkedAt: checkedItem.checkedAt,
+      };
+    })
+    .filter(Boolean);
 }
 
 function formatCurrency(value) {
@@ -833,7 +961,7 @@ function mergeQuantity(currentQuantity = "", nextQuantity = "") {
 }
 
 function sectionItems(categoryId, excludedItemId = "") {
-  return state.items.filter((item) => item.id !== excludedItemId && itemCategoryId(item) === categoryId);
+  return state.items.filter((item) => item.id !== excludedItemId && item.checked !== true && itemCategoryId(item) === categoryId);
 }
 
 function itemSortOrder(item) {
@@ -1105,6 +1233,60 @@ function renderPurchaseChart(periodPurchases = currentMonthPurchases()) {
   });
 }
 
+function updatePurchaseSessionTimer() {
+  if (!el.purchaseSessionTimer) return;
+  const session = activePurchaseSession();
+  if (!session) {
+    el.purchaseSessionTimer.textContent = "00:00";
+    return;
+  }
+  el.purchaseSessionTimer.textContent = formatDuration(Date.now() - session.startedAt);
+}
+
+function syncPurchaseSessionTimer() {
+  const session = activePurchaseSession();
+  if (state.purchaseTimerId && !session) {
+    clearInterval(state.purchaseTimerId);
+    state.purchaseTimerId = 0;
+  }
+  if (session && !state.purchaseTimerId) {
+    state.purchaseTimerId = setInterval(updatePurchaseSessionTimer, 1000);
+  }
+  updatePurchaseSessionTimer();
+}
+
+function renderPurchaseSessionBar() {
+  const session = activePurchaseSession();
+  const recentCount = recentCheckedItems().length;
+  const sessionCount = checkedItemsForSession(session).length;
+
+  if (el.purchaseSessionBar) {
+    el.purchaseSessionBar.hidden = !session;
+  }
+  if (el.purchaseSessionTitle) {
+    el.purchaseSessionTitle.textContent = session ? "Compra em andamento" : "Compra";
+  }
+  if (el.purchaseSessionMeta) {
+    el.purchaseSessionMeta.textContent = session
+      ? `${sessionCount} ${sessionCount === 1 ? "item marcado" : "itens marcados"} nesta compra`
+      : "";
+  }
+  if (el.startPurchaseSessionButton) {
+    el.startPurchaseSessionButton.hidden = Boolean(session);
+  }
+  if (el.finishPurchaseSessionButton) {
+    el.finishPurchaseSessionButton.hidden = !session;
+    el.finishPurchaseSessionButton.disabled = sessionCount === 0;
+  }
+  if (el.cancelPurchaseSessionButton) {
+    el.cancelPurchaseSessionButton.hidden = !session;
+  }
+  if (el.clearRecentItemsButton) {
+    el.clearRecentItemsButton.hidden = recentCount === 0 || Boolean(session);
+  }
+  syncPurchaseSessionTimer();
+}
+
 function renderWeeklyBudget(remaining, weeksLeft) {
   if (!el.topbarWeeklyBudget || !el.topbarWeeklyLabel) return;
 
@@ -1204,11 +1386,14 @@ function renderSpaces() {
 function renderItems() {
   el.itemList.innerHTML = "";
 
+  renderPurchaseSessionBar();
   renderCategorySections();
 
   el.emptyItems.classList.toggle("is-visible", state.items.length === 0 && !state.inlineItemEditor);
   if (el.itemCountLabel) {
-    el.itemCountLabel.textContent = `${state.items.length} ${state.items.length === 1 ? "item" : "itens"}`;
+    const recentCount = recentCheckedItems().length;
+    const suffix = recentCount ? `, ${recentCount} comprados` : "";
+    el.itemCountLabel.textContent = `${state.items.length} ${state.items.length === 1 ? "item" : "itens"}${suffix}`;
   }
 }
 
@@ -1236,6 +1421,14 @@ function renderNavigation() {
   });
   if (el.quickAddButton) {
     el.quickAddButton.hidden = state.activeView === "settingsView";
+    const quickAddIcon = el.quickAddButton.querySelector("[data-lucide]");
+    if (state.activeView === "listView") {
+      el.quickAddButton.setAttribute("aria-label", "Adicionar item");
+      quickAddIcon?.setAttribute("data-lucide", "plus");
+    } else {
+      el.quickAddButton.setAttribute("aria-label", "Adicionar");
+      quickAddIcon?.setAttribute("data-lucide", "plus");
+    }
   }
 }
 
@@ -1323,6 +1516,7 @@ async function switchSpace(spaceId) {
   state.inlinePurchaseEditor = null;
   state.pendingItemCategoryId = "";
   state.collapsedCategoryIds.clear();
+  state.manuallyToggledCategoryIds.clear();
   closeSpaceMenu();
   await reloadAndRender();
   await pullSpaceRecords();
@@ -1940,10 +2134,14 @@ function addMealItemEditorRow(item = {}) {
 }
 
 function focusDialogInput(input) {
-  //return;
   if (!input) return;
   input.focus({ preventScroll: true });
   requestAnimationFrame(() => input.focus({ preventScroll: true }));
+}
+
+function focusDialogInputForCreate(input, isEditing = false) {
+  if (isEditing) return;
+  focusDialogInput(input);
 }
 
 function focusInlineEditor() {
@@ -2051,8 +2249,68 @@ async function toggleItem(id) {
   const item = state.items.find((current) => current.id === id);
   if (!item) return;
 
-  await saveRecord("items", { ...item, checked: !item.checked });
+  const session = activePurchaseSession();
+  const nextChecked = !item.checked;
+  await saveRecord("items", { ...item, checked: nextChecked });
+  if (session) {
+    const checkedItems = (session.checkedItems || []).filter((checkedItem) => checkedItem.itemId !== id);
+    if (nextChecked) {
+      checkedItems.push({ itemId: id, checkedAt: Date.now() });
+    }
+    await saveRecord("purchaseSessions", {
+      ...session,
+      checkedItems,
+      updatedAt: Date.now(),
+    });
+  }
   await reloadAndRender();
+}
+
+async function startPurchaseSession() {
+  if (activePurchaseSession()) {
+    showToast("Já existe uma compra em andamento.");
+    return;
+  }
+  const now = Date.now();
+  await saveRecord("purchaseSessions", {
+    id: createId(),
+    status: "active",
+    startedAt: now,
+    updatedAt: now,
+    checkedItems: [],
+  });
+  await reloadAndRender();
+  showToast("Compra iniciada.");
+}
+
+async function cancelPurchaseSession() {
+  const session = activePurchaseSession();
+  if (!session) return;
+  const confirmed = window.confirm("Cancelar esta compra? Os itens marcados nela serão desmarcados.");
+  if (!confirmed) return;
+
+  const sessionItemIds = new Set((session.checkedItems || []).map((item) => item.itemId));
+  const markedSessionItems = state.items.filter((item) => sessionItemIds.has(item.id) && item.checked);
+  await Promise.all(markedSessionItems.map((item) => saveRecord("items", { ...item, checked: false })));
+  await saveRecord("purchaseSessions", {
+    ...session,
+    status: "cancelled",
+    completedAt: Date.now(),
+    updatedAt: Date.now(),
+  });
+  await reloadAndRender();
+  showToast("Compra cancelada.");
+}
+
+async function clearRecentItems() {
+  const recentItems = recentCheckedItems();
+  if (!recentItems.length) return;
+  const confirmed = window.confirm("Limpar comprados recentemente?");
+  if (!confirmed) return;
+
+  await Promise.all(recentItems.map((item) => saveRecord("items", { ...item, checked: false })));
+  await reloadAndRender();
+  showToast("Comprados recentes limpos.");
 }
 
 async function removeItem(id) {
@@ -2092,7 +2350,7 @@ function openItemDialog(id = null, categoryId = "") {
   } else {
     el.itemDialog.setAttribute("open", "");
   }
-  focusDialogInput(el.itemName);
+  focusDialogInputForCreate(el.itemName, Boolean(item));
 }
 
 function closeItemDialog() {
@@ -2186,7 +2444,7 @@ function openCategoryEditor(id = null) {
   } else {
     el.categoryDialog.setAttribute("open", "");
   }
-  focusDialogInput(el.categoryNameInput);
+  focusDialogInputForCreate(el.categoryNameInput, isEditing);
 }
 
 function openDeleteCategoryDialog(categoryId) {
@@ -2340,7 +2598,7 @@ function openMealEditor(id = null) {
   } else {
     el.mealDialog.setAttribute("open", "");
   }
-  focusDialogInput(el.mealName);
+  focusDialogInputForCreate(el.mealName, Boolean(meal));
 }
 
 function closeMealDialog() {
@@ -2497,8 +2755,18 @@ function closeCategoryDialog() {
   }
 }
 
+function isCategoryCollapsed(category) {
+  if (category?.recent && !state.manuallyToggledCategoryIds.has(category.id)) {
+    return true;
+  }
+  return state.collapsedCategoryIds.has(category.id);
+}
+
 function toggleCategory(id) {
-  const isCollapsed = state.collapsedCategoryIds.has(id);
+  const isCollapsed = id === RECENTLY_PURCHASED_SECTION_ID && !state.manuallyToggledCategoryIds.has(id)
+    ? true
+    : state.collapsedCategoryIds.has(id);
+  state.manuallyToggledCategoryIds.add(id);
   if (isCollapsed) {
     state.collapsedCategoryIds.delete(id);
   } else {
@@ -2558,7 +2826,7 @@ async function resetDatabase() {
   const confirmed = window.confirm("Tem certeza? Isso vai apagar os dados deste espaço.");
   if (!confirmed) return;
 
-  const stores = ["items", "categories", "purchases", "meals", "settings"];
+  const stores = ["items", "categories", "purchases", "purchaseSessions", "meals", "settings"];
   for (const storeName of stores) {
     const records = await getAll(storeName);
     for (const record of records) {
@@ -2638,6 +2906,40 @@ function openPurchaseEditor(id = null) {
   focusInlineEditor();
 }
 
+function openActivePurchaseCheckout() {
+  const session = activePurchaseSession();
+  if (!session) {
+    showToast("Comece uma compra primeiro.");
+    return;
+  }
+  if (!checkedItemsForSession(session).length) {
+    showToast("Marque pelo menos um item nesta compra.");
+    return;
+  }
+  openCheckout(null, { mode: "session", sessionId: session.id });
+}
+
+function renderPurchaseReceipt(purchase = null) {
+  if (!el.purchaseReceipt || !el.purchaseReceiptList || !el.purchaseReceiptCount) return;
+  const items = Array.isArray(purchase?.items) ? purchase.items : [];
+  el.purchaseReceipt.hidden = items.length === 0;
+  el.purchaseReceiptList.innerHTML = "";
+  el.purchaseReceiptCount.textContent = `${items.length} ${items.length === 1 ? "item" : "itens"}`;
+  items.forEach((item) => {
+    const row = document.createElement("li");
+    row.className = "receipt-item";
+    const quantity = item.quantity ? `<span>${escapeHtml(item.quantity)}</span>` : "";
+    row.innerHTML = `
+      <div>
+        <strong>${escapeHtml(item.name)}</strong>
+        ${quantity}
+      </div>
+      <small>${escapeHtml(item.categoryName || "Sem seção")}</small>
+    `;
+    el.purchaseReceiptList.append(row);
+  });
+}
+
 function closeInlinePurchaseEditor() {
   state.inlinePurchaseEditor = null;
   renderFinancialState();
@@ -2679,23 +2981,26 @@ async function saveInlinePurchase(event, id = null) {
   showToast(purchase ? "Compra atualizada." : "Compra registrada.");
 }
 
-function openCheckout(id = null) {
+function openCheckout(id = null, options = {}) {
   state.inlinePurchaseEditor = null;
+  state.finishingPurchaseSessionId = options.mode === "session" ? options.sessionId : null;
   state.editingPurchaseId = id;
   const purchase = state.purchases.find((current) => current.id === id);
+  const isSessionCheckout = Boolean(state.finishingPurchaseSessionId);
 
-  el.checkoutDialogTitle.textContent = purchase ? "Editar compra" : "Registrar compra";
+  el.checkoutDialogTitle.textContent = isSessionCheckout ? "Finalizar compra" : (purchase ? "Editar compra" : "Registrar compra");
   el.savePurchaseButton.textContent = purchase ? "Salvar" : "Salvar";
   el.deletePurchaseButton.hidden = !purchase;
-  el.purchaseName.value = purchase?.name || "";
+  el.purchaseName.value = purchase?.name || (isSessionCheckout ? "Compra do mercado" : "");
   el.purchaseDate.value = formatDateInput(purchase?.date || Date.now());
   el.purchaseTotal.value = purchase ? String(purchase.total).replace(".", ",") : "";
+  renderPurchaseReceipt(purchase);
   if (typeof el.checkoutDialog.showModal === "function") {
     el.checkoutDialog.showModal();
   } else {
     el.checkoutDialog.setAttribute("open", "");
   }
-  focusDialogInput(el.purchaseTotal);
+  focusDialogInputForCreate(el.purchaseTotal, Boolean(purchase));
 }
 
 async function finishPurchase(event) {
@@ -2712,9 +3017,37 @@ async function finishPurchase(event) {
     return;
   }
 
+  const session = state.finishingPurchaseSessionId
+    ? state.purchaseSessions.find((current) => current.id === state.finishingPurchaseSessionId && current.status === "active")
+    : null;
+  const snapshot = session ? checkedItemsSnapshot(session) : [];
+  if (session && !snapshot.length) {
+    showToast("Marque pelo menos um item nesta compra.");
+    return;
+  }
+
   const purchase = state.purchases.find((current) => current.id === state.editingPurchaseId);
   if (purchase) {
     await saveRecord("purchases", { ...purchase, name, date, total });
+  } else if (session) {
+    const completedAt = Date.now();
+    await saveRecord("purchases", {
+      id: createId(),
+      name,
+      total,
+      date,
+      createdAt: completedAt,
+      startedAt: session.startedAt,
+      completedAt,
+      durationMs: completedAt - session.startedAt,
+      items: snapshot,
+    });
+    await saveRecord("purchaseSessions", {
+      ...session,
+      status: "completed",
+      completedAt,
+      updatedAt: completedAt,
+    });
   } else {
     await saveRecord("purchases", {
       id: createId(),
@@ -2734,7 +3067,9 @@ async function finishPurchase(event) {
 
 function closeCheckout() {
   state.editingPurchaseId = null;
+  state.finishingPurchaseSessionId = null;
   el.deletePurchaseButton.hidden = true;
+  renderPurchaseReceipt(null);
   if (typeof el.checkoutDialog.close === "function") {
     el.checkoutDialog.close();
   } else {
@@ -2886,6 +3221,10 @@ function bindEvents() {
   el.closeConflictDialogButton?.addEventListener("click", closeConflictDialog);
   window.addEventListener("online", () => syncNow());
   el.quickAddButton.addEventListener("click", handleFabButton);
+  el.startPurchaseSessionButton?.addEventListener("click", startPurchaseSession);
+  el.finishPurchaseSessionButton?.addEventListener("click", openActivePurchaseCheckout);
+  el.cancelPurchaseSessionButton?.addEventListener("click", cancelPurchaseSession);
+  el.clearRecentItemsButton?.addEventListener("click", clearRecentItems);
   el.listMenuButton?.addEventListener("click", toggleListMenu);
   el.spaceSwitcherButton?.addEventListener("click", (event) => {
     event.stopPropagation();

@@ -19,7 +19,7 @@ create table if not exists public.space_members (
 
 create table if not exists public.space_records (
   space_id uuid not null references public.spaces(id) on delete cascade,
-  entity_type text not null check (entity_type in ('item', 'category', 'purchase', 'meal', 'settings')),
+  entity_type text not null check (entity_type in ('item', 'category', 'purchase', 'purchase_session', 'meal', 'settings')),
   entity_id text not null,
   data jsonb,
   version integer not null default 1,
@@ -34,7 +34,7 @@ drop constraint if exists space_records_entity_type_check;
 
 alter table public.space_records
 add constraint space_records_entity_type_check
-check (entity_type in ('item', 'category', 'purchase', 'meal', 'settings'));
+check (entity_type in ('item', 'category', 'purchase', 'purchase_session', 'meal', 'settings'));
 
 alter table public.spaces enable row level security;
 alter table public.space_members enable row level security;
