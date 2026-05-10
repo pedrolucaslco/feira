@@ -2135,7 +2135,7 @@ function focusInlineEditor() {
 function populateCategorySelect(select, selectedCategoryId = "") {
   if (!select) return;
   const normalized = selectedCategoryId === UNCATEGORIZED_ID ? "" : selectedCategoryId;
-  const options = [{ id: "", name: "Sem seção" }, ...state.categories];
+  const options = [{ id: "", name: "Seção" }, ...state.categories];
   select.innerHTML = options.map((category) => `<option value="${escapeHtml(category.id)}">${escapeHtml(category.name)}</option>`).join("");
   select.value = normalized;
 }
@@ -2319,7 +2319,11 @@ function openItemDialog(id = null, categoryId = "") {
 
   el.itemForm.reset();
   el.itemDialogTitle.textContent = item ? "Editar item" : "Novo item";
-  el.saveItemButton.textContent = item ? "Salvar" : "Adicionar";
+  el.saveItemButton.innerHTML = item
+    ? `<i data-lucide="check" aria-hidden="true"></i>`
+    : `<i data-lucide="check" aria-hidden="true"></i>`;
+  el.saveItemButton.setAttribute("aria-label", item ? "Salvar item" : "Adicionar item");
+  el.saveItemButton.setAttribute("title", item ? "Salvar item" : "Adicionar item");
   el.deleteItemButton.hidden = !item;
   if (item) {
     el.itemName.value = item.name;
@@ -2332,6 +2336,7 @@ function openItemDialog(id = null, categoryId = "") {
   } else {
     el.itemDialog.setAttribute("open", "");
   }
+  renderIcons();
   focusDialogInputForCreate(el.itemName, Boolean(item));
 }
 

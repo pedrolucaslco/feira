@@ -436,10 +436,10 @@ O app tem:
 Versão atual do cache:
 
 ```txt
-feira-v58.12
+feira-v58.13
 ```
 
-O cache foi atualizado para `feira-v58.12` para simplificar os temas DaisyUI para `emerald`/`dim` e ajustar o fundo do app por modo.
+O cache foi atualizado para `feira-v58.13` para corrigir os ícones Lucide do botão de salvar/adicionar item.
 
 Se alguma alteração não aparecer no navegador, usar **Ajustes > Atualizar app**. Em último caso, fazer reload forte ou limpar o service worker/cache do site.
 
@@ -550,14 +550,11 @@ Evolução de produto:
 Última funcionalidade implementada:
 
 ```txt
-Temas DaisyUI simplificados para claro/escuro com fundo do app ajustado por modo.
+Ícones Lucide corrigidos no modal de criar/editar item.
 ```
 
 Arquivos alterados nesse marco:
 
-- `src/app.css` (limita DaisyUI aos temas `emerald` e `dim`)
-- `app.js` e `index.html` (removem seletor/configuração de tema DaisyUI variável)
-- `styles.css` (aplica fundo `base-100` no claro e `base-300` no escuro)
-- `README.md` (documenta os temas fixos)
-- `sw.js` (incrementa cache para `feira-v58.12`)
+- `app.js` (usa `innerHTML`, `aria-label` e recria ícones Lucide no botão do modal de item)
+- `sw.js` (incrementa cache para `feira-v58.13`)
 - `CONTEXTO_PROJETO.md` (atualizado)

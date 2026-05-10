@@ -48,7 +48,7 @@ function createCategorySection(category, items) {
       </button>
       <div class="section-label-actions">
       <button class="btn btn-ghost btn-square btn-sm section-collapse-button" type="button" aria-label="${isCollapsed ? "Expandir" : "Recolher"} ${escapeHtml(category.name)}">
-          <i data-lucide="${isCollapsed ? "chevron-up" : "chevron-down"}" aria-hidden="true"></i>
+          <i data-lucide="${isCollapsed ? "chevron-right" : "chevron-down"}" aria-hidden="true"></i>
         </button>
         ${hasMenuActions ? `
           <div class="dropdown dropdown-end section-actions-dropdown">
