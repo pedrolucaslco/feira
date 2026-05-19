@@ -292,6 +292,7 @@ var el = {
   listMenuButton: document.querySelector("#listMenuButton"),
   listMenu: document.querySelector("#listMenu"),
   openCategoryDialogButton: document.querySelector("#openCategoryDialogButton"),
+  clearMarketListButton: document.querySelector("#clearMarketListButton"),
   refreshButton: document.querySelector("#refreshButton"),
   purchaseInlineEditorMount: document.querySelector("#purchaseInlineEditorMount"),
   checkoutDialog: document.querySelector("#checkoutDialog"),
@@ -2295,6 +2296,29 @@ async function clearRecentItems() {
   showToast("Comprados recentes limpos.");
 }
 
+async function clearMarketList() {
+  const hasItems = state.items.length > 0;
+  const hasSections = state.categories.length > 0;
+  if (!hasItems && !hasSections) {
+    showToast("A lista já está vazia.");
+    return;
+  }
+
+  const confirmed = window.confirm("Zerar lista e apagar todas as seções?");
+  if (!confirmed) return;
+
+  closeListMenu();
+  await Promise.all([
+    ...state.items.map((item) => deleteRecord("items", item.id)),
+    ...state.categories.map((category) => deleteRecord("categories", category.id)),
+  ]);
+  state.collapsedCategoryIds.clear();
+  state.manuallyToggledCategoryIds.clear();
+  state.inlineItemEditor = null;
+  await reloadAndRender();
+  showToast("Lista e seções limpas.");
+}
+
 async function removeItem(id) {
   if (!id) return;
   const confirmed = window.confirm("Excluir este item?");
@@ -3207,6 +3231,7 @@ function bindEvents() {
   el.finishPurchaseSessionButton?.addEventListener("click", openActivePurchaseCheckout);
   el.cancelPurchaseSessionButton?.addEventListener("click", cancelPurchaseSession);
   el.clearRecentItemsButton?.addEventListener("click", clearRecentItems);
+  el.clearMarketListButton?.addEventListener("click", clearMarketList);
   el.listMenuButton?.addEventListener("click", toggleListMenu);
   el.spaceSwitcherButton?.addEventListener("click", (event) => {
     event.stopPropagation();
