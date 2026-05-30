@@ -112,6 +112,13 @@ async function loadState() {
     .map((meal) => normalizeMeal(meal, state.activeSpaceId))
     .sort((a, b) => b.updatedAt - a.updatedAt);
   state.settings = normalizeSettings(settings, state.activeSpaceId);
+
+  if (state.settings.cardClosingDay && !getMonthlyClosingDay()) {
+    setMonthlyClosingDay(state.settings.cardClosingDay);
+    state.settings.monthlyClosingDays = { ...state.settings.monthlyClosingDays };
+    delete state.settings.cardClosingDay;
+  }
+
   state.syncOutbox = syncOutbox.filter((operation) => operation.spaceId === state.activeSpaceId);
   state.syncConflicts = syncConflicts.filter((conflict) => conflict.spaceId === state.activeSpaceId);
 }

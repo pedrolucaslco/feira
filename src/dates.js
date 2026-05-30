@@ -1,10 +1,28 @@
+function monthlyClosingDayKey(year, month) {
+  return `${year}-${String(month + 1).padStart(2, "0")}`;
+}
+
+function setMonthlyClosingDay(day, date = new Date()) {
+  const key = monthlyClosingDayKey(date.getFullYear(), date.getMonth());
+  state.settings.monthlyClosingDays = {
+    ...(state.settings.monthlyClosingDays || {}),
+    [key]: day,
+  };
+}
+
+function getMonthlyClosingDay(date = new Date()) {
+  const key = monthlyClosingDayKey(date.getFullYear(), date.getMonth());
+  return state.settings.monthlyClosingDays?.[key] || "";
+}
+
 function monthBounds(date = new Date()) {
   const start = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
   const end = new Date(date.getFullYear(), date.getMonth() + 1, 1).getTime();
   return { start, end, labelDate: date, usesClosingDay: false };
 }
 
-function billingPeriodBounds(date = new Date(), closingDay = state.settings.cardClosingDay) {
+function billingPeriodBounds(date = new Date(), closingDay) {
+  if (closingDay === undefined) closingDay = getMonthlyClosingDay(date);
   if (!closingDay) return monthBounds(date);
 
   const currentDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -20,4 +38,10 @@ function billingPeriodBounds(date = new Date(), closingDay = state.settings.card
     labelDate,
     usesClosingDay: true,
   };
+}
+
+function monthlyClosingDayLabel(date = new Date()) {
+  const day = getMonthlyClosingDay(date);
+  if (!day) return "";
+  return `Fechamento dia ${day}: compras a partir desse dia entram no ciclo seguinte.`;
 }

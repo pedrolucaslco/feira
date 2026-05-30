@@ -14,10 +14,13 @@ async function saveBudget(event) {
     return;
   }
 
+  if (cardClosingDay) {
+    setMonthlyClosingDay(cardClosingDay);
+  }
+
   await saveRecord("settings", {
     ...state.settings,
     monthlyBudget,
-    cardClosingDay,
   });
 
   await reloadAndRender();

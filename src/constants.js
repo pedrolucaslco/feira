@@ -27,7 +27,7 @@ const UNCATEGORIZED_ID = "uncategorized";
 const DEFAULT_SETTINGS = {
   id: SETTINGS_ID,
   monthlyBudget: 1200,
-  cardClosingDay: "",
+  monthlyClosingDays: {},
   userName: "",
   userGender: "neutral",
   editorMode: "modal",

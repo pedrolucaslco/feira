@@ -1,6 +1,15 @@
 [
   {
     "date": "2026-05-30",
+    "version": "1.5.0",
+    "changes": [
+      { "type": "new", "text": "Dia de fechamento do cartão por mês — o app pergunta no início de cada mês" },
+      { "type": "fixed", "text": "Build quebrada no PWA: módulos src/ não eram copiados para produção" },
+      { "type": "improved", "text": "Arquitetura dos módulos extraídos da app.js para src/" }
+    ]
+  },
+  {
+    "date": "2026-05-30",
     "version": "1.4.0",
     "changes": [
       { "type": "new", "text": "Tela de changelog para acompanhar atualizações" },

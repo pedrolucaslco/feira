@@ -11,7 +11,7 @@ function publicRecordData(storeName, value) {
   if (storeName === "settings") {
     return {
       monthlyBudget: data.monthlyBudget,
-      cardClosingDay: data.cardClosingDay,
+      monthlyClosingDays: data.monthlyClosingDays,
     };
   }
   return data;

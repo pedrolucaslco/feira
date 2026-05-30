@@ -456,7 +456,7 @@ function renderFinancialState() {
   const spent = monthPurchases.reduce((sum, purchase) => sum + purchase.total, 0);
   const budget = state.settings.monthlyBudget;
   const remaining = budget - spent;
-  const weeksLeft = weeksUntilClosing(state.settings.cardClosingDay);
+  const weeksLeft = weeksUntilClosing(getMonthlyClosingDay());
 
   el.remainingBalance.textContent = formatCurrency(remaining);
   if (el.spentBudgetRatio && el.spentBudgetSpent && el.spentBudgetTotal) {
@@ -468,7 +468,7 @@ function renderFinancialState() {
   }
   renderPurchasePeriod(period);
   el.budgetInput.value = budget ? String(budget).replace(".", ",") : "";
-  el.cardClosingDayInput.value = state.settings.cardClosingDay || "";
+  el.cardClosingDayInput.value = getMonthlyClosingDay() || "";
   el.userNameInput.value = state.settings.userName || "";
   renderWeeklyBudget(remaining, weeksLeft);
   renderProfile();
@@ -500,7 +500,7 @@ function renderPurchasePeriod(period) {
   el.purchasePeriodTitle.textContent = period.usesClosingDay ? `Ciclo de ${cycleName}` : `Mês de ${cycleName}`;
   el.purchasePeriodRange.textContent = `${formatDate(period.start)} a ${formatDate(endInclusive)}`;
   el.purchasePeriodRule.textContent = period.usesClosingDay
-    ? `Fechamento dia ${state.settings.cardClosingDay}: compras a partir desse dia entram no ciclo seguinte.`
+    ? monthlyClosingDayLabel()
     : "Sem dia de fechamento: o app usa o mês do calendário.";
 }
 
@@ -1585,6 +1585,44 @@ function showOnboarding() {
   dialog.showModal();
 }
 
+function promptMonthlyClosingDay() {
+  const dialog = document.getElementById("closingDayDialog");
+  const input = document.getElementById("closingDayPromptInput");
+  const saveBtn = document.getElementById("closingDayPromptSave");
+  const skipBtn = document.getElementById("closingDayPromptSkip");
+  if (!dialog || !input || !saveBtn || !skipBtn) return;
+
+  const now = new Date();
+  if (getMonthlyClosingDay(now)) return;
+
+  input.value = "";
+  input.removeAttribute("readonly");
+
+  const close = () => {
+    dialog.close();
+  };
+
+  const save = async () => {
+    const raw = input.value.trim();
+    const day = raw ? Number.parseInt(raw, 10) : NaN;
+    if (!Number.isInteger(day) || day < 1 || day > 31) {
+      showToast("Informe um dia entre 1 e 31.");
+      return;
+    }
+    setMonthlyClosingDay(day, now);
+    await saveRecord("settings", { ...state.settings });
+    await reloadAndRender();
+    close();
+    showToast("Dia de fechamento salvo.");
+  };
+
+  saveBtn.onclick = save;
+  skipBtn.onclick = close;
+  input.onkeydown = (e) => { if (e.key === "Enter") save(); };
+
+  dialog.showModal();
+}
+
 async function init() {
   try {
     state.db = await openDatabase();
@@ -1597,6 +1635,8 @@ async function init() {
     render();
 
     document.getElementById("loadingOverlay")?.classList.add("is-hidden");
+
+    promptMonthlyClosingDay();
 
     if (supabaseConfigured() && FeiraAuth.getSession()) {
       await ensureSupabase();

@@ -401,7 +401,7 @@
                 </div>
                 <div class="settings-row settings-row-inline">
                   <div class="settings-row-main">
-                    <label class="label" for="cardClosingDayInput">Fechamento do cartão</label>
+                    <label class="label" for="cardClosingDayInput">Fechamento do cartão (mês atual)</label>
                     <input class="input" id="cardClosingDayInput" name="cardClosingDay" type="number" min="1" max="31" inputmode="numeric" autocomplete="off" placeholder="Dia" />
                   </div>
                   <div class="settings-row-control">
@@ -796,6 +796,23 @@
             <button class="btn btn-soft btn-sm" id="onboardingPrevButton" type="button" disabled>Anterior</button>
             <button class="btn btn-primary btn-sm" id="onboardingNextButton" type="button">Próximo</button>
           </div>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="modal modal-bottom sm:modal-middle" id="closingDayDialog">
+      <div class="modal-box">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Orçamento</p>
+            <h2>Fechamento do cartão</h2>
+          </div>
+        </div>
+        <p class="mb-4">Qual o dia de fechamento da sua fatura para este mês?</p>
+        <input class="input input-bordered w-full" id="closingDayPromptInput" type="number" min="1" max="31" inputmode="numeric" placeholder="Dia do fechamento" />
+        <div class="modal-action">
+          <button class="btn btn-soft" id="closingDayPromptSkip" type="button">Agora não</button>
+          <button class="btn btn-primary" id="closingDayPromptSave" type="button">Salvar</button>
         </div>
       </div>
     </dialog>
