@@ -17,6 +17,20 @@ const staticFiles = [
   "components/categories.js",
   "src/router.js",
   "src/auth.js",
+  "src/constants.js",
+  "src/utils.js",
+  "src/theme.js",
+  "src/profile.js",
+  "src/db.js",
+  "src/dates.js",
+  "src/normalizers.js",
+  "src/state.js",
+  "src/sync.js",
+  "src/spaces.js",
+  "src/settings.js",
+  "src/shopping.js",
+  "src/meals.js",
+  "src/purchases.js",
 ];
 
 function copyPwaStaticFiles() {
