@@ -968,8 +968,8 @@ function sortOrderForItemPosition(items, targetIndex) {
 }
 
 function clearItemDropIndicators() {
-  document.querySelectorAll(".item-row.is-drop-before, .item-row.is-drop-after, .shopping-list.is-drop-target").forEach((element) => {
-    element.classList.remove("is-drop-before", "is-drop-after", "is-drop-target");
+  document.querySelectorAll(".item-row.is-drop-before, .item-row.is-drop-after, .shopping-list.is-drop-target, .market-section.is-drag-over-section").forEach((element) => {
+    element.classList.remove("is-drop-before", "is-drop-after", "is-drop-target", "is-drag-over-section");
   });
 }
 
@@ -979,13 +979,21 @@ function updateItemDropTarget(clientX, clientY) {
   const targetRow = target?.closest?.(".item-row");
   const targetList = target?.closest?.(".shopping-list");
   const targetSection = target?.closest?.(".market-section");
+  const targetEmpty = target?.closest?.(".section-empty");
   const draggedItem = state.items.find((item) => item.id === state.draggingItemId);
   const fallbackCategoryId = draggedItem ? itemCategoryId(draggedItem) : UNCATEGORIZED_ID;
   const categoryId = targetList?.dataset.categoryId || targetRow?.dataset.categoryId || targetSection?.dataset.categoryId || fallbackCategoryId;
 
-  state.dragTargetCategoryId = categoryId;
+  var skipSection = categoryId === RECENTLY_PURCHASED_SECTION_ID;
+  state.dragTargetCategoryId = skipSection ? fallbackCategoryId : categoryId;
   state.dragTargetItemId = "";
   state.dragTargetPlacement = "after";
+
+  if (skipSection) return;
+
+  if (targetSection && categoryId !== fallbackCategoryId) {
+    targetSection.classList.add("is-drag-over-section");
+  }
 
   if (targetRow && targetRow.dataset.itemId !== state.draggingItemId) {
     const rect = targetRow.getBoundingClientRect();
@@ -996,6 +1004,11 @@ function updateItemDropTarget(clientX, clientY) {
     return;
   }
 
+  if (targetEmpty && targetSection) {
+    targetEmpty.classList.add("is-drop-target");
+    return;
+  }
+
   targetList?.classList.add("is-drop-target");
 }
 
@@ -1003,7 +1016,8 @@ async function moveDraggedItemToTarget() {
   const item = state.items.find((current) => current.id === state.draggingItemId);
   if (!item) return;
 
-  const targetCategoryId = state.dragTargetCategoryId || itemCategoryId(item);
+  var targetCategoryId = state.dragTargetCategoryId || itemCategoryId(item);
+  if (targetCategoryId === RECENTLY_PURCHASED_SECTION_ID) targetCategoryId = itemCategoryId(item);
   const items = sectionItems(targetCategoryId, item.id);
   const targetItemIndex = items.findIndex((current) => current.id === state.dragTargetItemId);
   const targetIndex = targetItemIndex === -1
@@ -1025,6 +1039,8 @@ async function moveDraggedItemToTarget() {
 function bindItemLongPressDrag(row, item) {
   let longPressTimer = 0;
   let isDragging = false;
+  let scrollRAF = 0;
+  let currentClientY = 0;
   const longPressDelay = 420;
 
   const cleanup = () => {
@@ -1032,6 +1048,10 @@ function bindItemLongPressDrag(row, item) {
     window.removeEventListener("pointermove", handlePointerMove);
     window.removeEventListener("pointerup", handlePointerUp);
     window.removeEventListener("pointercancel", handlePointerCancel);
+    if (scrollRAF) {
+      window.cancelAnimationFrame(scrollRAF);
+      scrollRAF = 0;
+    }
   };
 
   const startDrag = (event) => {
@@ -1042,12 +1062,36 @@ function bindItemLongPressDrag(row, item) {
     state.dragTargetPlacement = "after";
     row.classList.add("is-dragging");
     document.body.classList.add("is-dragging-item");
+    currentClientY = event.clientY;
     updateItemDropTarget(event.clientX, event.clientY);
+    event.preventDefault();
+
+    if (navigator.vibrate) {
+      navigator.vibrate(20);
+    }
   };
+
+  function autoScroll() {
+    function tick() {
+      if (!isDragging) return;
+      var y = currentClientY;
+      var margin = 40;
+      var maxSpeed = 10;
+      var viewH = window.innerHeight;
+      if (y < margin) {
+        window.scrollBy(0, -(margin - y) / margin * maxSpeed);
+      } else if (y > viewH - margin) {
+        window.scrollBy(0, (y - (viewH - margin)) / margin * maxSpeed);
+      }
+      scrollRAF = window.requestAnimationFrame(tick);
+    }
+    scrollRAF = window.requestAnimationFrame(tick);
+  }
 
   function handlePointerMove(event) {
     if (!isDragging) return;
     event.preventDefault();
+    currentClientY = event.clientY;
     updateItemDropTarget(event.clientX, event.clientY);
   }
 
@@ -1077,15 +1121,25 @@ function bindItemLongPressDrag(row, item) {
   }
 
   row.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0 || event.target.closest("input, select, textarea, .check-button")) return;
+    if (event.button !== 0) return;
+    var handle = event.target.closest(".drag-handle");
+    if (!handle && event.target.closest("input, select, textarea, .check-button")) return;
     window.clearTimeout(longPressTimer);
+    currentClientY = event.clientY;
     window.addEventListener("pointermove", handlePointerMove, { passive: false });
     window.addEventListener("pointerup", handlePointerUp, { passive: false });
     window.addEventListener("pointercancel", handlePointerCancel, { passive: false });
-    longPressTimer = window.setTimeout(() => startDrag(event), longPressDelay);
+    if (handle) {
+      autoScroll();
+      startDrag(event);
+    } else {
+      autoScroll();
+      longPressTimer = window.setTimeout(() => startDrag(event), longPressDelay);
+    }
   });
 
   row.addEventListener("pointermove", (event) => {
+    currentClientY = event.clientY;
     if (isDragging) return;
     if (Math.abs(event.movementX) > 8 || Math.abs(event.movementY) > 8) {
       cleanup();
@@ -2274,19 +2328,19 @@ async function saveItem(event) {
 function openItemEditor(id = null, categoryId = "") {
   closeListMenu();
   const normalizedCategoryId = categoryId === UNCATEGORIZED_ID ? "" : categoryId;
-  if (editorMode() !== "inline") {
-    openItemDialog(id, normalizedCategoryId);
+
+  if (editorMode() === "inline") {
+    if (id !== null) return;
+    if (state.activeView !== "listView") setView("listView");
+    state.inlinePurchaseEditor = null;
+    state.inlineItemEditor = { id: null, categoryId: normalizedCategoryId };
+    renderItems();
+    renderIcons();
+    focusInlineEditor();
     return;
   }
 
-  if (state.activeView !== "listView") {
-    setView("listView");
-  }
-  state.inlinePurchaseEditor = null;
-  state.inlineItemEditor = { id, categoryId: normalizedCategoryId };
-  renderItems();
-  renderIcons();
-  focusInlineEditor();
+  openItemDialog(id, normalizedCategoryId);
 }
 
 function closeInlineItemEditor() {

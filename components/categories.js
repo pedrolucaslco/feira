@@ -5,14 +5,10 @@ function createShoppingList(category, items, hasInlineNewItem, isCollapsed) {
   list.hidden = isCollapsed;
 
   if (state.inlineItemEditor && !state.inlineItemEditor.id && itemCategoryId({ categoryId: state.inlineItemEditor.categoryId }) === category.id) {
-    list.append(createItemInlineEditor(null, category.id));
+    list.append(createItemInlineEditor(category.id));
   }
 
   items.forEach((item) => {
-    if (state.inlineItemEditor?.id === item.id) {
-      list.append(createItemInlineEditor(item, category.recent ? itemCategoryId(item) : category.id));
-      return;
-    }
     list.append(createItemRow(item, {
       draggable: !category.recent,
       originLabel: category.recent ? categoryNameForItem(item) : "",
