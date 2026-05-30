@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#145c58" id="themeColorMeta" />
+    <base href="/" />
+    <title>Feira</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <script>
+      (() => {
+        const storedTheme = localStorage.getItem("feira:theme");
+        const theme =
+          storedTheme === "dark" || storedTheme === "light"
+            ? storedTheme
+            : window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        document.documentElement.dataset.mode = theme;
+        document.documentElement.dataset.theme = theme === "dark" ? "dim" : "emerald";
+      })();
+    </script>
+    <script type="module">
+      window.__FEIRA_DEV__ = import.meta.env.DEV;
+    </script>
+    <link rel="stylesheet" href="./src/app.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="loadingOverlay" class="loading-overlay" aria-label="Carregando">
+      <div class="loading-spinner-wrapper">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+        <p class="loading-text">Carregando...</p>
+      </div>
+    </div>
+    <div class="app-shell">
+
+      <header class="navbar topbar">
+        <div class="navbar-start brand">
+          <div class="brand-copy">
+            <div class="space-switcher-wrap">
+              <button class="btn btn-ghost space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="spaceMenu">
+                <strong id="activeSpaceName">Espaço local</strong>
+                <span class="sync-status-icon" id="syncStatusLabel" title="Status de sincronização">
+                  <i data-lucide="check-circle-2" aria-hidden="true"></i>
+                </span>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+              </button>
+            </div>
+            <dialog id="spaceMenu" class="modal modal-bottom sm:modal-middle">
+              <div class="modal-box p-4">
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <p class="font-bold">Espaços</p>
+                    <p class="text-sm text-base-content/70">Escolha o espaço para trabalhar</p>
+                  </div>
+                  <form method="dialog">
+                    <button type="submit" class="btn btn-ghost btn-sm" aria-label="Fechar painel">
+                      <i data-lucide="x" aria-hidden="true"></i>
+                    </button>
+                  </form>
+                </div>
+                <ul class="menu gap-2" id="spaceMenuList"></ul>
+              </div>
+            </dialog>
+          </div>
+        </div>
+        <div class="navbar-end topbar-actions" aria-label="Ações do aplicativo">
+          <button class="btn btn-ghost btn-circle btn-sm topbar-refresh-button" id="topbarRefreshButton" type="button" aria-label="Atualizar app" title="Atualizar app">
+            <i data-lucide="refresh-cw" aria-hidden="true"></i>
+          </button>
+          <button tabindex="0" type="button" class="btn btn-ghost btn-sm btn-circle" data-nav-button data-view="changelogView" aria-label="Novidades" title="Novidades">
+            <i data-lucide="megaphone" aria-hidden="true"></i>
+          </button>
+          <button tabindex="0" type="button" class="btn btn-ghost btn-sm btn-circle" data-nav-button data-view="settingsView" aria-label="Ajustes">
+            <i data-lucide="cog" aria-hidden="true"></i>
+          </button>
+        </div>
+      </header>
+
+      <main>
+
+        <section class="alert alert-warning conflict-banner" id="conflictBanner" hidden>
+          <div>
+            <strong>Conflitos de sincronização</strong>
+            <span>Escolha qual versão manter para continuar sincronizando.</span>
+          </div>
+          <button class="btn btn-soft" id="openConflictsButton" type="button">Resolver</button>
+        </section>
+
+        <section id="loginView" class="view" aria-labelledby="loginTitle">
+          <div class="login-surface">
+            <div class="login-brand">
+              <img src="./icon.svg" alt="" class="login-logo" />
+              <h1 id="loginTitle">Feira</h1>
+              <p class="login-subtitle">Lista de mercado compartilhada</p>
+            </div>
+
+            <div class="login-tabs">
+              <button class="login-tab is-active" data-login-tab="email" type="button">Entrar</button>
+              <button class="login-tab" data-login-tab="register" type="button">Criar conta</button>
+            </div>
+
+            <form class="login-form" id="loginEmailForm">
+              <div class="form-group">
+                <label class="label" for="loginEmail">Email</label>
+                <input class="input" id="loginEmail" name="login-email" type="email" autocomplete="off" placeholder="seu@email.com" />
+              </div>
+              <div class="form-group">
+                <label class="label" for="loginPassword">Senha</label>
+                <input class="input" id="loginPassword" name="login-pass" type="password" autocomplete="off" placeholder="Sua senha" readonly onfocus="this.removeAttribute('readonly')" />
+              </div>
+              <button class="btn btn-primary btn-block" id="loginSubmitButton" type="submit">Entrar</button>
+              <button class="btn btn-soft btn-block" id="loginMagicLinkButton" type="button">Enviar link mágico</button>
+            </form>
+
+            <form class="login-form" id="loginRegisterForm" hidden>
+              <div class="form-group">
+                <label class="label" for="registerEmail">Email</label>
+                <input class="input" id="registerEmail" name="register-email" type="email" autocomplete="off" placeholder="seu@email.com" />
+              </div>
+              <div class="form-group">
+                <label class="label" for="registerPassword">Senha</label>
+                <input class="input" id="registerPassword" name="register-pass" type="password" autocomplete="off" placeholder="Crie uma senha" readonly onfocus="this.removeAttribute('readonly')" />
+              </div>
+              <button class="btn btn-primary btn-block" id="registerSubmitButton" type="submit">Criar conta</button>
+            </form>
+
+            <div class="login-divider"><span>ou</span></div>
+
+            <button class="btn btn-soft btn-block" id="loginGoogleButton" type="button">
+              Entrar com Google
+            </button>
+
+            <div class="login-anonymous">
+              <button class="btn btn-ghost btn-block" id="loginAnonymousButton" type="button">
+                Continuar sem login
+              </button>
+              <p class="login-anonymous-hint">Seus dados ficam salvos apenas neste dispositivo.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="quickNoteView" class="view" aria-labelledby="quickNoteTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="quickNoteTitle">Nota rápida</h2>
+              <span class="text-sm text-base-content/60">Rascunho da lista de compras</span>
+            </div>
+          </div>
+
+          <div class="note-surface">
+            <div class="note-editor" id="noteEditor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Digite sua nota" translate="no"></div>
+            <p class="note-hint" id="noteHint">
+              <i data-lucide="info" aria-hidden="true" class="note-hint-icon"></i>
+              Linhas que começam com <code>- </code> viram itens na lista
+            </p>
+            <div class="note-actions">
+              <button class="btn btn-primary" id="noteTransferButton" type="button" disabled>
+                <i data-lucide="arrow-right" aria-hidden="true"></i>
+                Transferir para lista
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section id="listView" class="view" aria-labelledby="fullListTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="fullListTitle">Lista de compras</h2>
+              <span id="itemCountLabel">0 itens</span>
+            </div>
+            <div class="list-head-actions">
+              <button class="btn btn-primary btn-sm" id="startPurchaseSessionButton" type="button">
+                <i data-lucide="play" aria-hidden="true"></i>
+              </button>
+              <button class="btn btn-soft btn-sm" id="clearRecentItemsButton" type="button" hidden>
+                <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+              </button>
+              <div class="dropdown dropdown-end list-menu-wrap">
+              <button class="btn btn-ghost btn-square" id="listMenuButton" type="button" aria-label="Abrir opções da lista" aria-expanded="false">
+                <i data-lucide="ellipsis" aria-hidden="true"></i>
+              </button>
+              <div class="dropdown-content z-10 mt-2 w-52 rounded-box border border-base-300 bg-base-100 p-2 shadow" id="listMenu" hidden>
+                <ul class="menu">
+                  <li>
+                    <button type="button" id="openCategoryDialogButton">
+                      <i data-lucide="plus" aria-hidden="true"></i>
+                      Adicionar seção
+                    </button>
+                  </li>
+                  <li>
+                    <button type="button" id="clearMarketListButton">
+                      <i data-lucide="trash-2" aria-hidden="true"></i>
+                      Zerar lista
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              </div>
+            </div>
+          </div>
+
+          <section class="purchase-session-bar" id="purchaseSessionBar" hidden>
+            <div class="purchase-session-copy">
+              <span id="purchaseSessionTitle">Compra em andamento</span>
+              <strong id="purchaseSessionTimer">00:00</strong>
+              <small id="purchaseSessionMeta">0 itens marcados nesta compra</small>
+            </div>
+            <div class="purchase-session-actions">
+              <button class="btn btn-primary btn-sm" id="finishPurchaseSessionButton" type="button">
+                <i data-lucide="check" aria-hidden="true"></i>
+                Finalizar
+              </button>
+              <button class="btn btn-ghost btn-square btn-sm" id="cancelPurchaseSessionButton" type="button" aria-label="Cancelar compra" title="Cancelar compra">
+                <i data-lucide="x" aria-hidden="true"></i>
+              </button>
+            </div>
+          </section>
+
+          <div class="list-surface" id="itemList"></div>
+          <p class="empty-state" id="emptyItems">Sua lista ainda está vazia.</p>
+        </section>
+
+        <section id="purchaseView" class="view" aria-labelledby="purchaseTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Compras</p>
+              <h2 id="purchaseTitle">Histórico</h2>
+            </div>
+            <button class="btn btn-ghost btn-square" id="refreshButton" type="button" title="Registrar compra" aria-label="Registrar compra">
+              <i data-lucide="plus" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <section class="card border border-base-300 bg-base-100 content-block purchase-indicators-card">
+            <div class="card-body">
+              <div class="indicators-grid">
+                <div class="indicator-item">
+                  <div class="indicator-icon">
+                    <i data-lucide="wallet" aria-hidden="true"></i>
+                  </div>
+                  <div class="indicator-content">
+                    <span class="indicator-label">Saldo disponível</span>
+                    <strong class="indicator-value" id="remainingBalance">R$ 0,00</strong>
+                  </div>
+                </div>
+                
+                <div class="indicator-item">
+                  <div class="indicator-icon">
+                    <i data-lucide="calendar" aria-hidden="true"></i>
+                  </div>
+                  <div class="indicator-content">
+                    <span class="indicator-label" id="topbarWeeklyLabel">Por semana</span>
+                    <strong class="indicator-value" id="topbarWeeklyBudget">--</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card border border-base-300 bg-base-100 content-block purchase-indicators-card">
+            <div class="card-body">
+              <div class="indicators-grid">
+                <div class="indicator-item">
+                  <div class="indicator-icon">
+                    <i data-lucide="trending-up" aria-hidden="true"></i>
+                  </div>
+                  <div class="indicator-content">
+                    <span class="indicator-label">Gasto / Orçamento</span>
+                    <strong class="indicator-value" id="spentBudgetRatio">
+                      <span id="spentBudgetSpent">R$ 0,00</span> / <span id="spentBudgetTotal">R$ 0,00</span>
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card border border-base-300 bg-base-100 content-block" aria-labelledby="purchasePeriodTitle">
+            <div class="card-body">
+              <div>
+                <span>Período atual</span>
+                <strong id="purchasePeriodTitle">Mês atual</strong>
+              </div>
+              <div>
+                <b id="purchasePeriodRange">--</b>
+                <small id="purchasePeriodRule">Configure o fechamento do cartão para usar ciclos.</small>
+              </div>
+            </div>
+          </section>
+
+          <section class="card border border-base-300 bg-base-100 content-block chart-block" aria-labelledby="purchaseChartTitle">
+            <div class="card-body">
+              <div class="block-title-row">
+                <h3 id="purchaseChartTitle" class="card-title">Variação das compras</h3>
+                <span id="purchaseMedianLabel" class="">Mediana R$ 0,00</span>
+              </div>
+              <div class="purchase-chart" id="purchaseChart" aria-label="Gráfico de barras das compras"></div>
+              <p class="empty-state" id="emptyPurchaseChart">Registre compras para ver a variação.</p>
+            </div>
+          </section>
+
+          <section class="card border border-base-300 bg-base-100 content-block" aria-labelledby="latestTitle">
+            <div class="card-body">
+              <div class="block-title-row">
+                <h3 id="latestTitle" class="card-title">Compras realizadas</h3>
+                <span id="purchaseCountLabel" class="badge badge-soft soft-label">0 compras</span>
+              </div>
+              <ul class="purchase-list inline-editor-list" id="purchaseInlineEditorMount"></ul>
+              <ul class="purchase-list" id="purchaseList"></ul>
+              <p class="empty-state" id="emptyPurchases">Nenhuma compra registrada.</p>
+            </div>
+          </section>
+        </section>
+
+        <section id="mealsView" class="view" aria-labelledby="mealsTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="mealsTitle">Refeições</h2>
+              <span id="mealCountLabel">0 refeições</span>
+            </div>
+            <button class="btn btn-ghost btn-square" id="createFirstMealButton" type="button" aria-label="Nova refeição">
+              <i data-lucide="plus" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div class="meal-list" id="mealList"></div>
+          <p class="empty-state" id="emptyMeals">Nenhuma refeição criada.</p>
+        </section>
+
+        <section id="changelogView" class="view" aria-labelledby="changelogTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="changelogTitle">Novidades</h2>
+            </div>
+          </div>
+          <div class="changelog-list" id="changelogList"></div>
+        </section>
+
+        <section id="settingsView" class="view settings-view-surface" aria-labelledby="settingsTitle">
+          <div class="section-head">
+            <div>
+              <h2 id="settingsTitle">Ajustes</h2>
+            </div>
+          </div>
+
+          <div class="settings-stack">
+            
+            <section class="card bg-base-100 border border-base-300 settings-section settings-card" aria-labelledby="accountTitle">
+              <div class="card-body">
+                <div class="settings-row">
+                  <div class="settings-row-main">
+                    <h3 id="accountTitle" class="card-title">Conta</h3>
+                    <p id="accountStatusLabel">Modo local</p>
+                  </div>
+                  <div class="settings-row-control" id="accountActionArea">
+                    <button class="btn btn-soft btn-sm" id="accountActionButton" type="button">Entrar</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card bg-base-100 border border-base-300 settings-section settings-card" aria-labelledby="changelogSectionTitle">
+              <div class="card-body">
+                <div class="settings-row">
+                  <div class="settings-row-main">
+                    <h3 id="changelogSectionTitle" class="card-title">Novidades</h3>
+                    <div class="changelog-summary" id="changelogSummary"></div>
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-sm" data-nav-button data-view="changelogView" type="button">Ver tudo</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <form class="card bg-base-100 border border-base-300 settings-section profile-form" id="profileForm">
+              <div class="card-body">
+                <div class="settings-row settings-row-inline">
+                  <div class="settings-row-main">
+                    <label class="label" for="userNameInput">Nome</label>
+                    <input class="input" id="userNameInput" name="user-name" autocomplete="off" placeholder="Seu nome" />
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-primary btn-square btn-sm" type="submit" aria-label="Salvar perfil" title="Salvar perfil">
+                      <i data-lucide="save" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            <form class="card bg-base-100 border border-base-300 settings-section budget-form" id="budgetForm">
+              <div class="card-body">
+                <div class="settings-row settings-row-inline">
+                  <div class="settings-row-main">
+                    <label class="label" for="budgetInput">Orçamento mensal</label>
+                    <input class="input" id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
+                  </div>
+                </div>
+                <div class="settings-row settings-row-inline">
+                  <div class="settings-row-main">
+                    <label class="label" for="cardClosingDayInput">Fechamento do cartão</label>
+                    <input class="input" id="cardClosingDayInput" name="cardClosingDay" type="number" min="1" max="31" inputmode="numeric" autocomplete="off" placeholder="Dia" />
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-primary btn-square btn-sm" type="submit" aria-label="Salvar orçamento" title="Salvar orçamento">
+                      <i data-lucide="save" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            <section class="card bg-base-100 border border-base-300 settings-section settings-card" aria-labelledby="themeTitle">
+              <div class="card-body">
+                <div class="settings-row settings-row-toggle">
+                  <div class="settings-row-main">
+                    <label class="settings-inline-check" for="themeToggle">
+                      <input class="toggle toggle-primary toggle-sm" id="themeToggle" type="checkbox" role="switch" aria-label="Ativar modo escuro" />
+                      <span id="themeTitle">Modo escuro</span>
+                    </label>
+                    <p>Cores neste dispositivo</p>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div class="settings-row-main">
+                    <h3 id="editorModeTitle" class="card-title">Edição</h3>
+                    <p>Itens e compras</p>
+                  </div>
+                  <div class="settings-row-control">
+                    <select class="select accent-select" id="editorModeInput" name="editorMode" aria-label="Modo de edição">
+                      <option value="modal">Modal</option>
+                      <option value="inline">Inline</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            
+            <section class="card bg-base-100 border border-base-300 settings-section settings-card share-settings" aria-labelledby="spacesTitle">
+              <div class="card-body">
+                <div class="settings-row">
+                  <div class="settings-row-main">
+                    <h3 id="spacesTitle" class="card-title">Espaços</h3>
+                    <p>Compartilhe por código</p>
+                  </div>
+                </div>
+                <form class="settings-row settings-row-inline compact-form" id="createSpaceForm">
+                  <div class="settings-row-main">
+                    <label class="label" for="createSpaceNameInput">Novo espaço</label>
+                    <input class="input input-sm" id="createSpaceNameInput" name="name" autocomplete="off" placeholder="Ex.: Casa" />
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-square btn-sm" type="submit" aria-label="Criar espaço" title="Criar espaço">
+                      <i data-lucide="plus" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </form>
+                <form class="settings-row settings-row-inline compact-form" id="joinSpaceForm">
+                  <div class="settings-row-main">
+                    <label class="label" for="joinSpaceCodeInput">Entrar por código</label>
+                    <input class="input input-sm" id="joinSpaceCodeInput" name="code" autocomplete="off" autocapitalize="characters" placeholder="ABC123" />
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-square btn-sm" type="submit" aria-label="Entrar no espaço" title="Entrar no espaço">
+                      <i data-lucide="log-in" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </section>
+
+            <section class="card bg-base-100 border border-base-300 settings-section settings-card share-settings" id="shareSpaceCard" aria-labelledby="currentSpaceTitle" hidden>
+              <div class="card-body">
+                <div class="settings-row">
+                  <div class="settings-row-main">
+                    <h3 id="currentSpaceTitle" class="card-title">Espaço atual</h3>
+                    <p>Código de convite</p>
+                  </div>
+                </div>
+                <div class="settings-row settings-row-inline">
+                  <div class="settings-row-main">
+                    <label class="label" for="currentSpaceNameInput">Nome do espaço</label>
+                    <input class="input input-sm" id="currentSpaceNameInput" name="spaceName" autocomplete="off" />
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-square btn-sm" id="renameSpaceButton" type="button" aria-label="Salvar nome do espaço" title="Salvar nome do espaço">
+                      <i data-lucide="save" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="settings-row settings-row-inline">
+                  <div class="settings-row-main">
+                    <label class="label" for="inviteCodeInput">Código de convite</label>
+                    <input class="input input-sm" id="inviteCodeInput" name="inviteCode" readonly />
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-square btn-sm" id="copyInviteButton" type="button" aria-label="Copiar código de convite" title="Copiar código de convite">
+                      <i data-lucide="copy" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            
+            <section class="card bg-base-100 border border-base-300 settings-section settings-card" aria-labelledby="refreshAppTitle">
+              <div class="card-body">
+                <div class="settings-row settings-row-inline">
+                  <div class="settings-row-main">
+                    <h3 id="refreshAppTitle" class="card-title">Atualizar app</h3>
+                    <p>Busca a versão recente</p>
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-square btn-sm" id="manualRefreshButton" type="button" aria-label="Atualizar app" title="Atualizar app">
+                      <i data-lucide="refresh-cw" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="settings-row settings-row-inline sync-test-card" aria-labelledby="syncTestTitle">
+                  <div class="settings-row-main">
+                    <h3 id="syncTestTitle" class="card-title">Testes de sincronização</h3>
+                    <p>Valida conflitos e status sem alterar seus dados</p>
+                    <div class="sync-test-summary" id="syncTestSummary">Aguardando execução.</div>
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-soft btn-square btn-sm" id="runSyncTestsButton" type="button" aria-label="Rodar testes de sincronização" title="Rodar testes de sincronização">
+                      <i data-lucide="play" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                  <div class="sync-test-list" id="syncTestList" aria-live="polite"></div>
+                </div>
+                <div class="settings-row settings-row-inline danger-zone" aria-labelledby="resetTitle">
+                  <div class="settings-row-main">
+                    <h3 id="resetTitle" class="card-title">Resetar dados</h3>
+                    <p>Apaga dados locais</p>
+                  </div>
+                  <div class="settings-row-control">
+                    <button class="btn btn-error btn-square btn-sm" id="resetDatabaseButton" type="button" aria-label="Resetar dados" title="Resetar dados">
+                      <i data-lucide="trash-2" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+
+      <nav class="dock border-t border-base-300" aria-label="Navegação principal" id="mainNav">
+        <button type="button" data-nav-button data-view="quickNoteView" aria-label="Nota">
+          <i data-lucide="file-edit" aria-hidden="true"></i>
+          <span class="dock-label">Nota</span>
+        </button>
+        <button class="dock-active" type="button" data-nav-button data-view="listView" aria-label="Lista">
+          <i data-lucide="list-checks" aria-hidden="true"></i>
+          <span class="dock-label">Lista</span>
+        </button>
+        <button type="button" data-nav-button data-view="mealsView" aria-label="Refeições">
+          <i data-lucide="utensils" aria-hidden="true"></i>
+          <span class="dock-label">Refeições</span>
+        </button>
+        <button type="button" data-nav-button data-view="purchaseView" aria-label="Compras">
+          <i data-lucide="shopping-basket" aria-hidden="true"></i>
+          <span class="dock-label">Compras</span>
+        </button>
+      </nav>
+      <button class="btn btn-primary btn-circle btn-lg fab-button" id="quickAddButton" type="button" aria-label="Adicionar">
+        <i data-lucide="plus" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <dialog class="modal modal-top checkout-dialog" id="checkoutDialog">
+      <form class="modal-box checkout-form" id="checkoutForm">
+        <div class="dialog-head">
+          <div>
+            <h2 id="checkoutDialogTitle">Registrar compra</h2>
+          </div>
+          <button class="btn btn-ghost btn-square" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="purchaseName">Nome da compra</label>
+          <input class="input" id="purchaseName" name="name" autocomplete="off" placeholder="Compra do mercado" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="purchaseDate">Data da compra</label>
+           <input class="input" id="purchaseDate" name="purchase-date" type="date" autocomplete="off" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="purchaseTotal">Valor pago</label>
+          <input class="input" id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
+        </div>
+        <section class="purchase-receipt" id="purchaseReceipt" hidden aria-labelledby="purchaseReceiptTitle">
+          <div class="receipt-head">
+            <h3 id="purchaseReceiptTitle">Itens comprados</h3>
+            <span id="purchaseReceiptCount">0 itens</span>
+          </div>
+          <ul id="purchaseReceiptList" class="receipt-list"></ul>
+        </section>
+        <button class="btn btn-error btn-ghost" id="deletePurchaseButton" type="button" hidden>Excluir compra</button>
+        <div class="modal-action dialog-actions">
+          <button class="btn btn-soft" id="cancelCheckoutButton" value="cancel" type="button">Cancelar</button>
+          <button class="btn btn-primary" id="savePurchaseButton" value="confirm" type="submit">Salvar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal modal-top item-dialog" id="itemDialog">
+      <form class="modal-box item-form" id="itemForm">
+        <div class="dialog-head hidden">
+          <div class='hidden'>
+            <p class="eyebrow">Lista</p>
+            <h2 id="itemDialogTitle">Novo item</h2>
+          </div>
+          <button class="hidden btn btn-ghost btn-square" id="closeItemDialogButton" type="button" aria-label="Fechar">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+        <input class="input font-medium input-ghost input-lg focus:ring-offset-0 ps-0" id="itemName" name="name" autocomplete="off" placeholder="Nome do item" required />
+        <div class="form-group">
+          <input class="input font-medium input-ghost focus:outline-none focus:ring-0 focus:ring-offset-0 ps-0" id="itemQuantity" name="quantity" autocomplete="off" placeholder="Quantidade/Peso" />
+        </div>
+        <div class="form-group">
+          <select class="select" id="itemCategory" name="categoryId"></select>
+        </div>
+        <button class="btn btn-error btn-ghost" id="deleteItemButton" type="button" hidden>Excluir item</button>
+        <div class="modal-action dialog-actions">
+          <button class="btn btn-soft btn-circle" id="cancelItemDialogButton" type="button"><i data-lucide="x" aria-hidden="true"></i></button>
+          <button class="btn btn-primary btn-circle" id="saveItemButton" type="submit"><i data-lucide="plus" aria-hidden="true"></i></button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal modal-top item-dialog" id="categoryDialog">
+      <form class="modal-box item-form" id="categoryForm">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Lista</p>
+            <h2 id="categoryDialogTitle">Adicionar seção</h2>
+          </div>
+          <button class="btn btn-ghost btn-square" id="closeCategoryDialogButton" type="button" aria-label="Fechar">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+        <label class="label" for="categoryNameInput">Seção personalizada</label>
+        <input class="input" id="categoryNameInput" name="category" autocomplete="off" placeholder="Ex.: Congelados" />
+        <fieldset class="fieldset preset-grid bg-base-200 rounded-box border border-base-300 p-3" id="categoryPresetGrid">
+          <legend class="fieldset-legend">Sugestões rápidas</legend>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Frutas" /> Frutas</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Verduras" /> Verduras</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Frios" /> Frios</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Carnes" /> Carnes</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Padaria" /> Padaria</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Bebidas" /> Bebidas</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Limpeza" /> Limpeza</label>
+          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Mercearia" /> Mercearia</label>
+        </fieldset>
+        <div class="modal-action dialog-actions">
+          <button class="btn btn-soft" id="cancelCategoryDialogButton" type="button">Cancelar</button>
+          <button class="btn btn-primary" id="saveCategoryButton" type="submit">Adicionar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal modal-bottom sm:modal-middle" id="reorderCategoryDialog">
+      <div class="modal-box p-0 reorder-category-dialog">
+        <div class="dialog-head reorder-dialog-head">
+          <div>
+            <p class="eyebrow">Lista</p>
+            <h2>Reordenar seções</h2>
+          </div>
+          <div class="reorder-dialog-actions">
+            <button class="btn btn-primary btn-sm" id="confirmReorderCategoriesButton" type="button">Confirmar</button>
+            <button class="btn btn-ghost btn-square btn-sm" id="closeReorderCategoryDialogButton" type="button" aria-label="Fechar">
+              <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div class="reorder-section-list" id="reorderCategoryList"></div>
+      </div>
+    </dialog>
+
+    <dialog class="modal modal-bottom sm:modal-middle" id="deleteCategoryDialog">
+      <div class="modal-box">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Lista</p>
+            <h2>Apagar seção</h2>
+          </div>
+          <button class="btn btn-ghost btn-square btn-sm" id="closeDeleteCategoryDialogButton" type="button" aria-label="Fechar">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+        <p class="delete-section-copy" id="deleteCategoryMessage">Tem certeza?</p>
+        <div class="modal-action dialog-actions">
+          <button class="btn btn-soft" id="cancelDeleteCategoryDialogButton" type="button">Cancelar</button>
+          <button class="btn btn-error" id="confirmDeleteCategoryButton" type="button">Apagar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="modal modal-top item-dialog meal-dialog" id="mealDialog">
+      <form class="modal-box item-form" id="mealForm">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Refeições</p>
+            <h2 id="mealDialogTitle">Nova refeição</h2>
+          </div>
+          <button class="btn btn-ghost btn-square" id="closeMealDialogButton" type="button" aria-label="Fechar">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+        <label class="label" for="mealName">Nome da refeição</label>
+        <input class="input" id="mealName" name="name" autocomplete="off" placeholder="Ex.: Strogonoff" required />
+        <div class="meal-editor-head">
+          <label class="label">Itens da refeição</label>
+          <button class="btn btn-soft btn-sm" id="addMealItemButton" type="button">
+            <i data-lucide="plus" aria-hidden="true"></i>
+            Item
+          </button>
+        </div>
+        <div class="meal-items-editor" id="mealItemsEditor"></div>
+        <button class="btn btn-error btn-ghost" id="deleteMealButton" type="button" hidden>Excluir refeição</button>
+        <div class="modal-action dialog-actions">
+          <button class="btn btn-soft" id="cancelMealDialogButton" type="button">Cancelar</button>
+          <button class="btn btn-primary" id="saveMealButton" type="submit">Adicionar</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal modal-top item-dialog" id="conflictDialog">
+      <div class="modal-box">
+        <div class="dialog-head">
+          <div>
+            <p class="eyebrow">Sincronização</p>
+            <h2>Resolver conflitos</h2>
+          </div>
+          <button class="btn btn-ghost btn-square" id="closeConflictDialogButton" type="button" aria-label="Fechar">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="conflict-list" id="conflictList"></div>
+      </div>
+    </dialog>
+
+    <dialog class="modal modal-bottom sm:modal-middle" id="onboardingDialog">
+      <div class="modal-box onboarding-box">
+        <div class="onboarding-handle" aria-hidden="true"></div>
+        <button class="btn btn-ghost btn-sm onboarding-skip" id="onboardingSkipButton" type="button">Pular</button>
+
+        <div class="onboarding-pages" id="onboardingPages">
+          <div class="onboarding-page is-active" data-onboarding-page="0">
+            <div class="onboarding-icon-wrap">
+              <i data-lucide="list-checks" class="onboarding-icon" aria-hidden="true"></i>
+            </div>
+            <h2 class="onboarding-title">Lista de compras</h2>
+            <p class="onboarding-desc">
+              Adicione itens à sua lista, organize por seções como Frios, Padaria e Hortifrúti.
+              Marque os itens conforme você os pega no mercado.
+            </p>
+          </div>
+          <div class="onboarding-page" data-onboarding-page="1">
+            <div class="onboarding-icon-wrap">
+              <i data-lucide="wallet" class="onboarding-icon" aria-hidden="true"></i>
+            </div>
+            <h2 class="onboarding-title">Controle de gastos</h2>
+            <p class="onboarding-desc">
+              Registre o valor pago em cada compra e acompanhe seus gastos ao longo do tempo.
+              Veja gráficos e estatísticas para se planejar melhor.
+            </p>
+          </div>
+          <div class="onboarding-page" data-onboarding-page="2">
+            <div class="onboarding-icon-wrap">
+              <i data-lucide="utensils" class="onboarding-icon" aria-hidden="true"></i>
+            </div>
+            <h2 class="onboarding-title">Refeições e sincronia</h2>
+            <p class="onboarding-desc">
+              Crie receitas com ingredientes e adicione tudo à lista com um toque.
+              Convide outras pessoas para editar a lista em tempo real.
+            </p>
+          </div>
+        </div>
+
+        <div class="onboarding-footer">
+          <div class="onboarding-dots" id="onboardingDots">
+            <span class="onboarding-dot is-active" data-dot="0"></span>
+            <span class="onboarding-dot" data-dot="1"></span>
+            <span class="onboarding-dot" data-dot="2"></span>
+          </div>
+          <div class="onboarding-actions">
+            <button class="btn btn-soft btn-sm" id="onboardingPrevButton" type="button" disabled>Anterior</button>
+            <button class="btn btn-primary btn-sm" id="onboardingNextButton" type="button">Próximo</button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <div class="toast toast-top toast-center app-toast">
+      <div class="alert alert-info" id="toast" role="status" aria-live="polite"></div>
+    </div>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="./supabase-config.js" defer></script>
+    <script src="./src/router.js" defer></script>
+    <script src="./src/auth.js" defer></script>
+    <script src="./app.js" defer></script>
+    <script src="./components/items.js" defer></script>
+    <script src="./components/meals.js" defer></script>
+    <script src="./components/purchases.js" defer></script>
+    <script src="./components/categories.js" defer></script>
+  </body>
+</html>

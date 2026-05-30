@@ -1,0 +1,51 @@
+[
+  {
+    "date": "2026-05-30",
+    "version": "1.4.0",
+    "changes": [
+      { "type": "new", "text": "Tela de changelog para acompanhar atualizações" },
+      { "type": "fixed", "text": "Bloqueio de preenchimento automático do Safari em todos os campos" },
+      { "type": "improved", "text": "Estilo dos estados ativos e navegação no dock" }
+    ]
+  },
+  {
+    "date": "2026-05-19",
+    "version": "1.3.0",
+    "changes": [
+      { "type": "new", "text": "Botão para limpar toda a lista de compras" },
+      { "type": "improved", "text": "Cache do service worker para carregamento mais rápido" }
+    ]
+  },
+  {
+    "date": "2026-05-09",
+    "version": "1.2.0",
+    "changes": [
+      { "type": "new", "text": "Editor inline e modal para adicionar itens" },
+      { "type": "new", "text": "Tela de onboarding para novos usuários" },
+      { "type": "new", "text": "Nota rápida com rascunho da lista de compras" },
+      { "type": "improved", "text": "Tema visual e responsividade" }
+    ]
+  },
+  {
+    "date": "2026-05-07",
+    "version": "1.1.0",
+    "changes": [
+      { "type": "new", "text": "Reordenação de itens com drag and drop" },
+      { "type": "improved", "text": "Navegação por URL com histórico" }
+    ]
+  },
+  {
+    "date": "2026-05-04",
+    "version": "1.0.0",
+    "changes": [
+      { "type": "new", "text": "Tela de login com email, link mágico e Google" },
+      { "type": "new", "text": "Modo anônimo e convidado sem cadastro" },
+      { "type": "new", "text": "Espaços compartilhados por código de convite" },
+      { "type": "new", "text": "Sincronização entre dispositivos" },
+      { "type": "new", "text": "Controle de gastos com orçamento mensal" },
+      { "type": "new", "text": "Gráfico de variação de compras" },
+      { "type": "new", "text": "Cadastro de refeições com ingredientes" },
+      { "type": "improved", "text": "Arquitetura baseada em rotas URL" }
+    ]
+  }
+]

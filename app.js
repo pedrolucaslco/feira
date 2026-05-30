@@ -16,7 +16,7 @@ const STORE_TO_ENTITY = {
   settings: "settings",
 };
 const ENTITY_TO_STORE = Object.fromEntries(Object.entries(STORE_TO_ENTITY).map(([storeName, entityType]) => [entityType, storeName]));
-const VIEW_ORDER = ["listView", "mealsView", "purchaseView", "settingsView"];
+const VIEW_ORDER = ["quickNoteView", "listView", "mealsView", "purchaseView", "changelogView", "settingsView"];
 const DEFAULT_ITEMS = [
   { name: "Arroz", quantity: "1 pacote" },
   { name: "Feijão", quantity: "1 kg" },
@@ -33,6 +33,7 @@ const DEFAULT_SETTINGS = {
   editorMode: "modal",
 };
 const RECENTLY_PURCHASED_SECTION_ID = "recently-purchased";
+const QUICK_NOTE_KEY = "feira:quick-note";
 
 function preventIOSZoomGestures() {
   const preventDefault = (event) => event.preventDefault();
@@ -1400,13 +1401,18 @@ function renderMeals() {
 
 
 function renderNavigation() {
+  var isLoginView = state.activeView === "loginView";
   el.views.forEach((view) => view.classList.toggle("is-active", view.id === state.activeView));
   el.navButtons.forEach((button) => {
     const isActive = button.dataset.view === state.activeView;
     button.classList.toggle("dock-active", isActive);
   });
+  var dock = document.getElementById("mainNav");
+  if (dock) dock.hidden = isLoginView;
+  var topbar = document.querySelector(".topbar");
+  if (topbar) topbar.hidden = isLoginView;
   if (el.quickAddButton) {
-    el.quickAddButton.hidden = state.activeView === "settingsView";
+    el.quickAddButton.hidden = isLoginView || state.activeView === "settingsView" || state.activeView === "changelogView";
     const quickAddIcon = el.quickAddButton.querySelector("[data-lucide]");
     if (state.activeView === "listView") {
       el.quickAddButton.setAttribute("aria-label", "Adicionar item");
@@ -1418,7 +1424,80 @@ function renderNavigation() {
   }
 }
 
+function renderChangelog() {
+  var list = document.getElementById("changelogList");
+  if (!list) return;
+  list.innerHTML = "";
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/changelog.json");
+  xhr.onload = function () {
+    if (xhr.status !== 200) {
+      list.innerHTML = '<p class="empty-state">Não foi possível carregar as novidades.</p>';
+      return;
+    }
+    try {
+      var entries = JSON.parse(xhr.responseText);
+      if (!entries.length) {
+        list.innerHTML = '<p class="empty-state">Nenhuma novidade por enquanto.</p>';
+        return;
+      }
+      entries.forEach(function (entry) {
+        var card = document.createElement("div");
+        card.className = "changelog-entry card bg-base-100 border border-base-300 mb-3";
+        var dateObj = new Date(entry.date + "T12:00:00");
+        var dateStr = dateObj.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" });
+        card.innerHTML =
+          '<div class="card-body">' +
+            '<div class="changelog-head">' +
+              '<span class="changelog-version badge badge-primary">' + (entry.version || "") + '</span>' +
+              '<span class="changelog-date text-sm text-base-content/60">' + dateStr + '</span>' +
+            '</div>' +
+            '<ul class="changelog-changes">' +
+              entry.changes.map(function (c) {
+                var badgeClass = c.type === "new" ? "badge-success" : c.type === "fixed" ? "badge-warning" : "badge-info";
+                var label = c.type === "new" ? "Novo" : c.type === "fixed" ? "Corrigido" : "Melhorado";
+                return '<li>' +
+                  '<span class="badge ' + badgeClass + ' badge-sm changelog-badge">' + label + '</span> ' +
+                  '<span>' + c.text + '</span>' +
+                '</li>';
+              }).join("") +
+            '</ul>' +
+          '</div>';
+        list.appendChild(card);
+      });
+    } catch (e) {
+      list.innerHTML = '<p class="empty-state">Erro ao carregar novidades.</p>';
+    }
+  };
+  xhr.onerror = function () {
+    list.innerHTML = '<p class="empty-state">Sem conexão para carregar novidades.</p>';
+  };
+  xhr.send();
+}
+
 function renderSettings() {
+  var summaryEl = document.getElementById("changelogSummary");
+  if (summaryEl && !summaryEl.dataset.loaded) {
+    summaryEl.dataset.loaded = "1";
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/changelog.json");
+    xhr.onload = function () {
+      if (xhr.status !== 200) return;
+      try {
+        var entries = JSON.parse(xhr.responseText);
+        if (entries.length) {
+          var latest = entries[0];
+          var dateObj = new Date(latest.date + "T12:00:00");
+          var dateStr = dateObj.toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
+          summaryEl.innerHTML =
+            '<span class="font-semibold">v' + (latest.version || "") + '</span> &middot; ' + dateStr + ' &middot; ' +
+            latest.changes.map(function (c) { return c.text; }).join(", ") + '.';
+        }
+      } catch (e) {}
+    };
+    xhr.send();
+  }
+
   el.themeToggle.checked = document.documentElement.dataset.mode === "dark";
   if (el.editorModeInput) {
     el.editorModeInput.value = editorMode();
@@ -1432,6 +1511,22 @@ function renderSettings() {
   }
   if (el.inviteCodeInput) {
     el.inviteCodeInput.value = space.inviteCode || "";
+  }
+
+  var accountLabel = document.getElementById("accountStatusLabel");
+  var accountButton = document.getElementById("accountActionButton");
+  if (accountLabel && accountButton) {
+    if (FeiraAuth.isAuthenticated()) {
+      var email = FeiraAuth.getSession()?.user?.email || "conectado";
+      accountLabel.textContent = email;
+      accountButton.textContent = "Sair";
+    } else if (FeiraAuth.getSession()) {
+      accountLabel.textContent = "Modo anônimo";
+      accountButton.textContent = "Entrar";
+    } else {
+      accountLabel.textContent = "Modo local";
+      accountButton.textContent = "Entrar";
+    }
   }
 }
 
@@ -1448,6 +1543,7 @@ function render() {
   renderNavigation();
   renderSettings();
   renderSpaces();
+  renderQuickNote();
   renderIcons();
 }
 
@@ -1463,6 +1559,13 @@ function setView(viewId) {
   state.activeView = viewId;
   renderNavigation();
   closeListMenu();
+
+  if (viewId !== "loginView" && VIEW_TO_PATH[viewId] && window.FeiraRouter) {
+    var currentPath = window.location.pathname;
+    if (currentPath !== VIEW_TO_PATH[viewId]) {
+      history.replaceState(null, "", VIEW_TO_PATH[viewId]);
+    }
+  }
 }
 
 function toggleSpaceMenu() {
@@ -1525,14 +1628,10 @@ async function ensureSupabase() {
     },
   });
 
-  const { data } = await state.supabase.auth.getSession();
-  if (!data.session) {
-    const { error } = await state.supabase.auth.signInAnonymously();
-    if (error) {
-      console.info("Falha ao autenticar anonimamente no Supabase.", error);
-      showToast("Não foi possível conectar ao compartilhamento.");
-      return null;
-    }
+  var session = FeiraAuth.getSession();
+  if (!session) {
+    showToast("Não foi possível conectar ao compartilhamento.");
+    return null;
   }
   return state.supabase;
 }
@@ -2886,13 +2985,18 @@ function handleFabButton() {
 
 function toggleListMenu() {
   if (!el.listMenu) return;
-  const isOpen = !el.listMenu.hidden;
+  var wrap = el.listMenu.closest(".dropdown");
+  if (!wrap) return;
+  var isOpen = wrap.classList.contains("dropdown-open");
+  wrap.classList.toggle("dropdown-open");
   el.listMenu.hidden = isOpen;
   el.listMenuButton.setAttribute("aria-expanded", String(!isOpen));
 }
 
 function closeListMenu() {
   if (!el.listMenu) return;
+  var wrap = el.listMenu.closest(".dropdown");
+  if (wrap) wrap.classList.remove("dropdown-open");
   el.listMenu.hidden = true;
   el.listMenuButton.setAttribute("aria-expanded", "false");
 }
@@ -3197,7 +3301,14 @@ async function refreshApp() {
 
 function bindEvents() {
   el.navButtons.forEach((button) => {
-    button.addEventListener("click", () => setView(button.dataset.view));
+    button.addEventListener("click", () => {
+      var path = VIEW_TO_PATH[button.dataset.view];
+      if (path && window.FeiraRouter) {
+        FeiraRouter.navigate(path);
+      } else {
+        setView(button.dataset.view);
+      }
+    });
   });
   el.itemForm.addEventListener("submit", saveItem);
   el.categoryForm?.addEventListener("submit", saveCategory);
@@ -3248,7 +3359,8 @@ function bindEvents() {
     });
   }
   document.addEventListener("click", (event) => {
-    if (!el.listMenu || el.listMenu.hidden) return;
+    var wrap = el.listMenu?.closest(".dropdown");
+    if (!wrap || !wrap.classList.contains("dropdown-open")) return;
     if (event.target.closest(".list-menu-wrap")) return;
     closeListMenu();
   });
@@ -3264,11 +3376,152 @@ function bindEvents() {
   el.cancelCheckoutButton.addEventListener("click", closeCheckout);
   el.refreshButton.addEventListener("click", () => openPurchaseEditor());
   el.createFirstMealButton?.addEventListener("click", () => openMealEditor());
+  var accountButton = document.getElementById("accountActionButton");
+  if (accountButton) {
+    accountButton.addEventListener("click", function () {
+      if (FeiraAuth.isAuthenticated()) {
+        FeiraAuth.signOut();
+        showToast("Você saiu da conta.");
+        renderSettings();
+      } else {
+        FeiraRouter.navigate("/app/login");
+      }
+    });
+  }
+
+  FeiraAuth.onAuthStateChange(function () {
+    renderSettings();
+  });
+
   el.mealForm?.addEventListener("submit", saveMeal);
   el.addMealItemButton?.addEventListener("click", () => addMealItemEditorRow());
   el.deleteMealButton?.addEventListener("click", () => removeMeal(state.editingMealId));
   el.closeMealDialogButton?.addEventListener("click", closeMealDialog);
   el.cancelMealDialogButton?.addEventListener("click", closeMealDialog);
+
+  bindLoginEvents();
+}
+
+function bindLoginEvents() {
+  var loginEmailForm = document.getElementById("loginEmailForm");
+  var loginRegisterForm = document.getElementById("loginRegisterForm");
+  var loginSubmitButton = document.getElementById("loginSubmitButton");
+  var loginMagicLinkButton = document.getElementById("loginMagicLinkButton");
+  var registerSubmitButton = document.getElementById("registerSubmitButton");
+  var loginGoogleButton = document.getElementById("loginGoogleButton");
+  var loginAnonymousButton = document.getElementById("loginAnonymousButton");
+
+  document.querySelectorAll("[data-login-tab]").forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      document.querySelectorAll("[data-login-tab]").forEach(function (t) { t.classList.remove("is-active"); });
+      tab.classList.add("is-active");
+      var isRegister = tab.dataset.loginTab === "register";
+      if (loginEmailForm) loginEmailForm.hidden = isRegister;
+      if (loginRegisterForm) loginRegisterForm.hidden = !isRegister;
+    });
+  });
+
+  if (loginEmailForm) {
+    loginEmailForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var email = document.getElementById("loginEmail").value.trim();
+      var password = document.getElementById("loginPassword").value;
+      if (!email || !password) { showToast("Preencha email e senha."); return; }
+      loginSubmitButton.disabled = true;
+      loginSubmitButton.textContent = "Entrando...";
+      var result = await FeiraAuth.signIn(email, password);
+      loginSubmitButton.disabled = false;
+      loginSubmitButton.textContent = "Entrar";
+      if (result.error) {
+        showToast(result.error.message || "Erro ao entrar.");
+        return;
+      }
+      showToast("Bem-vindo de volta!");
+      FeiraRouter.navigate("/app/lista");
+    });
+  }
+
+  if (loginRegisterForm) {
+    loginRegisterForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var email = document.getElementById("registerEmail").value.trim();
+      var password = document.getElementById("registerPassword").value;
+      if (!email || !password) { showToast("Preencha email e senha."); return; }
+      if (password.length < 6) { showToast("A senha deve ter pelo menos 6 caracteres."); return; }
+      registerSubmitButton.disabled = true;
+      registerSubmitButton.textContent = "Criando...";
+      var result = await FeiraAuth.signUp(email, password);
+      registerSubmitButton.disabled = false;
+      registerSubmitButton.textContent = "Criar conta";
+      if (result.error) {
+        showToast(result.error.message || "Erro ao criar conta.");
+        return;
+      }
+      if (result.data.session) {
+        showToast("Conta criada!");
+        FeiraRouter.navigate("/app/lista");
+      } else {
+        showToast("Verifique seu email para confirmar o cadastro.");
+      }
+    });
+  }
+
+  if (loginMagicLinkButton) {
+    loginMagicLinkButton.addEventListener("click", async function () {
+      var email = document.getElementById("loginEmail").value.trim();
+      if (!email) { showToast("Informe seu email primeiro."); return; }
+      loginMagicLinkButton.disabled = true;
+      loginMagicLinkButton.textContent = "Enviando...";
+      var result = await FeiraAuth.sendMagicLink(email);
+      loginMagicLinkButton.disabled = false;
+      loginMagicLinkButton.textContent = "Enviar link mágico";
+      if (result.error) {
+        showToast(result.error.message || "Erro ao enviar link.");
+        return;
+      }
+      showToast("Link mágico enviado! Verifique seu email.");
+    });
+  }
+
+  if (loginGoogleButton) {
+    loginGoogleButton.addEventListener("click", async function () {
+      var result = await FeiraAuth.signInWithGoogle();
+      if (result.error) {
+        showToast(result.error.message || "Erro ao entrar com Google.");
+      }
+    });
+  }
+
+  if (loginAnonymousButton) {
+    loginAnonymousButton.addEventListener("click", async function () {
+      await FeiraAuth.continueAsGuest();
+      showToast("Usando modo local.");
+      FeiraRouter.navigate("/app/lista");
+    });
+  }
+
+  var noteEditor = document.getElementById("noteEditor");
+  var noteTransferButton = document.getElementById("noteTransferButton");
+
+  if (noteEditor) {
+    var noteSaveTimer = null;
+    noteEditor.addEventListener("input", function () {
+      Array.from(noteEditor.children).forEach(function (child) {
+        if (child.tagName === "DIV") {
+          child.classList.toggle("note-line-checked", child.textContent.startsWith("- "));
+        }
+      });
+      clearTimeout(noteSaveTimer);
+      noteSaveTimer = setTimeout(function () {
+        saveQuickNote(noteEditor.textContent);
+        updateNoteTransferButton();
+      }, 500);
+    });
+  }
+
+  if (noteTransferButton) {
+    noteTransferButton.addEventListener("click", transformNoteToItems);
+  }
 }
 
 async function registerServiceWorker() {
@@ -3286,14 +3539,187 @@ async function registerServiceWorker() {
   }
 }
 
+var VIEW_TO_PATH = {
+  quickNoteView: "/app/nota",
+  listView: "/app/lista",
+  mealsView: "/app/refeicoes",
+  purchaseView: "/app/compras",
+  changelogView: "/app/changelog",
+  settingsView: "/app/config",
+};
+
+var PATH_TO_VIEW = {
+  "/app/nota": "quickNoteView",
+  "/app/lista": "listView",
+  "/app/refeicoes": "mealsView",
+  "/app/compras": "purchaseView",
+  "/app/changelog": "changelogView",
+  "/app/config": "settingsView",
+  "/app": "listView",
+};
+
+function setupRouter() {
+  FeiraRouter.setGuard(function (path) {
+    if (path === "/app/login") return true;
+    if (path.startsWith("/app")) {
+      var session = FeiraAuth.getSession();
+      if (!session && !FeiraAuth.isGuestMode()) {
+        FeiraRouter.navigate("/app/login?redirect=" + encodeURIComponent(path), true);
+        return false;
+      }
+    }
+    return true;
+  });
+
+  FeiraRouter.add("/app/login", function () {
+    var loginView = document.getElementById("loginView");
+    if (loginView) {
+      setView("loginView");
+    }
+  });
+
+  FeiraRouter.add("/app/nota", function () { setView("quickNoteView"); });
+  FeiraRouter.add("/app/lista", function () { setView("listView"); showOnboarding(); });
+  FeiraRouter.add("/app/refeicoes", function () { setView("mealsView"); });
+  FeiraRouter.add("/app/compras", function () { setView("purchaseView"); });
+  FeiraRouter.add("/app/changelog", function () { setView("changelogView"); renderChangelog(); });
+  FeiraRouter.add("/app/config", function () { setView("settingsView"); });
+  FeiraRouter.add("/app", function () { setView("listView"); });
+  FeiraRouter.add("/app/", function () { setView("listView"); });
+
+  FeiraRouter.start();
+}
+
+function loadQuickNote() {
+  return localStorage.getItem(QUICK_NOTE_KEY) || "";
+}
+
+function saveQuickNote(text) {
+  localStorage.setItem(QUICK_NOTE_KEY, text);
+}
+
+function updateNoteTransferButton() {
+  var btn = document.getElementById("noteTransferButton");
+  var editor = document.getElementById("noteEditor");
+  if (!btn || !editor) return;
+  var hasItems = editor.textContent.split("\n").some(function (line) {
+    return line.trim().startsWith("- ");
+  });
+  btn.disabled = !hasItems;
+}
+
+function renderQuickNote() {
+  var editor = document.getElementById("noteEditor");
+  if (!editor) return;
+  try { document.execCommand("defaultParagraphSeparator", false, "div"); } catch (_) {}
+  var text = loadQuickNote();
+  var lines = text.split("\n");
+  editor.innerHTML = lines.map(function (line) {
+    var esc = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return '<div class="note-line' + (line.startsWith("- ") ? " note-line-checked" : "") + '">' + esc + '</div>';
+  }).join("");
+  updateNoteTransferButton();
+}
+
+async function transformNoteToItems() {
+  var editor = document.getElementById("noteEditor");
+  if (!editor) return;
+  var lines = editor.textContent.split("\n");
+  var itemLines = lines.filter(function (line) { return line.trim().startsWith("- "); });
+
+  if (itemLines.length === 0) {
+    showToast("Nenhum item encontrado. Use - na frente dos itens.");
+    return;
+  }
+
+  var items = itemLines.map(function (line) {
+    var content = line.substring(2).trim();
+    var name = content;
+    var quantity = "";
+    var commaIdx = content.indexOf(",");
+    if (commaIdx !== -1) {
+      name = content.substring(0, commaIdx).trim();
+      quantity = content.substring(commaIdx + 1).trim();
+    }
+    return { name: name, quantity: quantity };
+  });
+
+  for (var i = 0; i < items.length; i++) {
+    await putOne("items", normalizeItem(items[i]));
+  }
+
+  await reloadAndRender();
+  showToast(itemLines.length + " " + (itemLines.length === 1 ? "item adicionado" : "itens adicionados") + " à lista.");
+  FeiraRouter.navigate("/app/lista");
+}
+
+var ONBOARDING_SEEN_KEY = "feira:onboarding-seen";
+
+function showOnboarding() {
+  if (localStorage.getItem(ONBOARDING_SEEN_KEY)) return;
+  var dialog = document.getElementById("onboardingDialog");
+  if (!dialog) return;
+  var currentPage = 0;
+  var totalPages = 3;
+
+  function updatePage(index) {
+    currentPage = index;
+    document.querySelectorAll("[data-onboarding-page]").forEach(function (el) {
+      el.classList.toggle("is-active", Number(el.dataset.onboardingPage) === index);
+    });
+    document.querySelectorAll("[data-dot]").forEach(function (dot) {
+      dot.classList.toggle("is-active", Number(dot.dataset.dot) === index);
+    });
+    document.getElementById("onboardingPrevButton").disabled = index === 0;
+    var nextBtn = document.getElementById("onboardingNextButton");
+    if (index === totalPages - 1) {
+      nextBtn.textContent = "Começar";
+    } else {
+      nextBtn.textContent = "Próximo";
+    }
+  }
+
+  function close() {
+    localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
+    dialog.close();
+  }
+
+  dialog.addEventListener("close", function () {
+    localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
+  });
+
+  document.getElementById("onboardingPrevButton").addEventListener("click", function () {
+    if (currentPage > 0) updatePage(currentPage - 1);
+  });
+
+  document.getElementById("onboardingNextButton").addEventListener("click", function () {
+    if (currentPage < totalPages - 1) {
+      updatePage(currentPage + 1);
+    } else {
+      close();
+    }
+  });
+
+  document.getElementById("onboardingSkipButton").addEventListener("click", close);
+
+  updatePage(0);
+  dialog.showModal();
+}
+
 async function init() {
   try {
     state.db = await openDatabase();
     await seedData();
     await loadState();
+
+    await FeiraAuth.init();
     bindEvents();
+    setupRouter();
     render();
-    if (supabaseConfigured()) {
+
+    document.getElementById("loadingOverlay")?.classList.add("is-hidden");
+
+    if (supabaseConfigured() && FeiraAuth.getSession()) {
       await ensureSupabase();
       await pullSpaceRecords();
       subscribeToSpace();
@@ -3302,6 +3728,7 @@ async function init() {
     registerServiceWorker();
   } catch (error) {
     console.error(error);
+    document.getElementById("loadingOverlay")?.classList.add("is-hidden");
     showToast("Não foi possível iniciar o app.");
   }
 }

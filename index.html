@@ -2,641 +2,797 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#145c58" id="themeColorMeta" />
-    <title>Feira</title>
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <script>
-      (() => {
-        const storedTheme = localStorage.getItem("feira:theme");
-        const theme =
-          storedTheme === "dark" || storedTheme === "light"
-            ? storedTheme
-            : window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light";
-        document.documentElement.dataset.mode = theme;
-        document.documentElement.dataset.theme = theme === "dark" ? "dim" : "emerald";
-      })();
-    </script>
-    <script type="module">
-      window.__FEIRA_DEV__ = import.meta.env.DEV;
-    </script>
-    <link rel="stylesheet" href="./src/app.css" />
-    <link rel="stylesheet" href="./styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Feira - compras de casa sem perder o orçamento</title>
+    <meta
+      name="description"
+      content="Feira é uma lista de mercado compartilhada com controle simples do orçamento do mês para casais."
+    />
+    <style>
+      :root {
+        --bg: #f7faf9;
+        --surface: #ffffff;
+        --surface-soft: #edf7f3;
+        --ink: #142523;
+        --muted: #60736f;
+        --line: #dce8e3;
+        --accent: #0f766e;
+        --accent-strong: #145c58;
+        --accent-soft: #d9f3ea;
+        --gold: #f2b84b;
+        --danger: #b45309;
+        --shadow: 0 22px 60px rgba(20, 37, 35, 0.12);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .page {
+        width: min(100%, 1120px);
+        margin: 0 auto;
+        padding: 18px 18px 28px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 4px 0 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        font-weight: 850;
+      }
+
+      .brand img {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+      }
+
+      .topbar-link {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 750;
+        padding: 0 12px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: center;
+        gap: 24px;
+        min-height: calc(100svh - 82px);
+        padding: 8px 0 24px;
+      }
+
+      .hero-copy {
+        display: grid;
+        gap: 18px;
+      }
+
+      .eyebrow {
+        width: fit-content;
+        margin: 0;
+        border: 1px solid rgba(15, 118, 110, 0.18);
+        border-radius: 8px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-size: 0.78rem;
+        font-weight: 850;
+        padding: 7px 10px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 0;
+        font-size: clamp(3rem, 16vw, 6.8rem);
+        font-weight: 950;
+        line-height: 0.86;
+        letter-spacing: 0;
+      }
+
+      .subheadline {
+        max-width: 760px;
+        margin-bottom: 0;
+        font-size: clamp(1.42rem, 7vw, 3.55rem);
+        font-weight: 900;
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      .hero-text {
+        max-width: 620px;
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+        font-weight: 560;
+        line-height: 1.55;
+      }
+
+      .cta-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        max-width: 420px;
+      }
+
+      .button {
+        min-height: 50px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-weight: 850;
+        padding: 0 18px;
+      }
+
+      .button-primary {
+        background: var(--accent);
+        color: #ffffff;
+        box-shadow: 0 14px 30px rgba(15, 118, 110, 0.22);
+      }
+
+      .button-secondary {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        color: var(--ink);
+      }
+
+      .proof-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        max-width: 520px;
+      }
+
+      .proof {
+        min-height: 72px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.72);
+        padding: 10px;
+      }
+
+      .proof strong,
+      .proof span {
+        display: block;
+      }
+
+      .proof strong {
+        font-size: 1.08rem;
+      }
+
+      .proof span {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+        line-height: 1.25;
+      }
+
+      .mockup-wrap {
+        display: grid;
+        justify-items: center;
+      }
+
+      .phone {
+        width: min(100%, 348px);
+        border: 1px solid rgba(20, 37, 35, 0.1);
+        border-radius: 34px;
+        background: #102421;
+        box-shadow: var(--shadow);
+        padding: 12px;
+      }
+
+      .phone-screen {
+        overflow: hidden;
+        min-height: 616px;
+        border-radius: 24px;
+        background: #f8faf9;
+        color: var(--ink);
+      }
+
+      .app-top {
+        padding: 18px 16px 10px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .app-greeting {
+        margin-bottom: 4px;
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 750;
+      }
+
+      .app-space {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-weight: 900;
+      }
+
+      .app-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 12px 16px;
+      }
+
+      .app-metric,
+      .app-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      .app-metric {
+        padding: 12px;
+      }
+
+      .app-metric span,
+      .app-card-header span,
+      .purchase-date {
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 750;
+      }
+
+      .app-metric strong {
+        display: block;
+        margin-top: 7px;
+        font-size: 1.05rem;
+      }
+
+      .app-stack {
+        display: grid;
+        gap: 10px;
+        padding: 0 16px 16px;
+      }
+
+      .app-card {
+        padding: 13px;
+      }
+
+      .app-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .app-card-header strong {
+        font-size: 0.96rem;
+      }
+
+      .item,
+      .purchase {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 42px;
+        border-top: 1px solid #edf2ef;
+      }
+
+      .item:first-of-type,
+      .purchase:first-of-type {
+        border-top: 0;
+      }
+
+      .item-left {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+      }
+
+      .check {
+        width: 23px;
+        height: 23px;
+        display: grid;
+        flex: 0 0 auto;
+        place-items: center;
+        border: 2px solid var(--accent);
+        border-radius: 999px;
+        background: var(--accent);
+        color: #ffffff;
+        font-size: 0.76rem;
+        font-weight: 900;
+      }
+
+      .check.empty {
+        background: #ffffff;
+        color: transparent;
+      }
+
+      .item-name,
+      .purchase-name {
+        overflow-wrap: anywhere;
+        font-weight: 800;
+      }
+
+      .item-qty {
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 750;
+        white-space: nowrap;
+      }
+
+      .purchase-main {
+        display: grid;
+        gap: 3px;
+      }
+
+      .purchase-total {
+        font-weight: 900;
+      }
+
+      .section {
+        padding: 26px 0;
+      }
+
+      .section-head {
+        display: grid;
+        gap: 8px;
+        max-width: 720px;
+        margin-bottom: 16px;
+      }
+
+      .section-kicker {
+        margin-bottom: 0;
+        color: var(--accent);
+        font-size: 0.82rem;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        margin-bottom: 0;
+        font-size: clamp(1.8rem, 8vw, 3.5rem);
+        font-weight: 920;
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .section-head p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+
+      .grid-three,
+      .steps,
+      .trust-grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .feature-card,
+      .step-card,
+      .trust-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 16px;
+      }
+
+      .feature-card h3,
+      .step-card h3,
+      .trust-card h3 {
+        margin-bottom: 8px;
+        font-size: 1rem;
+      }
+
+      .feature-card p,
+      .step-card p,
+      .trust-card p {
+        margin-bottom: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.45;
+      }
+
+      .feature-icon,
+      .step-number {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 14px;
+        border-radius: 8px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-weight: 900;
+      }
+
+      .step-number {
+        background: var(--accent);
+        color: #ffffff;
+      }
+
+      .final-cta {
+        display: grid;
+        gap: 16px;
+        align-items: center;
+        margin: 28px 0 18px;
+        border: 1px solid rgba(15, 118, 110, 0.2);
+        border-radius: 8px;
+        background: var(--accent-strong);
+        color: #ffffff;
+        padding: 18px;
+      }
+
+      .final-cta h2 {
+        font-size: clamp(1.7rem, 7vw, 3rem);
+      }
+
+      .final-cta p {
+        margin-bottom: 0;
+        color: rgba(255, 255, 255, 0.76);
+        line-height: 1.5;
+      }
+
+      .final-cta .button-primary {
+        background: #ffffff;
+        color: var(--accent-strong);
+        box-shadow: none;
+      }
+
+      footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.9rem;
+        padding: 18px 0 0;
+      }
+
+      footer strong {
+        color: var(--ink);
+      }
+
+      @media (min-width: 720px) {
+        .page {
+          padding: 24px 28px 34px;
+        }
+
+        .hero {
+          grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.78fr);
+          gap: 34px;
+          min-height: calc(100svh - 92px);
+        }
+
+        .cta-row {
+          grid-template-columns: auto auto;
+          max-width: none;
+          justify-content: start;
+        }
+
+        .grid-three {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .steps {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .trust-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .final-cta {
+          grid-template-columns: minmax(0, 1fr) auto;
+          padding: 24px;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .page {
+          padding-inline: 14px;
+        }
+
+        .proof-strip {
+          grid-template-columns: 1fr;
+        }
+
+        .phone {
+          border-radius: 26px;
+          padding: 9px;
+        }
+
+        .phone-screen {
+          min-height: 560px;
+          border-radius: 19px;
+        }
+
+        .app-metrics {
+          grid-template-columns: 1fr;
+        }
+
+        footer {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div class="app-shell">
-      <header class="navbar topbar">
-        <div class="navbar-start brand">
-          <div class="brand-copy">
-            <div class="space-switcher-wrap">
-              <button class="btn btn-ghost space-switcher-button" id="spaceSwitcherButton" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="spaceMenu">
-                <strong id="activeSpaceName">Espaço local</strong>
-                <span class="sync-status-icon" id="syncStatusLabel" title="Status de sincronização">
-                  <i data-lucide="check-circle-2" aria-hidden="true"></i>
-                </span>
-                <i data-lucide="chevron-down" aria-hidden="true"></i>
-              </button>
-            </div>
-            <dialog id="spaceMenu" class="modal modal-bottom sm:modal-middle">
-              <div class="modal-box p-4">
-                <div class="flex items-center justify-between mb-3">
-                  <div>
-                    <p class="font-bold">Espaços</p>
-                    <p class="text-sm text-base-content/70">Escolha o espaço para trabalhar</p>
-                  </div>
-                  <form method="dialog">
-                    <button type="submit" class="btn btn-ghost btn-sm" aria-label="Fechar painel">
-                      <i data-lucide="x" aria-hidden="true"></i>
-                    </button>
-                  </form>
-                </div>
-                <ul class="menu gap-2" id="spaceMenuList"></ul>
-              </div>
-            </dialog>
-          </div>
-        </div>
-        <div class="navbar-end topbar-actions" aria-label="Ações do aplicativo">
-          <button class="btn btn-ghost btn-circle btn-sm topbar-refresh-button" id="topbarRefreshButton" type="button" aria-label="Atualizar app" title="Atualizar app">
-            <i data-lucide="refresh-cw" aria-hidden="true"></i>
-          </button>
-          
-            <button tabindex="0" type="button" class="btn btn-ghost btn-sm btn-circle" data-nav-button data-view="settingsView" aria-label="Ajustes">
-                <i data-lucide="cog" aria-hidden="true"></i>
-            </button>
-            
-      
-        </div>
+    <div class="page">
+      <header class="topbar" aria-label="Topo">
+        <a class="brand" href="/" aria-label="Feira">
+          <img src="./icon.svg" alt="" />
+          <span>Feira</span>
+        </a>
+        <a class="topbar-link" href="/app/lista">Abrir app</a>
       </header>
 
       <main>
-        <section class="alert alert-warning conflict-banner" id="conflictBanner" hidden>
+        <section class="hero" aria-labelledby="heroTitle">
+          <div class="hero-copy">
+            <p class="eyebrow">Para compras a dois</p>
+            <h1 id="heroTitle">Feira</h1>
+            <p class="subheadline">
+              Lista de mercado compartilhada com controle simples do orçamento do mês.
+            </p>
+            <p class="hero-text">
+              Combine o que falta comprar, acompanhe quanto já foi gasto e veja quanto ainda
+              dá para usar antes da próxima compra.
+            </p>
+            <div class="cta-row" aria-label="Ações principais">
+              <a class="button button-primary" href="/app/lista">
+                Abrir app
+              </a>
+              <a
+                class="button button-secondary"
+                href="https://wa.me/SEU_NUMERO?text=Quero%20testar%20o%20Feira%20com%20meu%20par"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Quero testar com meu par
+              </a>
+            </div>
+            <div class="proof-strip" aria-label="Resumo do produto">
+              <div class="proof">
+                <strong>Offline</strong>
+                <span>Funciona no mercado</span>
+              </div>
+              <div class="proof">
+                <strong>R$</strong>
+                <span>Saldo sempre visível</span>
+              </div>
+              <div class="proof">
+                <strong>Código</strong>
+                <span>Espaço compartilhado</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mockup-wrap" aria-label="Prévia visual do aplicativo">
+            <div class="phone" role="img" aria-label="Mockup do app Feira em um celular">
+              <div class="phone-screen">
+                <div class="app-top">
+                  <p class="app-greeting">Olá, vocês</p>
+                  <div class="app-space">
+                    <span>Casa</span>
+                    <span>Sincronizado</span>
+                  </div>
+                </div>
+
+                <div class="app-metrics">
+                  <div class="app-metric">
+                    <span>Saldo</span>
+                    <strong>R$ 742,60</strong>
+                  </div>
+                  <div class="app-metric">
+                    <span>por semana</span>
+                    <strong>R$ 185,65</strong>
+                  </div>
+                </div>
+
+                <div class="app-stack">
+                  <section class="app-card" aria-labelledby="mockListTitle">
+                    <div class="app-card-header">
+                      <strong id="mockListTitle">Lista de mercado</strong>
+                      <span>5 itens</span>
+                    </div>
+                    <div class="item">
+                      <div class="item-left">
+                        <span class="check">✓</span>
+                        <span class="item-name">Arroz</span>
+                      </div>
+                      <span class="item-qty">1 pacote</span>
+                    </div>
+                    <div class="item">
+                      <div class="item-left">
+                        <span class="check empty">✓</span>
+                        <span class="item-name">Leite</span>
+                      </div>
+                      <span class="item-qty">2 un</span>
+                    </div>
+                    <div class="item">
+                      <div class="item-left">
+                        <span class="check empty">✓</span>
+                        <span class="item-name">Café</span>
+                      </div>
+                      <span class="item-qty">500 g</span>
+                    </div>
+                  </section>
+
+                  <section class="app-card" aria-labelledby="mockPurchaseTitle">
+                    <div class="app-card-header">
+                      <strong id="mockPurchaseTitle">Últimas compras</strong>
+                      <span>mês atual</span>
+                    </div>
+                    <div class="purchase">
+                      <div class="purchase-main">
+                        <span class="purchase-name">Mercado da semana</span>
+                        <span class="purchase-date">18/04</span>
+                      </div>
+                      <span class="purchase-total">R$ 214,30</span>
+                    </div>
+                    <div class="purchase">
+                      <div class="purchase-main">
+                        <span class="purchase-name">Hortifruti</span>
+                        <span class="purchase-date">12/04</span>
+                      </div>
+                      <span class="purchase-total">R$ 86,90</span>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="benefitsTitle">
+          <div class="section-head">
+            <p class="section-kicker">Por que usar</p>
+            <h2 id="benefitsTitle">Menos conversa perdida, mais clareza no carrinho.</h2>
+            <p>
+              Feira junta a lista e o orçamento em um fluxo simples para quem divide as compras
+              de casa.
+            </p>
+          </div>
+          <div class="grid-three">
+            <article class="feature-card">
+              <div class="feature-icon">01</div>
+              <h3>Lista para os dois</h3>
+              <p>Itens, quantidades e check rápido no mercado para ninguém comprar no escuro.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">02</div>
+              <h3>Orçamento visível</h3>
+              <p>Saldo restante, gasto do mês e sugestão semanal sempre perto da lista.</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">03</div>
+              <h3>Espaços por código</h3>
+              <p>Entre no mesmo espaço sem login complexo e mantenha a rotina alinhada.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="stepsTitle">
+          <div class="section-head">
+            <p class="section-kicker">Como funciona</p>
+            <h2 id="stepsTitle">Do "precisa comprar" ao saldo atualizado.</h2>
+          </div>
+          <div class="steps">
+            <article class="step-card">
+              <div class="step-number">1</div>
+              <h3>Montem a lista</h3>
+              <p>Adicionem o que está faltando em casa com quantidade opcional.</p>
+            </article>
+            <article class="step-card">
+              <div class="step-number">2</div>
+              <h3>Marquem no mercado</h3>
+              <p>Use o checklist no corredor para acompanhar o que já foi para o carrinho.</p>
+            </article>
+            <article class="step-card">
+              <div class="step-number">3</div>
+              <h3>Registrem o total</h3>
+              <p>Ao finalizar, salvem o valor pago para atualizar o histórico.</p>
+            </article>
+            <article class="step-card">
+              <div class="step-number">4</div>
+              <h3>Acompanhem o saldo</h3>
+              <p>Veja o que ainda cabe no mês antes da próxima ida ao mercado.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" aria-labelledby="trustTitle">
+          <div class="section-head">
+            <p class="section-kicker">Estado atual</p>
+            <h2 id="trustTitle">Simples o suficiente para usar hoje.</h2>
+          </div>
+          <div class="trust-grid">
+            <article class="trust-card">
+              <h3>Funciona offline no celular</h3>
+              <p>A lista continua disponível mesmo quando o sinal do mercado falha.</p>
+            </article>
+            <article class="trust-card">
+              <h3>PWA simples</h3>
+              <p>Abra no navegador e instale na tela inicial quando fizer sentido.</p>
+            </article>
+            <article class="trust-card">
+              <h3>Compartilhamento opcional em desenvolvimento</h3>
+              <p>Espaços compartilhados por código estão evoluindo aos poucos.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="final-cta" aria-labelledby="finalCtaTitle">
           <div>
-            <strong>Conflitos de sincronização</strong>
-            <span>Escolha qual versão manter para continuar sincronizando.</span>
+            <h2 id="finalCtaTitle">Teste o Feira com quem divide a lista com você.</h2>
+            <p>
+              A ideia é pequena: transformar a compra de mercado em uma rotina mais combinada,
+              previsível e leve.
+            </p>
           </div>
-          <button class="btn btn-soft" id="openConflictsButton" type="button">Resolver</button>
-        </section>
-
-        <section id="listView" class="view is-active" aria-labelledby="fullListTitle">
-          <div class="section-head">
-            <div>
-              <h2 id="fullListTitle">Lista de compras</h2>
-              <span id="itemCountLabel">0 itens</span>
-            </div>
-            <div class="list-head-actions">
-              <button class="btn btn-primary btn-sm" id="startPurchaseSessionButton" type="button">
-                <i data-lucide="play" aria-hidden="true"></i>
-              </button>
-              <button class="btn btn-soft btn-sm" id="clearRecentItemsButton" type="button" hidden>
-                <i data-lucide="rotate-ccw" aria-hidden="true"></i>
-              </button>
-              <div class="dropdown dropdown-end list-menu-wrap">
-              <button class="btn btn-ghost btn-square" id="listMenuButton" type="button" aria-label="Abrir opções da lista" aria-expanded="false">
-                <i data-lucide="ellipsis" aria-hidden="true"></i>
-              </button>
-              <div class="dropdown-content z-10 mt-2 w-52 rounded-box border border-base-300 bg-base-100 p-2 shadow" id="listMenu" hidden>
-                <ul class="menu">
-                  <li>
-                    <button type="button" id="openCategoryDialogButton">
-                      <i data-lucide="plus" aria-hidden="true"></i>
-                      Adicionar seção
-                    </button>
-                  </li>
-                  <li>
-                    <button type="button" id="clearMarketListButton">
-                      <i data-lucide="trash-2" aria-hidden="true"></i>
-                      Zerar lista
-                    </button>
-                  </li>
-                </ul>
-              </div>
-              </div>
-            </div>
-          </div>
-
-          <section class="purchase-session-bar" id="purchaseSessionBar" hidden>
-            <div class="purchase-session-copy">
-              <span id="purchaseSessionTitle">Compra em andamento</span>
-              <strong id="purchaseSessionTimer">00:00</strong>
-              <small id="purchaseSessionMeta">0 itens marcados nesta compra</small>
-            </div>
-            <div class="purchase-session-actions">
-              <button class="btn btn-primary btn-sm" id="finishPurchaseSessionButton" type="button">
-                <i data-lucide="check" aria-hidden="true"></i>
-                Finalizar
-              </button>
-              <button class="btn btn-ghost btn-square btn-sm" id="cancelPurchaseSessionButton" type="button" aria-label="Cancelar compra" title="Cancelar compra">
-                <i data-lucide="x" aria-hidden="true"></i>
-              </button>
-            </div>
-          </section>
-
-          <div class="list-surface" id="itemList"></div>
-          <p class="empty-state" id="emptyItems">Sua lista ainda está vazia.</p>
-        </section>
-
-        <section id="purchaseView" class="view" aria-labelledby="purchaseTitle">
-          <div class="section-head">
-            <div>
-              <p class="eyebrow">Compras</p>
-              <h2 id="purchaseTitle">Histórico</h2>
-            </div>
-            <button class="btn btn-ghost btn-square" id="refreshButton" type="button" title="Registrar compra" aria-label="Registrar compra">
-              <i data-lucide="plus" aria-hidden="true"></i>
-            </button>
-          </div>
-
-          <section class="card border border-base-300 bg-base-100 content-block purchase-indicators-card">
-            <div class="card-body">
-              <div class="indicators-grid">
-                <div class="indicator-item">
-                  <div class="indicator-icon">
-                    <i data-lucide="wallet" aria-hidden="true"></i>
-                  </div>
-                  <div class="indicator-content">
-                    <span class="indicator-label">Saldo disponível</span>
-                    <strong class="indicator-value" id="remainingBalance">R$ 0,00</strong>
-                  </div>
-                </div>
-                
-                <div class="indicator-item">
-                  <div class="indicator-icon">
-                    <i data-lucide="calendar" aria-hidden="true"></i>
-                  </div>
-                  <div class="indicator-content">
-                    <span class="indicator-label" id="topbarWeeklyLabel">Por semana</span>
-                    <strong class="indicator-value" id="topbarWeeklyBudget">--</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="card border border-base-300 bg-base-100 content-block purchase-indicators-card">
-            <div class="card-body">
-              <div class="indicators-grid">
-                <div class="indicator-item">
-                  <div class="indicator-icon">
-                    <i data-lucide="trending-up" aria-hidden="true"></i>
-                  </div>
-                  <div class="indicator-content">
-                    <span class="indicator-label">Gasto / Orçamento</span>
-                    <strong class="indicator-value" id="spentBudgetRatio">
-                      <span id="spentBudgetSpent">R$ 0,00</span> / <span id="spentBudgetTotal">R$ 0,00</span>
-                    </strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="card border border-base-300 bg-base-100 content-block" aria-labelledby="purchasePeriodTitle">
-            <div class="card-body">
-              <div>
-                <span>Período atual</span>
-                <strong id="purchasePeriodTitle">Mês atual</strong>
-              </div>
-              <div>
-                <b id="purchasePeriodRange">--</b>
-                <small id="purchasePeriodRule">Configure o fechamento do cartão para usar ciclos.</small>
-              </div>
-            </div>
-          </section>
-
-          <section class="card border border-base-300 bg-base-100 content-block chart-block" aria-labelledby="purchaseChartTitle">
-            <div class="card-body">
-              <div class="block-title-row">
-                <h3 id="purchaseChartTitle" class="card-title">Variação das compras</h3>
-                <span id="purchaseMedianLabel" class="">Mediana R$ 0,00</span>
-              </div>
-              <div class="purchase-chart" id="purchaseChart" aria-label="Gráfico de barras das compras"></div>
-              <p class="empty-state" id="emptyPurchaseChart">Registre compras para ver a variação.</p>
-            </div>
-          </section>
-
-          <section class="card border border-base-300 bg-base-100 content-block" aria-labelledby="latestTitle">
-            <div class="card-body">
-              <div class="block-title-row">
-                <h3 id="latestTitle" class="card-title">Compras realizadas</h3>
-                <span id="purchaseCountLabel" class="badge badge-soft soft-label">0 compras</span>
-              </div>
-              <ul class="purchase-list inline-editor-list" id="purchaseInlineEditorMount"></ul>
-              <ul class="purchase-list" id="purchaseList"></ul>
-              <p class="empty-state" id="emptyPurchases">Nenhuma compra registrada.</p>
-            </div>
-          </section>
-        </section>
-
-        <section id="mealsView" class="view" aria-labelledby="mealsTitle">
-          <div class="section-head">
-            <div>
-              <h2 id="mealsTitle">Refeições</h2>
-              <span id="mealCountLabel">0 refeições</span>
-            </div>
-            <button class="btn btn-ghost btn-square" id="createFirstMealButton" type="button" aria-label="Nova refeição">
-              <i data-lucide="plus" aria-hidden="true"></i>
-            </button>
-          </div>
-
-          <div class="meal-list" id="mealList"></div>
-          <p class="empty-state" id="emptyMeals">Nenhuma refeição criada.</p>
-        </section>
-
-        <section id="settingsView" class="view settings-view-surface" aria-labelledby="settingsTitle">
-          <div class="section-head">
-            <div>
-              <h2 id="settingsTitle">Ajustes</h2>
-            </div>
-          </div>
-
-          <div class="settings-stack">
-            
-            <form class="card bg-base-100 border border-base-300 settings-section profile-form" id="profileForm">
-              <div class="card-body">
-                <div class="settings-row settings-row-inline">
-                  <div class="settings-row-main">
-                    <label class="label" for="userNameInput">Nome</label>
-                    <input class="input" id="userNameInput" name="name" autocomplete="name" placeholder="Seu nome" />
-                  </div>
-                  <div class="settings-row-control">
-                    <button class="btn btn-primary btn-square btn-sm" type="submit" aria-label="Salvar perfil" title="Salvar perfil">
-                      <i data-lucide="save" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
-
-            <form class="card bg-base-100 border border-base-300 settings-section budget-form" id="budgetForm">
-              <div class="card-body">
-                <div class="settings-row settings-row-inline">
-                  <div class="settings-row-main">
-                    <label class="label" for="budgetInput">Orçamento mensal</label>
-                    <input class="input" id="budgetInput" name="budget" inputmode="decimal" autocomplete="off" placeholder="1200,00" />
-                  </div>
-                </div>
-                <div class="settings-row settings-row-inline">
-                  <div class="settings-row-main">
-                    <label class="label" for="cardClosingDayInput">Fechamento do cartão</label>
-                    <input class="input" id="cardClosingDayInput" name="cardClosingDay" type="number" min="1" max="31" inputmode="numeric" autocomplete="off" placeholder="Dia" />
-                  </div>
-                  <div class="settings-row-control">
-                    <button class="btn btn-primary btn-square btn-sm" type="submit" aria-label="Salvar orçamento" title="Salvar orçamento">
-                      <i data-lucide="save" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
-
-            <section class="card bg-base-100 border border-base-300 settings-section settings-card" aria-labelledby="themeTitle">
-              <div class="card-body">
-                <div class="settings-row settings-row-toggle">
-                  <div class="settings-row-main">
-                    <label class="settings-inline-check" for="themeToggle">
-                      <input class="toggle toggle-primary toggle-sm" id="themeToggle" type="checkbox" role="switch" aria-label="Ativar modo escuro" />
-                      <span id="themeTitle">Modo escuro</span>
-                    </label>
-                    <p>Cores neste dispositivo</p>
-                  </div>
-                </div>
-                <div class="settings-row">
-                  <div class="settings-row-main">
-                    <h3 id="editorModeTitle" class="card-title">Edição</h3>
-                    <p>Itens e compras</p>
-                  </div>
-                  <div class="settings-row-control">
-                    <select class="select accent-select" id="editorModeInput" name="editorMode" aria-label="Modo de edição">
-                      <option value="modal">Modal</option>
-                      <option value="inline">Inline</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            
-            <section class="card bg-base-100 border border-base-300 settings-section settings-card share-settings" aria-labelledby="spacesTitle">
-              <div class="card-body">
-                <div class="settings-row">
-                  <div class="settings-row-main">
-                    <h3 id="spacesTitle" class="card-title">Espaços</h3>
-                    <p>Compartilhe por código</p>
-                  </div>
-                </div>
-                <form class="settings-row settings-row-inline compact-form" id="createSpaceForm">
-                  <div class="settings-row-main">
-                    <label class="label" for="createSpaceNameInput">Novo espaço</label>
-                    <input class="input input-sm" id="createSpaceNameInput" name="name" autocomplete="off" placeholder="Ex.: Casa" />
-                  </div>
-                  <div class="settings-row-control">
-                    <button class="btn btn-soft btn-square btn-sm" type="submit" aria-label="Criar espaço" title="Criar espaço">
-                      <i data-lucide="plus" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </form>
-                <form class="settings-row settings-row-inline compact-form" id="joinSpaceForm">
-                  <div class="settings-row-main">
-                    <label class="label" for="joinSpaceCodeInput">Entrar por código</label>
-                    <input class="input input-sm" id="joinSpaceCodeInput" name="code" autocomplete="off" autocapitalize="characters" placeholder="ABC123" />
-                  </div>
-                  <div class="settings-row-control">
-                    <button class="btn btn-soft btn-square btn-sm" type="submit" aria-label="Entrar no espaço" title="Entrar no espaço">
-                      <i data-lucide="log-in" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </section>
-
-            <section class="card bg-base-100 border border-base-300 settings-section settings-card share-settings" id="shareSpaceCard" aria-labelledby="currentSpaceTitle" hidden>
-              <div class="card-body">
-                <div class="settings-row">
-                  <div class="settings-row-main">
-                    <h3 id="currentSpaceTitle" class="card-title">Espaço atual</h3>
-                    <p>Código de convite</p>
-                  </div>
-                </div>
-                <div class="settings-row settings-row-inline">
-                  <div class="settings-row-main">
-                    <label class="label" for="currentSpaceNameInput">Nome do espaço</label>
-                    <input class="input input-sm" id="currentSpaceNameInput" name="spaceName" autocomplete="off" />
-                  </div>
-                  <div class="settings-row-control">
-                    <button class="btn btn-soft btn-square btn-sm" id="renameSpaceButton" type="button" aria-label="Salvar nome do espaço" title="Salvar nome do espaço">
-                      <i data-lucide="save" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="settings-row settings-row-inline">
-                  <div class="settings-row-main">
-                    <label class="label" for="inviteCodeInput">Código de convite</label>
-                    <input class="input input-sm" id="inviteCodeInput" name="inviteCode" readonly />
-                  </div>
-                  <div class="settings-row-control">
-                    <button class="btn btn-soft btn-square btn-sm" id="copyInviteButton" type="button" aria-label="Copiar código de convite" title="Copiar código de convite">
-                      <i data-lucide="copy" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            
-            <section class="card bg-base-100 border border-base-300 settings-section settings-card" aria-labelledby="refreshAppTitle">
-              <div class="card-body">
-                <div class="settings-row settings-row-inline">
-                  <div class="settings-row-main">
-                    <h3 id="refreshAppTitle" class="card-title">Atualizar app</h3>
-                    <p>Busca a versão recente</p>
-                  </div>
-                  <div class="settings-row-control">
-                    <button class="btn btn-soft btn-square btn-sm" id="manualRefreshButton" type="button" aria-label="Atualizar app" title="Atualizar app">
-                      <i data-lucide="refresh-cw" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
-                <div class="settings-row settings-row-inline sync-test-card" aria-labelledby="syncTestTitle">
-                  <div class="settings-row-main">
-                    <h3 id="syncTestTitle" class="card-title">Testes de sincronização</h3>
-                    <p>Valida conflitos e status sem alterar seus dados</p>
-                    <div class="sync-test-summary" id="syncTestSummary">Aguardando execução.</div>
-                  </div>
-                  <div class="settings-row-control">
-                    <button class="btn btn-soft btn-square btn-sm" id="runSyncTestsButton" type="button" aria-label="Rodar testes de sincronização" title="Rodar testes de sincronização">
-                      <i data-lucide="play" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                  <div class="sync-test-list" id="syncTestList" aria-live="polite"></div>
-                </div>
-                <div class="settings-row settings-row-inline danger-zone" aria-labelledby="resetTitle">
-                  <div class="settings-row-main">
-                    <h3 id="resetTitle" class="card-title">Resetar dados</h3>
-                    <p>Apaga dados locais</p>
-                  </div>
-                  <div class="settings-row-control">
-                    <button class="btn btn-error btn-square btn-sm" id="resetDatabaseButton" type="button" aria-label="Resetar dados" title="Resetar dados">
-                      <i data-lucide="trash-2" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
+          <a class="button button-primary" href="/app/lista">
+            Abrir app
+          </a>
         </section>
       </main>
 
-      <nav class="dock border-t border-base-300" aria-label="Navegação principal">
-        <button class="dock-active" type="button" data-nav-button data-view="listView" aria-label="Lista">
-          <i data-lucide="list-checks" aria-hidden="true"></i>
-          <span class="dock-label">Lista</span>
-        </button>
-        <button type="button" data-nav-button data-view="mealsView" aria-label="Refeições">
-          <i data-lucide="utensils" aria-hidden="true"></i>
-          <span class="dock-label">Refeições</span>
-        </button>
-        <button type="button" data-nav-button data-view="purchaseView" aria-label="Compras">
-          <i data-lucide="shopping-basket" aria-hidden="true"></i>
-          <span class="dock-label">Compras</span>
-        </button>
-      </nav>
-      <button class="btn btn-primary btn-circle btn-lg fab-button" id="quickAddButton" type="button" aria-label="Adicionar">
-        <i data-lucide="plus" aria-hidden="true"></i>
-      </button>
+      <footer>
+        <div>
+          <strong>Feira</strong>
+          <span> - Um app em evolução para compras de casa.</span>
+        </div>
+        <a href="/app/lista">Abrir app</a>
+      </footer>
     </div>
-
-    <dialog class="modal modal-top checkout-dialog" id="checkoutDialog">
-      <form class="modal-box checkout-form" id="checkoutForm">
-        <div class="dialog-head">
-          <div>
-            <h2 id="checkoutDialogTitle">Registrar compra</h2>
-          </div>
-          <button class="btn btn-ghost btn-square" id="closeCheckoutButton" value="cancel" type="button" aria-label="Fechar">
-            <i data-lucide="x" aria-hidden="true"></i>
-          </button>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="purchaseName">Nome da compra</label>
-          <input class="input" id="purchaseName" name="name" autocomplete="off" placeholder="Compra do mercado" />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="purchaseDate">Data da compra</label>
-          <input class="input" id="purchaseDate" name="date" type="date" required />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="purchaseTotal">Valor pago</label>
-          <input class="input" id="purchaseTotal" name="total" inputmode="decimal" autocomplete="off" placeholder="230,00" required />
-        </div>
-        <section class="purchase-receipt" id="purchaseReceipt" hidden aria-labelledby="purchaseReceiptTitle">
-          <div class="receipt-head">
-            <h3 id="purchaseReceiptTitle">Itens comprados</h3>
-            <span id="purchaseReceiptCount">0 itens</span>
-          </div>
-          <ul id="purchaseReceiptList" class="receipt-list"></ul>
-        </section>
-        <button class="btn btn-error btn-ghost" id="deletePurchaseButton" type="button" hidden>Excluir compra</button>
-        <div class="modal-action dialog-actions">
-          <button class="btn btn-soft" id="cancelCheckoutButton" value="cancel" type="button">Cancelar</button>
-          <button class="btn btn-primary" id="savePurchaseButton" value="confirm" type="submit">Salvar</button>
-        </div>
-      </form>
-    </dialog>
-
-    <dialog class="modal modal-top item-dialog" id="itemDialog">
-      <form class="modal-box item-form" id="itemForm">
-        <div class="dialog-head hidden">
-          <div class='hidden'>
-            <p class="eyebrow">Lista</p>
-            <h2 id="itemDialogTitle">Novo item</h2>
-          </div>
-          <button class="hidden btn btn-ghost btn-square" id="closeItemDialogButton" type="button" aria-label="Fechar">
-            <i data-lucide="x" aria-hidden="true"></i>
-          </button>
-        </div>
-        <!-- <div class="form-group"> -->
-          <!-- <label class="form-label" for="itemName">Item</label> -->
-          <input class="input font-medium input-ghost input-lg focus:ring-offset-0 ps-0" id="itemName" name="name" autocomplete="off" placeholder="Nome do item" required />
-        <!-- </div> -->
-        <div class="form-group">
-          <!-- <label class="form-label" for="itemQuantity">Quantidade</label> -->
-          <input class="input font-medium input-ghost focus:outline-none focus:ring-0 focus:ring-offset-0 ps-0" id="itemQuantity" name="quantity" autocomplete="off" placeholder="Quantidade/Peso" />
-        </div>
-        <div class="form-group">
-          <!-- <label class="form-label" for="itemCategory">Seção</label> -->
-          <select class="select" id="itemCategory" name="categoryId"></select>
-        </div>
-        <button class="btn btn-error btn-ghost" id="deleteItemButton" type="button" hidden>Excluir item</button>
-        <div class="modal-action dialog-actions">
-          <button class="btn btn-soft btn-circle" id="cancelItemDialogButton" type="button"><i data-lucide="x" aria-hidden="true"></i></button>
-          <button class="btn btn-primary btn-circle" id="saveItemButton" type="submit"><i data-lucide="plus" aria-hidden="true"></i></button>
-        </div>
-      </form>
-    </dialog>
-
-    <dialog class="modal modal-top item-dialog" id="categoryDialog">
-      <form class="modal-box item-form" id="categoryForm">
-        <div class="dialog-head">
-          <div>
-            <p class="eyebrow">Lista</p>
-            <h2 id="categoryDialogTitle">Adicionar seção</h2>
-          </div>
-          <button class="btn btn-ghost btn-square" id="closeCategoryDialogButton" type="button" aria-label="Fechar">
-            <i data-lucide="x" aria-hidden="true"></i>
-          </button>
-        </div>
-        <label class="label" for="categoryNameInput">Seção personalizada</label>
-        <input class="input" id="categoryNameInput" name="category" autocomplete="off" placeholder="Ex.: Congelados" />
-        <fieldset class="fieldset preset-grid bg-base-200 rounded-box border border-base-300 p-3" id="categoryPresetGrid">
-          <legend class="fieldset-legend">Sugestões rápidas</legend>
-          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Frutas" /> Frutas</label>
-          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Verduras" /> Verduras</label>
-          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Frios" /> Frios</label>
-          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Carnes" /> Carnes</label>
-          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Padaria" /> Padaria</label>
-          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Bebidas" /> Bebidas</label>
-          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Limpeza" /> Limpeza</label>
-          <label class="label"><input class="checkbox checkbox-sm" type="checkbox" name="categoryPreset" value="Mercearia" /> Mercearia</label>
-        </fieldset>
-        <div class="modal-action dialog-actions">
-          <button class="btn btn-soft" id="cancelCategoryDialogButton" type="button">Cancelar</button>
-          <button class="btn btn-primary" id="saveCategoryButton" type="submit">Adicionar</button>
-        </div>
-      </form>
-    </dialog>
-
-    <dialog class="modal modal-bottom sm:modal-middle" id="reorderCategoryDialog">
-      <div class="modal-box p-0 reorder-category-dialog">
-        <div class="dialog-head reorder-dialog-head">
-          <div>
-            <p class="eyebrow">Lista</p>
-            <h2>Reordenar seções</h2>
-          </div>
-          <div class="reorder-dialog-actions">
-            <button class="btn btn-primary btn-sm" id="confirmReorderCategoriesButton" type="button">Confirmar</button>
-            <button class="btn btn-ghost btn-square btn-sm" id="closeReorderCategoryDialogButton" type="button" aria-label="Fechar">
-              <i data-lucide="x" aria-hidden="true"></i>
-            </button>
-          </div>
-        </div>
-        <div class="reorder-section-list" id="reorderCategoryList"></div>
-      </div>
-    </dialog>
-
-    <dialog class="modal modal-bottom sm:modal-middle" id="deleteCategoryDialog">
-      <div class="modal-box">
-        <div class="dialog-head">
-          <div>
-            <p class="eyebrow">Lista</p>
-            <h2>Apagar seção</h2>
-          </div>
-          <button class="btn btn-ghost btn-square btn-sm" id="closeDeleteCategoryDialogButton" type="button" aria-label="Fechar">
-            <i data-lucide="x" aria-hidden="true"></i>
-          </button>
-        </div>
-        <p class="delete-section-copy" id="deleteCategoryMessage">Tem certeza?</p>
-        <div class="modal-action dialog-actions">
-          <button class="btn btn-soft" id="cancelDeleteCategoryDialogButton" type="button">Cancelar</button>
-          <button class="btn btn-error" id="confirmDeleteCategoryButton" type="button">Apagar</button>
-        </div>
-      </div>
-    </dialog>
-
-    <dialog class="modal modal-top item-dialog meal-dialog" id="mealDialog">
-      <form class="modal-box item-form" id="mealForm">
-        <div class="dialog-head">
-          <div>
-            <p class="eyebrow">Refeições</p>
-            <h2 id="mealDialogTitle">Nova refeição</h2>
-          </div>
-          <button class="btn btn-ghost btn-square" id="closeMealDialogButton" type="button" aria-label="Fechar">
-            <i data-lucide="x" aria-hidden="true"></i>
-          </button>
-        </div>
-        <label class="label" for="mealName">Nome da refeição</label>
-        <input class="input" id="mealName" name="name" autocomplete="off" placeholder="Ex.: Strogonoff" required />
-        <div class="meal-editor-head">
-          <label class="label">Itens da refeição</label>
-          <button class="btn btn-soft btn-sm" id="addMealItemButton" type="button">
-            <i data-lucide="plus" aria-hidden="true"></i>
-            Item
-          </button>
-        </div>
-        <div class="meal-items-editor" id="mealItemsEditor"></div>
-        <button class="btn btn-error btn-ghost" id="deleteMealButton" type="button" hidden>Excluir refeição</button>
-        <div class="modal-action dialog-actions">
-          <button class="btn btn-soft" id="cancelMealDialogButton" type="button">Cancelar</button>
-          <button class="btn btn-primary" id="saveMealButton" type="submit">Adicionar</button>
-        </div>
-      </form>
-    </dialog>
-
-    <dialog class="modal modal-top item-dialog" id="conflictDialog">
-      <div class="modal-box">
-        <div class="dialog-head">
-          <div>
-            <p class="eyebrow">Sincronização</p>
-            <h2>Resolver conflitos</h2>
-          </div>
-          <button class="btn btn-ghost btn-square" id="closeConflictDialogButton" type="button" aria-label="Fechar">
-            <i data-lucide="x" aria-hidden="true"></i>
-          </button>
-        </div>
-        <div class="conflict-list" id="conflictList"></div>
-      </div>
-    </dialog>
-
-    <div class="toast toast-top toast-center app-toast">
-      <div class="alert alert-info" id="toast" role="status" aria-live="polite"></div>
-    </div>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="./supabase-config.js" defer></script>
-    <script src="./app.js" defer></script>
-    <script src="./components/items.js" defer></script>
-    <script src="./components/meals.js" defer></script>
-    <script src="./components/purchases.js" defer></script>
-    <script src="./components/categories.js" defer></script>
   </body>
 </html>

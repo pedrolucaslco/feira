@@ -1,5 +1,22 @@
-const CACHE_NAME = "feira-v58.17";
-const ASSETS = ["./", "./index.html", "./assets/app.css", "./styles.css", "./app.js", "./supabase-config.js", "./manifest.webmanifest", "./icon.svg"];
+const CACHE_NAME = "feira-v60.0";
+const ASSETS = [
+  "./",
+  "./index.html",
+  "./app.html",
+  "./assets/app.css",
+  "./styles.css",
+  "./app.js",
+  "./supabase-config.js",
+  "./manifest.webmanifest",
+  "./icon.svg",
+  "./src/router.js",
+  "./src/auth.js",
+  "./components/items.js",
+  "./components/meals.js",
+  "./components/purchases.js",
+  "./components/categories.js",
+  "./changelog.json",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -30,7 +47,6 @@ self.addEventListener("message", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Ignora requests de extensões do Chrome e outros schemes não suportados
   if (!event.request.url.startsWith("http")) return;
   if (event.request.method !== "GET") return;
 
@@ -39,10 +55,10 @@ self.addEventListener("fetch", (event) => {
       fetch(event.request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
+          caches.open(CACHE_NAME).then((cache) => cache.put("./app.html", copy));
           return response;
         })
-        .catch(() => caches.match("./index.html")),
+        .catch(() => caches.match("./app.html")),
     );
     return;
   }

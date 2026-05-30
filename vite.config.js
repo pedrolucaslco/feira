@@ -10,10 +10,13 @@ const staticFiles = [
   "supabase-config.js",
   "manifest.webmanifest",
   "icon.svg",
+  "changelog.json",
   "components/items.js",
   "components/meals.js",
   "components/purchases.js",
   "components/categories.js",
+  "src/router.js",
+  "src/auth.js",
 ];
 
 function copyPwaStaticFiles() {
@@ -34,12 +37,12 @@ function copyPwaStaticFiles() {
 }
 
 export default defineConfig({
-  base: "./",
+  base: "/",
   build: {
     rollupOptions: {
       input: {
-        app: resolve(__dirname, "index.html"),
-        landing: resolve(__dirname, "landing-page.html"),
+        landing: resolve(__dirname, "index.html"),
+        app: resolve(__dirname, "app.html"),
       },
       output: {
         assetFileNames: (assetInfo) => {
@@ -48,11 +51,24 @@ export default defineConfig({
         },
       },
       onwarn(warning, warn) {
-        // Ignora avisos de scripts sem type="module"
         if (warning.message?.includes("can't be bundled without type=\"module\" attribute")) return;
         warn(warning);
       },
     },
   },
-  plugins: [tailwindcss(), copyPwaStaticFiles()],
+  plugins: [
+    tailwindcss(),
+    copyPwaStaticFiles(),
+    {
+      name: "app-spa-fallback",
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url === "/app" || req.url.startsWith("/app/")) {
+            req.url = "/app.html";
+          }
+          next();
+        });
+      },
+    },
+  ],
 });
